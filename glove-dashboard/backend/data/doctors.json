@@ -1,0 +1,11 @@
+[
+  {
+    "id": "DOC-DEMO-0001",
+    "name": "Demo Doctor",
+    "username": "doctor",
+    "password_salt": "neuro-demo-doctor-salt-2026",
+    "password_hash": "0825c90893bb61b0346889265dc62b7c77f526cdaf75924bc994128ce95f628f",
+    "iterations": 200000,
+    "enabled": true
+  }
+]

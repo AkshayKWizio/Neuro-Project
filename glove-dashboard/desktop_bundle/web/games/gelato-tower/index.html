@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gelato Tower — Sweet Scoops Rehabilitation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #87CEEB 0%, #E0F7FA 60%, #FFF9C4 100%);
+      font-family: 'Fredoka', 'Segoe UI', sans-serif;
+      overflow: hidden;
+      width: 100vw; height: 100vh;
+    }
+    canvas#game-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: block; z-index: 1;
+    }
+
+    /* === Premium Glass HUD === */
+    .hud {
+      position: absolute; top: 16px; left: 20px; right: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      pointer-events: none; z-index: 20;
+    }
+    .hud-pill {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(255,183,77,0.4);
+      border-radius: 60px; padding: 10px 28px;
+      display: flex; gap: 24px; align-items: center;
+      box-shadow: 0 8px 32px rgba(255,152,0,0.12), 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .stat-label { font-size: 10px; font-weight: 600; color: #8D6E63; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-val { font-size: 24px; font-weight: 700; color: #E65100; }
+    .stat-val.blue { color: #0288D1; }
+    .stat-val.green { color: #2E7D32; }
+    .stat-val.pink { color: #C2185B; }
+
+    .level-pill {
+      background: linear-gradient(135deg, #FF8A65, #FF6D00);
+      border-radius: 60px; padding: 10px 24px;
+      color: white; font-weight: 700; font-size: 14px;
+      box-shadow: 0 6px 20px rgba(255,109,0,0.3);
+      display: flex; align-items: center; gap: 10px;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .level-pill .lvl-num { font-size: 22px; font-weight: 700; }
+    .level-bar {
+      width: 80px; height: 8px; background: rgba(255,255,255,0.3);
+      border-radius: 99px; overflow: hidden;
+    }
+    .level-fill {
+      height: 100%; background: white; border-radius: 99px;
+      transition: width 0.4s cubic-bezier(.4,.2,.2,1);
+    }
+
+    .gauge-pill {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(255,183,77,0.3);
+      border-radius: 60px; padding: 10px 20px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(255,152,0,0.12);
+    }
+    .gauge-label { font-size: 10px; font-weight: 700; color: #795548; letter-spacing: 0.08em; text-transform: uppercase; }
+    .gauge-track {
+      position: relative; width: 100px; height: 8px;
+      background: #FFCCBC; border-radius: 99px; overflow: hidden;
+    }
+    .gauge-center { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #BCAAA4; z-index: 2; }
+    .gauge-needle {
+      position: absolute; top: -2px; bottom: -2px; left: 50%;
+      width: 16px; margin-left: -8px;
+      background: linear-gradient(135deg, #FF7043, #E64A19);
+      border-radius: 6px;
+      box-shadow: 0 0 12px rgba(230,74,25,0.5);
+      transition: left 0.06s ease-out; z-index: 3;
+    }
+    .gauge-deg { font-size: 14px; font-weight: 700; color: #BF360C; width: 40px; text-align: right; }
+
+    /* === Toast === */
+    .toast {
+      position: absolute; top: 85px; left: 50%;
+      transform: translateX(-50%) translateY(-30px) scale(0.9);
+      background: linear-gradient(135deg, #FFF8E1, #FFFFFF);
+      border: 2px solid #FFB74D; border-radius: 60px;
+      padding: 10px 32px; color: #E65100;
+      font-size: 16px; font-weight: 700;
+      box-shadow: 0 12px 40px rgba(255,152,0,0.25);
+      opacity: 0; pointer-events: none;
+      transition: all 0.35s cubic-bezier(.34,1.56,.64,1);
+      z-index: 30;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ─── Clinical HUD Controls Bar ─── */
+    .controls-hint {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      padding: 7px 20px; border-radius: 9999px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      font-size: 12.5px; font-weight: 550; color: #334155;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+      display: flex; gap: 12px; align-items: center;
+      pointer-events: none; z-index: 20;
+      white-space: nowrap;
+    }
+    .hint-step {
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .motion-badge {
+      display: inline-flex; align-items: center;
+      background: #0F172A; color: #FFFFFF;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px; border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .motion-badge.alt {
+      background: #0284C7; color: #FFFFFF;
+    }
+    .motion-badge.target {
+      background: #E65100; color: #FFFFFF;
+    }
+    .hint-sep {
+      width: 1px; height: 14px;
+      background: rgba(15, 23, 42, 0.15);
+      display: inline-block;
+    }
+    .hint-label {
+      color: #1E293B; font-weight: 600;
+    }
+
+    /* === Level Complete Overlay === */
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,248,225,0.7); backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease; z-index: 100;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: linear-gradient(135deg, #FFFFFF, #FFF8E1);
+      border-radius: 32px; padding: 48px; width: 90%; max-width: 460px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(255,152,0,0.2), 0 0 0 1px rgba(255,183,77,0.2);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+    }
+    .overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-emoji { font-size: 56px; margin-bottom: 12px; }
+    .modal-title { font-size: 28px; font-weight: 700; color: #E65100; margin-bottom: 8px; }
+    .modal-sub { font-size: 14px; color: #795548; line-height: 1.6; margin-bottom: 8px; }
+    .modal-stars { font-size: 36px; margin-bottom: 20px; }
+    .modal-btn {
+      background: linear-gradient(135deg, #FF8A65, #E64A19);
+      color: white; border: none; padding: 16px 36px;
+      border-radius: 60px; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 8px 24px rgba(230,74,25,0.3);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .modal-btn:hover { transform: scale(1.05); box-shadow: 0 12px 32px rgba(230,74,25,0.4); }
+  </style>
+</head>
+<body>
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-pill">
+      <div class="stat"><span class="stat-label">Scoops</span><span class="stat-val green" id="v-reps">0</span></div>
+      <div class="stat"><span class="stat-label">Score</span><span class="stat-val" id="v-score">0</span></div>
+      <div class="stat"><span class="stat-label">Combo</span><span class="stat-val pink" id="v-combo">×1</span></div>
+    </div>
+    <div class="level-pill">
+      <span>Level</span><span class="lvl-num" id="v-level">1</span>
+      <div class="level-bar"><div class="level-fill" id="level-fill" style="width:0%"></div></div>
+    </div>
+    <div class="gauge-pill">
+      <span class="gauge-label">Tilt</span>
+      <div class="gauge-track"><div class="gauge-center"></div><div class="gauge-needle" id="gauge-needle"></div></div>
+      <span class="gauge-deg" id="gauge-deg">0°</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="controls-hint">
+    <div class="hint-step">
+      <span class="motion-badge">Pronation</span>
+      <span class="hint-label">Tilt Left (Palm Down)</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge alt">Supination</span>
+      <span class="hint-label">Tilt Right (Palm Up)</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge target">Target</span>
+      <span class="hint-label">Catch &amp; Balance Scoops</span>
+    </div>
+  </div>
+
+  <!-- Level Complete -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-badge"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+      <h2 class="modal-title" id="m-title">Level Complete</h2>
+      <div class="modal-stars" id="m-stars"><span class="stars-text">PERFECT BALANCE</span></div>
+      <p class="modal-sub" id="m-sub">Rehabilitation target reached.</p>
+      <button class="modal-btn" id="m-btn">Next Level →</button>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script type="module">
+    import * as THREE from '../lib/three.module.min.js';
+
+    // ═══════════════════════════════════════════
+    // AUDIO ENGINE (procedural, zero dependencies)
+    // ═══════════════════════════════════════════
+    class Audio {
+      constructor() { this.ctx = null; }
+      init() {
+        if (!this.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) this.ctx = new A(); }
+        if (this.ctx?.state === 'suspended') this.ctx.resume();
+      }
+      play(freq, type, dur, vol = 0.25) {
+        this.init(); if (!this.ctx) return;
+        const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        o.frequency.exponentialRampToValueAtTime(freq * 0.4, t + dur);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.01);
+      }
+      plop(p = 1) { this.play(320 * p, 'sine', 0.12, 0.3); }
+      combo() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'triangle', 0.35, 0.2), i * 70)); }
+      fanfare() { [392, 523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.7, 0.25), i * 60)); }
+      miss() { this.play(180, 'sawtooth', 0.15, 0.15); }
+    }
+    const sfx = new Audio();
+
+    // ═══════════════════════════════════════════
+    // THREE.JS RENDERER
+    // ═══════════════════════════════════════════
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+
+    // Bright sky gradient background
+    const skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 2; skyCanvas.height = 512;
+    const skyCtx = skyCanvas.getContext('2d');
+    const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
+    skyGrad.addColorStop(0, '#64B5F6');
+    skyGrad.addColorStop(0.4, '#90CAF9');
+    skyGrad.addColorStop(0.7, '#E1F5FE');
+    skyGrad.addColorStop(1, '#FFF9C4');
+    skyCtx.fillStyle = skyGrad;
+    skyCtx.fillRect(0, 0, 2, 512);
+    const skyTex = new THREE.CanvasTexture(skyCanvas);
+    skyTex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = skyTex;
+    scene.environment = skyTex;
+    scene.fog = new THREE.FogExp2(0xE1F5FE, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 5, 14);
+    camera.lookAt(0, 3, 0);
+
+    // ═══════════════════════════════════════════
+    // LIGHTING — bright, warm, happy
+    // ═══════════════════════════════════════════
+    scene.add(new THREE.AmbientLight(0xFFF8E1, 0.7));
+
+    const sun = new THREE.DirectionalLight(0xFFFFE0, 2.2);
+    sun.position.set(8, 18, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 40;
+    sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
+    sun.shadow.camera.top = 12; sun.shadow.camera.bottom = -4;
+    sun.shadow.bias = -0.0005;
+    sun.shadow.normalBias = 0.02;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x81D4FA, 0.8);
+    fill.position.set(-6, 4, -5);
+    scene.add(fill);
+
+    const rim = new THREE.DirectionalLight(0xFFCC80, 0.5);
+    rim.position.set(0, 2, 12);
+    scene.add(rim);
+
+    // ═══════════════════════════════════════════
+    // ENVIRONMENT — Italian seaside gelato shop
+    // ═══════════════════════════════════════════
+
+    // Ground — warm sand/terracotta
+    const groundGeo = new THREE.CircleGeometry(40, 64);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0xFFE0B2, roughness: 0.85, metalness: 0.02
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2; ground.position.y = -1.8;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Tiled plaza pattern
+    for (let i = -6; i <= 6; i++) {
+      for (let j = -3; j <= 3; j++) {
+        if ((i + j) % 2 === 0) continue;
+        const tile = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.8, 1.8),
+          new THREE.MeshStandardMaterial({ color: 0xFFCC80, roughness: 0.8 })
+        );
+        tile.rotation.x = -Math.PI / 2;
+        tile.position.set(i * 1.9, -1.79, j * 1.9 + 2);
+        tile.receiveShadow = true;
+        scene.add(tile);
+      }
+    }
+
+    // Helper: create rounded tree
+    function makeTree(x, z, scale = 1) {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15 * scale, 0.2 * scale, 2 * scale, 8),
+        new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.9 })
+      );
+      trunk.position.y = scale; trunk.castShadow = true;
+      g.add(trunk);
+
+      const colors = [0x66BB6A, 0x81C784, 0x4CAF50, 0xA5D6A7];
+      for (let i = 0; i < 4; i++) {
+        const leaf = new THREE.Mesh(
+          new THREE.SphereGeometry((0.7 + Math.random() * 0.4) * scale, 12, 10),
+          new THREE.MeshStandardMaterial({ color: colors[i], roughness: 0.7 })
+        );
+        leaf.position.set(
+          (Math.random() - 0.5) * scale * 0.6,
+          2 * scale + (Math.random() - 0.3) * scale * 0.5,
+          (Math.random() - 0.5) * scale * 0.6
+        );
+        leaf.castShadow = true;
+        g.add(leaf);
+      }
+      g.position.set(x, -1.8, z);
+      return g;
+    }
+
+    // Trees along the background
+    [-8, -5, -2.5, 2.5, 5, 8].forEach((x, i) => {
+      scene.add(makeTree(x, -6 - Math.random() * 3, 0.9 + Math.random() * 0.6));
+    });
+
+    // Colorful buildings/shops in background
+    function makeBuilding(x, z, w, h, color) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, 2),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.05 })
+      );
+      body.position.y = h / 2; body.castShadow = true; body.receiveShadow = true;
+      g.add(body);
+
+      // Roof
+      const roof = new THREE.Mesh(
+        new THREE.BoxGeometry(w + 0.4, 0.3, 2.4),
+        new THREE.MeshStandardMaterial({ color: 0xBF360C, roughness: 0.7 })
+      );
+      roof.position.y = h + 0.15;
+      g.add(roof);
+
+      // Windows
+      for (let wy = 1; wy < h - 0.5; wy += 1.2) {
+        for (let wx = -w / 3; wx <= w / 3; wx += w / 3) {
+          const win = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.4, 0.5),
+            new THREE.MeshStandardMaterial({ color: 0xE3F2FD, roughness: 0.2, metalness: 0.1 })
+          );
+          win.position.set(wx, wy, 1.01);
+          g.add(win);
+        }
+      }
+
+      g.position.set(x, -1.8, z);
+      return g;
+    }
+
+    const buildingColors = [0xFFCDD2, 0xFFF9C4, 0xC8E6C9, 0xBBDEFB, 0xF8BBD0, 0xFFE0B2, 0xD1C4E9];
+    [
+      [-10, -10, 3, 5], [-6, -12, 2.5, 4], [-2, -11, 3.5, 6],
+      [2, -12, 2, 3.5], [5, -10, 4, 5.5], [9, -11, 2.5, 4.5]
+    ].forEach(([x, z, w, h], i) => {
+      scene.add(makeBuilding(x, z, w, h, buildingColors[i % buildingColors.length]));
+    });
+
+    // Fluffy clouds
+    function makeCloud(x, y, z) {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.9, metalness: 0 });
+      for (let i = 0; i < 5; i++) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(0.6 + Math.random() * 0.8, 12, 10),
+          mat
+        );
+        puff.position.set(i * 0.7 - 1.4, (Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.4);
+        puff.scale.y = 0.6;
+        g.add(puff);
+      }
+      g.position.set(x, y, z);
+      return g;
+    }
+    const clouds = [];
+    for (let i = 0; i < 8; i++) {
+      const c = makeCloud(
+        (Math.random() - 0.5) * 40,
+        10 + Math.random() * 6,
+        -15 - Math.random() * 10
+      );
+      c.userData.speed = 0.2 + Math.random() * 0.3;
+      scene.add(c); clouds.push(c);
+    }
+
+    // Decorative items: ice cream cart, umbrella, bench
+    // Gelato Cart
+    const cartGroup = new THREE.Group();
+    const cartBody = new THREE.Mesh(
+      new THREE.BoxGeometry(1.8, 1.2, 1),
+      new THREE.MeshStandardMaterial({ color: 0xF48FB1, roughness: 0.5, metalness: 0.1 })
+    );
+    cartBody.position.y = 0.8; cartBody.castShadow = true;
+    cartGroup.add(cartBody);
+    // Cart wheels
+    [-0.6, 0.6].forEach(x => {
+      const wheel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.08, 16),
+        new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.6 })
+      );
+      wheel.rotation.z = Math.PI / 2; wheel.position.set(x, 0.2, 0.55);
+      cartGroup.add(wheel);
+    });
+    // Cart umbrella
+    const umbrellaTop = new THREE.Mesh(
+      new THREE.ConeGeometry(1.2, 0.6, 16),
+      new THREE.MeshStandardMaterial({ color: 0xFFEB3B, roughness: 0.4 })
+    );
+    umbrellaTop.position.y = 2.8;
+    cartGroup.add(umbrellaTop);
+    const umbrellaPole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 1.5, 8),
+      new THREE.MeshStandardMaterial({ color: 0x9E9E9E, metalness: 0.6 })
+    );
+    umbrellaPole.position.y = 1.8;
+    cartGroup.add(umbrellaPole);
+    cartGroup.position.set(-5, -1.8, 2);
+    cartGroup.rotation.y = 0.3;
+    scene.add(cartGroup);
+
+    // Decorative sun/star sparkle spheres floating
+    const sparkles = [];
+    for (let i = 0; i < 20; i++) {
+      const s = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.06 + Math.random() * 0.05, 0),
+        new THREE.MeshStandardMaterial({
+          color: [0xFFD54F, 0xFF8A65, 0xF48FB1, 0x81D4FA, 0xA5D6A7][i % 5],
+          roughness: 0.2, metalness: 0.3, emissive: [0xFFD54F, 0xFF8A65, 0xF48FB1, 0x81D4FA, 0xA5D6A7][i % 5],
+          emissiveIntensity: 0.4
+        })
+      );
+      s.position.set(
+        (Math.random() - 0.5) * 12,
+        2 + Math.random() * 8,
+        (Math.random() - 0.5) * 8
+      );
+      s.userData = { phase: Math.random() * Math.PI * 2, speed: 1 + Math.random() * 2 };
+      scene.add(s);
+      sparkles.push(s);
+    }
+
+    // ═══════════════════════════════════════════
+    // GELATO FLAVORS — rich PBR
+    // ═══════════════════════════════════════════
+    const FLAVORS = [
+      { name: 'Strawberry',  color: 0xE91E63, emissive: 0x880E4F, rough: 0.25 },
+      { name: 'Pistachio',   color: 0x8BC34A, emissive: 0x33691E, rough: 0.35 },
+      { name: 'Mango',       color: 0xFFC107, emissive: 0xFF6F00, rough: 0.22 },
+      { name: 'Blueberry',   color: 0x5C6BC0, emissive: 0x1A237E, rough: 0.3 },
+      { name: 'Vanilla',     color: 0xFFF8E1, emissive: 0xFFE082, rough: 0.2 },
+      { name: 'Mint',        color: 0x26A69A, emissive: 0x004D40, rough: 0.3 },
+      { name: 'Bubblegum',   color: 0xF48FB1, emissive: 0xC2185B, rough: 0.2 },
+      { name: 'Chocolate',   color: 0x6D4C41, emissive: 0x3E2723, rough: 0.4 },
+    ];
+
+    // ═══════════════════════════════════════════
+    // PLAYER CONE
+    // ═══════════════════════════════════════════
+    const playerGroup = new THREE.Group();
+    playerGroup.position.set(0, -0.3, 0);
+    scene.add(playerGroup);
+
+    // Waffle cone with realistic texture look
+    const coneGeo = new THREE.ConeGeometry(0.9, 2.4, 32);
+    const coneMat = new THREE.MeshStandardMaterial({
+      color: 0xE6A23C, roughness: 0.7, metalness: 0.05,
+      emissive: 0x6D4C41, emissiveIntensity: 0.05
+    });
+    const cone = new THREE.Mesh(coneGeo, coneMat);
+    cone.rotation.x = Math.PI; cone.castShadow = true; cone.receiveShadow = true;
+    playerGroup.add(cone);
+
+    // Waffle pattern lines
+    for (let i = 0; i < 12; i++) {
+      const line = new THREE.Mesh(
+        new THREE.BoxGeometry(0.02, 2.2, 0.02),
+        new THREE.MeshStandardMaterial({ color: 0xBF8C30, roughness: 0.8 })
+      );
+      const angle = (i / 12) * Math.PI * 2;
+      line.position.set(Math.cos(angle) * 0.35, -0.1, Math.sin(angle) * 0.35);
+      line.rotation.x = Math.PI;
+      line.rotation.y = angle;
+      playerGroup.add(line);
+    }
+
+    // Rim ring
+    const rimRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.9, 0.1, 12, 32),
+      new THREE.MeshStandardMaterial({ color: 0xBF8C30, roughness: 0.6, metalness: 0.1 })
+    );
+    rimRing.rotation.x = Math.PI / 2; rimRing.position.y = 1.2;
+    playerGroup.add(rimRing);
+
+    // ═══════════════════════════════════════════
+    // SCOOP CREATION
+    // ═══════════════════════════════════════════
+    function createScoop(flavor) {
+      const g = new THREE.Group();
+
+      // Main scoop — slightly flattened sphere with subsurface illusion
+      const sGeo = new THREE.SphereGeometry(0.75, 32, 24);
+      const sMat = new THREE.MeshStandardMaterial({
+        color: flavor.color, roughness: flavor.rough, metalness: 0.02,
+        emissive: flavor.emissive, emissiveIntensity: 0.08
+      });
+      const sMesh = new THREE.Mesh(sGeo, sMat);
+      sMesh.castShadow = true; sMesh.receiveShadow = true;
+      g.add(sMesh);
+
+      // Gelato drip rim
+      const dripGeo = new THREE.TorusGeometry(0.7, 0.13, 10, 24);
+      const dripMat = new THREE.MeshStandardMaterial({
+        color: flavor.color, roughness: flavor.rough + 0.1,
+        emissive: flavor.emissive, emissiveIntensity: 0.05
+      });
+      const drip = new THREE.Mesh(dripGeo, dripMat);
+      drip.rotation.x = Math.PI / 2; drip.position.y = -0.3;
+      drip.scale.set(1.08, 1.08, 0.6);
+      g.add(drip);
+
+      // Sprinkles
+      const sprinkleColors = [0xFFFFFF, 0xE91E63, 0x00BCD4, 0xFFEB3B, 0x8BC34A];
+      for (let i = 0; i < 10; i++) {
+        const spr = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.02, 0.02, 0.1, 6),
+          new THREE.MeshStandardMaterial({
+            color: sprinkleColors[i % 5], roughness: 0.3,
+            emissive: sprinkleColors[i % 5], emissiveIntensity: 0.15
+          })
+        );
+        const phi = Math.random() * Math.PI * 0.45;
+        const theta = Math.random() * Math.PI * 2;
+        spr.position.set(
+          0.75 * Math.sin(phi) * Math.cos(theta),
+          0.75 * Math.cos(phi),
+          0.75 * Math.sin(phi) * Math.sin(theta)
+        );
+        spr.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        g.add(spr);
+      }
+
+      // Cherry on certain scoops
+      if (Math.random() > 0.6) {
+        const cherry = new THREE.Mesh(
+          new THREE.SphereGeometry(0.12, 12, 10),
+          new THREE.MeshStandardMaterial({ color: 0xC62828, roughness: 0.2, metalness: 0.1 })
+        );
+        cherry.position.y = 0.7;
+        g.add(cherry);
+        const stem = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.015, 0.015, 0.2, 6),
+          new THREE.MeshStandardMaterial({ color: 0x4E342E })
+        );
+        stem.position.y = 0.85;
+        g.add(stem);
+      }
+
+      g.userData = { flavor: flavor.name, springY: 1 };
+      return g;
+    }
+
+    // ═══════════════════════════════════════════
+    // PARTICLES — confetti & sprinkles
+    // ═══════════════════════════════════════════
+    const particles = [];
+    function spawnConfetti(x, y, z, count = 35, big = false) {
+      for (let i = 0; i < count; i++) {
+        const shapes = [
+          new THREE.SphereGeometry(0.05 + Math.random() * 0.04, 8, 6),
+          new THREE.BoxGeometry(0.08, 0.08, 0.02),
+          new THREE.OctahedronGeometry(0.06, 0)
+        ];
+        const colors = [0xE91E63, 0x00BCD4, 0xFFEB3B, 0x8BC34A, 0xFF5722, 0x9C27B0, 0xFF9800];
+        const c = colors[i % colors.length];
+        const p = new THREE.Mesh(
+          shapes[i % 3],
+          new THREE.MeshStandardMaterial({
+            color: c, roughness: 0.3, emissive: c, emissiveIntensity: 0.2
+          })
+        );
+        p.position.set(x, y, z);
+        const a = Math.random() * Math.PI * 2;
+        const sp = (big ? 5 : 3) + Math.random() * 3;
+        p.userData = {
+          vx: Math.cos(a) * sp, vy: 3 + Math.random() * 4, vz: Math.sin(a) * sp,
+          rx: Math.random() * 12, ry: Math.random() * 12, life: 1
+        };
+        scene.add(p); particles.push(p);
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // GAME STATE
+    // ═══════════════════════════════════════════
+    let level = 1, reps = 0, score = 0, combo = 1;
+    let targetX = 0, currentX = 0, coneTiltAngle = 0, currentTilt = 0;
+    let wobble = 0, wobbleV = 0;
+    let stackedScoops = [], fallingScoops = [];
+    let lastSpawn = 0, gameState = 'playing'; // playing | levelComplete
+
+    // Level config
+    const LEVELS = [
+      { target: 5,  speed: 2.0, interval: 2800, title: 'Beginner Scooper' },
+      { target: 7,  speed: 2.5, interval: 2400, title: 'Gelato Apprentice' },
+      { target: 10, speed: 3.0, interval: 2000, title: 'Tower Artisan' },
+      { target: 12, speed: 3.5, interval: 1700, title: 'Master Gelatiere' },
+      { target: 15, speed: 4.0, interval: 1400, title: 'Legendary Chef' },
+    ];
+    function getLevelCfg() { return LEVELS[Math.min(level - 1, LEVELS.length - 1)]; }
+
+    // ═══════════════════════════════════════════
+    // HUD UPDATES
+    // ═══════════════════════════════════════════
+    const elReps = document.getElementById('v-reps');
+    const elScore = document.getElementById('v-score');
+    const elCombo = document.getElementById('v-combo');
+    const elLevel = document.getElementById('v-level');
+    const elLevelFill = document.getElementById('level-fill');
+    const elToast = document.getElementById('toast');
+    const elNeedle = document.getElementById('gauge-needle');
+    const elDeg = document.getElementById('gauge-deg');
+
+    let toastTimer = null;
+    function toast(txt) {
+      elToast.textContent = txt;
+      elToast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => elToast.classList.remove('show'), 1800);
+    }
+
+    function updateHUD() {
+      elReps.textContent = reps;
+      elScore.textContent = score.toLocaleString();
+      elCombo.textContent = `×${combo}`;
+      elLevel.textContent = level;
+      const cfg = getLevelCfg();
+      const progress = (stackedScoops.length / cfg.target) * 100;
+      elLevelFill.style.width = `${Math.min(100, progress)}%`;
+    }
+
+    // ═══════════════════════════════════════════
+    // SPAWN FALLING SCOOP
+    // ═══════════════════════════════════════════
+    function spawnScoop() {
+      if (gameState !== 'playing') return;
+      const flavor = FLAVORS[Math.floor(Math.random() * FLAVORS.length)];
+      const scoop = createScoop(flavor);
+      const spawnX = (Math.random() - 0.5) * 7;
+      scoop.position.set(spawnX, 12, 0);
+      const cfg = getLevelCfg();
+      scoop.userData.fallSpeed = cfg.speed + Math.random() * 0.5;
+      // Add a gentle glow ring around falling scoop
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.8, 1.0, 24),
+        new THREE.MeshBasicMaterial({
+          color: flavor.color, transparent: true, opacity: 0.3, side: THREE.DoubleSide
+        })
+      );
+      ring.rotation.x = Math.PI / 2;
+      scoop.add(ring);
+      scoop.userData.ring = ring;
+
+      scene.add(scoop);
+      fallingScoops.push(scoop);
+    }
+
+    // ═══════════════════════════════════════════
+    // CATCH HANDLER
+    // ═══════════════════════════════════════════
+    function onCatch(scoop) {
+      scene.remove(scoop);
+      const idx = stackedScoops.length;
+      const stackY = 1.2 + idx * 0.78;
+      const flavor = FLAVORS.find(f => f.name === scoop.userData.flavor) || FLAVORS[0];
+      const stacked = createScoop(flavor);
+      stacked.position.set(0, stackY, 0);
+      stacked.scale.set(1.3, 0.6, 1.3); // Squash on catch
+      playerGroup.add(stacked);
+      stackedScoops.push(stacked);
+
+      wobbleV += (Math.random() - 0.5) * 0.18;
+
+      score += 100 * combo;
+      reps++;
+
+      // Combo check
+      if (stackedScoops.length >= 3) {
+        const last3 = stackedScoops.slice(-3).map(s => s.userData.flavor);
+        if (last3[0] === last3[1] && last3[1] === last3[2]) {
+          combo++;
+          score += 300 * combo;
+          toast(`TRIPLE ${last3[0].toUpperCase()}! ×${combo}`);
+          sfx.combo();
+          spawnConfetti(playerGroup.position.x, stackY + playerGroup.position.y, 0, 50, true);
+        } else {
+          sfx.plop(1 + idx * 0.05);
+        }
+      } else {
+        sfx.plop(1 + idx * 0.05);
+      }
+
+      spawnConfetti(playerGroup.position.x, stackY + playerGroup.position.y, 0, 20);
+      updateHUD();
+
+      // Level complete check
+      const cfg = getLevelCfg();
+      if (stackedScoops.length >= cfg.target) {
+        gameState = 'levelComplete';
+        sfx.fanfare();
+        showLevelComplete();
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // LEVEL COMPLETE
+    // ═══════════════════════════════════════════
+    function showLevelComplete() {
+      const cfg = getLevelCfg();
+      const rating = combo >= 3 ? 'EXCELLENT (3/3 STARS)' : combo >= 2 ? 'GREAT (2/3 STARS)' : 'GOOD (1/3 STARS)';
+      document.getElementById('m-title').textContent = cfg.title;
+      const mStars = document.getElementById('m-stars');
+      if (mStars) mStars.textContent = rating;
+      document.getElementById('m-sub').textContent =
+        `Level ${level} complete — ${stackedScoops.length} scoops balanced with ×${combo} combo. Score: ${score.toLocaleString()}`;
+      document.getElementById('m-btn').textContent = level >= 5 ? 'Victory Lap' : `Level ${level + 1} →`;
+      document.getElementById('overlay').classList.add('active');
+
+      // Big celebration confetti
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => spawnConfetti(
+          (Math.random() - 0.5) * 8, 4 + Math.random() * 3, (Math.random() - 0.5) * 4, 40, true
+        ), i * 200);
+      }
+    }
+
+    document.getElementById('m-btn').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('active');
+      // Clear scoops
+      stackedScoops.forEach(s => playerGroup.remove(s));
+      stackedScoops = [];
+      fallingScoops.forEach(s => scene.remove(s));
+      fallingScoops = [];
+      combo = 1;
+      level++;
+      gameState = 'playing';
+      lastSpawn = performance.now();
+      updateHUD();
+    });
+
+    // ═══════════════════════════════════════════
+    // INPUT — Glove + Keyboard + Mouse
+    // ═══════════════════════════════════════════
+    function updateTilt(deg) {
+      const c = Math.max(-90, Math.min(90, deg));
+      coneTiltAngle = (c / 90) * 0.5;
+      targetX = (c / 60) * 4.2;
+      const pct = 50 + (c / 90) * 50;
+      elNeedle.style.left = `${pct}%`;
+      elDeg.textContent = `${Math.round(c)}°`;
+    }
+
+    // Parent window messages
+    window.addEventListener('message', e => {
+      if (!e.data) return;
+      if (e.data.type === 'neuro-game-action') {
+        if (e.data.movement === 'pronation' || e.data.action === 'move_left') updateTilt(-55);
+        else if (e.data.movement === 'supination' || e.data.action === 'move_right') updateTilt(55);
+      }
+    });
+
+    // WebSocket glove
+    function connectGlove() {
+      try {
+        const ws = new WebSocket('ws://127.0.0.1:8765/ws');
+        ws.onmessage = (e) => {
+          try {
+            const p = JSON.parse(e.data);
+            const h = p.hands?.right || p.hands?.left;
+            const q = h?.imu?.quaternion || h?.fused_quaternion;
+            if (q) {
+              const sinr = 2 * (q.w * q.x + q.y * q.z);
+              const cosr = 1 - 2 * (q.x * q.x + q.y * q.y);
+              updateTilt(Math.atan2(sinr, cosr) * 180 / Math.PI);
+            }
+          } catch {}
+        };
+        ws.onclose = () => setTimeout(connectGlove, 3000);
+        ws.onerror = () => {};
+      } catch {}
+    }
+    connectGlove();
+
+    // Keyboard
+    let keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a') updateTilt(-55);
+      if (e.key === 'ArrowRight' || e.key === 'd') updateTilt(55);
+    });
+    window.addEventListener('keyup', e => {
+      keys[e.key] = false;
+      if (!keys['ArrowLeft'] && !keys['ArrowRight'] && !keys['a'] && !keys['d']) updateTilt(0);
+    });
+    window.addEventListener('mousemove', e => {
+      updateTilt(((e.clientX / window.innerWidth) * 2 - 1) * 65);
+    });
+
+    // Ready signal
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    // ═══════════════════════════════════════════
+    // MAIN GAME LOOP
+    // ═══════════════════════════════════════════
+    let lastTime = performance.now();
+    function animate(time) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      // Smooth movement
+      currentX += (targetX - currentX) * dt * 10;
+      currentTilt += (coneTiltAngle - currentTilt) * dt * 9;
+
+      // Wobble spring
+      const wF = -40 * wobble - 5 * wobbleV;
+      wobbleV += wF * dt; wobble += wobbleV * dt;
+
+      playerGroup.position.x = currentX;
+      playerGroup.rotation.z = -currentTilt + wobble;
+
+      // Stack bounce recovery
+      stackedScoops.forEach(s => {
+        s.scale.x += (1 - s.scale.x) * dt * 14;
+        s.scale.y += (1 - s.scale.y) * dt * 14;
+        s.scale.z += (1 - s.scale.z) * dt * 14;
+      });
+
+      // Spawn
+      const cfg = getLevelCfg();
+      if (gameState === 'playing' && time - lastSpawn > cfg.interval) {
+        spawnScoop();
+        lastSpawn = time;
+      }
+
+      // Falling scoops
+      const catchY = playerGroup.position.y + 1.2 + stackedScoops.length * 0.78;
+      for (let i = fallingScoops.length - 1; i >= 0; i--) {
+        const s = fallingScoops[i];
+        s.position.y -= s.userData.fallSpeed * dt;
+        s.rotation.y += dt * 1.2;
+        // Pulsing ring
+        if (s.userData.ring) {
+          s.userData.ring.material.opacity = 0.15 + Math.sin(time * 0.006) * 0.1;
+        }
+
+        const dy = Math.abs(s.position.y - catchY);
+        const dx = Math.abs(s.position.x - playerGroup.position.x);
+        if (dy < 0.5 && dx < 1.0) {
+          fallingScoops.splice(i, 1);
+          onCatch(s);
+        } else if (s.position.y < -2) {
+          scene.remove(s);
+          fallingScoops.splice(i, 1);
+          combo = 1;
+          updateHUD();
+          sfx.miss();
+          // Splat effect
+          spawnConfetti(s.position.x, -1.5, 0, 8);
+        }
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.position.x += p.userData.vx * dt;
+        p.position.y += p.userData.vy * dt;
+        p.position.z += p.userData.vz * dt;
+        p.userData.vy -= 12 * dt;
+        p.rotation.x += p.userData.rx * dt;
+        p.rotation.y += p.userData.ry * dt;
+        p.userData.life -= dt * 1.3;
+        p.scale.setScalar(Math.max(0.01, p.userData.life));
+        if (p.userData.life <= 0) { scene.remove(p); particles.splice(i, 1); }
+      }
+
+      // Clouds drift
+      clouds.forEach(c => {
+        c.position.x += c.userData.speed * dt;
+        if (c.position.x > 25) c.position.x = -25;
+      });
+
+      // Sparkles twinkle
+      sparkles.forEach(s => {
+        const t = time * 0.003 * s.userData.speed + s.userData.phase;
+        s.position.y += Math.sin(t) * 0.003;
+        s.rotation.x = t; s.rotation.y = t * 0.7;
+        s.scale.setScalar(0.8 + Math.sin(t * 2) * 0.3);
+      });
+
+      // Camera gentle sway
+      camera.position.x = Math.sin(time * 0.0003) * 0.3;
+      camera.position.y = 5 + Math.sin(time * 0.0005) * 0.15;
+      camera.lookAt(0, 3, 0);
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

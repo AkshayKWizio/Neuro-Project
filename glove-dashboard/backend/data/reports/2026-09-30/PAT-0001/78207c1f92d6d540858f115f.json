@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "session_id": "78207c1f92d6d540858f115f",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "pronation_supination",
+  "hand": "right",
+  "started_at": "2026-09-30T07:56:10.095231Z",
+  "ended_at": "2026-09-30T07:56:16.221456Z",
+  "duration_seconds": 6.1,
+  "outcome": "completed",
+  "glove_serial": "",
+  "calibration": null,
+  "counts": {
+    "pronation": 2,
+    "supination": 1,
+    "clockwise": 0,
+    "anticlockwise": 0,
+    "wrist_open": 0,
+    "wrist_close": 0
+  },
+  "total_repetitions": 3,
+  "events": [
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1790754976051
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1790754973370
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1790754971234
+    }
+  ],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "moving",
+      "angular_velocity": 74.73,
+      "projected_rotation": 15.85,
+      "direction_consistency": 1.0,
+      "palm_dot_change": 0.48
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.0,
+      "loop_strength": 0.0,
+      "average_velocity": 0.0,
+      "signed_area": 0.0
+    },
+    "hand_open_close": {
+      "state": "unknown",
+      "raw_flexion": 0.0,
+      "smoothed_flexion": 0.0,
+      "confidence": 0.0,
+      "open_threshold": 0.0,
+      "close_threshold": 0.0,
+      "observed_range": 0.0,
+      "channels": "BEND1+BEND2 (MCP/PIP), four fingers"
+    }
+  }
+}

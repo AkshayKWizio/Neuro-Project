@@ -1,0 +1,79 @@
+# "mode" options:
+#   - "left": Create one virtual Xbox360 vgamepad and use the controller inputs from the left hand exclusively
+#   - "right": Create one virtual Xbox360 gamepad and Use the controller inputs from the right hand exclusively
+#   - "merged_or": Create one virtual Xbox360 gamepad and OR the inputs from the left hand and the right hand (i.e. either hand can activate a shared controller button)
+#   - "merged_preferred": Create one virtual Xbox360 gamepad but select which hand controls a controller input on a field by field basis
+#   - "independent": Create two virtual Xbox360 gamepads, one for each hand, and use the control inputs from each hand for its own controller
+mode: merged_or  # Options: left, right, independent, merged_or, merged_preferred, disabled
+
+left:
+  grab_pressed: XUSB_GAMEPAD_X
+  grab_value: XUSB_GAMEPAD_X
+  button1: XUSB_GAMEPAD_B
+  button2: XUSB_GAMEPAD_A
+  trigger_pressed: left_trigger_float
+  trigger_value: left_trigger_float
+  menu_pressed: XUSB_GAMEPAD_START
+  joystick_x:  left_joystick_x
+  joystick_y: left_joystick_y
+
+right:
+  grab_pressed: XUSB_GAMEPAD_A
+  grab_value: XUSB_GAMEPAD_A
+  button1: XUSB_GAMEPAD_Y
+  button2: XUSB_GAMEPAD_X
+  trigger_pressed: right_trigger_float
+  trigger_value: right_trigger_float
+  menu_pressed: XUSB_GAMEPAD_START
+  joystick_x:  right_joystick_x
+  joystick_y: right_joystick_y
+
+merged_or:
+  grab_pressed: XUSB_GAMEPAD_X
+  grab_value: XUSB_GAMEPAD_X
+  button1: XUSB_GAMEPAD_B
+  button2: XUSB_GAMEPAD_A
+  trigger_pressed: left_trigger_float
+  trigger_value: left_trigger_float
+  menu_pressed: XUSB_GAMEPAD_START
+  joystick_x:  left_joystick_x
+  joystick_y: left_joystick_y
+
+merged_preferred:
+  joystick_x:
+    source: left
+    target: left_joystick_x
+
+  joystick_y:
+    source: left
+    target: left_joystick_y
+
+  trigger_value:
+    source: left
+    target: left_trigger_float
+
+  grab_pressed:
+    source: left
+    target: XUSB_GAMEPAD_X
+
+  button1:
+    source: right
+    target: XUSB_GAMEPAD_B
+
+  button2:
+    source: right
+    target: XUSB_GAMEPAD_A
+
+  menu_pressed:
+    source: right
+    target: XUSB_GAMEPAD_START
+
+  # Example: Use right-hand joystick for right stick
+  right_joystick_x:
+    source: right
+    target: right_joystick_x
+
+  right_joystick_y:
+    source: right
+    target: right_joystick_y
+

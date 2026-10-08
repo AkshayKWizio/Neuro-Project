@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balloon Festival — Inflate & Fly Rehabilitation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #64B5F6 0%, #BBDEFB 40%, #E1F5FE 70%, #FFF9C4 100%);
+      font-family: 'Fredoka', 'Segoe UI', sans-serif;
+      overflow: hidden; width: 100vw; height: 100vh;
+    }
+    canvas#game-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: block; z-index: 1;
+    }
+
+    /* ── Premium Glass HUD ── */
+    .hud {
+      position: absolute; top: 16px; left: 20px; right: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      pointer-events: none; z-index: 20;
+    }
+    .hud-pill {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(233,30,99,0.2);
+      border-radius: 60px; padding: 10px 28px;
+      display: flex; gap: 24px; align-items: center;
+      box-shadow: 0 8px 32px rgba(233,30,99,0.08), 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .stat-label { font-size: 10px; font-weight: 600; color: #78909C; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-val { font-size: 24px; font-weight: 700; color: #C2185B; }
+    .stat-val.green { color: #2E7D32; }
+    .stat-val.gold { color: #F57F17; }
+    .stat-val.blue { color: #0277BD; }
+
+    .level-pill {
+      background: linear-gradient(135deg, #F48FB1, #E91E63);
+      border-radius: 60px; padding: 10px 24px;
+      color: white; font-weight: 700; font-size: 14px;
+      box-shadow: 0 6px 20px rgba(233,30,99,0.3);
+      display: flex; align-items: center; gap: 10px;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .level-pill .lvl-num { font-size: 22px; }
+    .level-bar { width: 80px; height: 8px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; }
+    .level-fill { height: 100%; background: white; border-radius: 99px; transition: width 0.4s ease; }
+
+    .grip-pill {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(233,30,99,0.2);
+      border-radius: 60px; padding: 10px 20px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(233,30,99,0.08);
+    }
+    .grip-label { font-size: 10px; font-weight: 700; color: #78909C; letter-spacing: 0.08em; text-transform: uppercase; }
+    .grip-track { width: 90px; height: 8px; background: #FCE4EC; border-radius: 99px; overflow: hidden; }
+    .grip-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #F48FB1, #E91E63); border-radius: 99px; transition: width 0.1s ease; }
+    .grip-status { font-size: 12px; font-weight: 700; color: #C2185B; width: 55px; text-align: right; }
+
+    /* ── Precision Clinical Telemetry HUD ── */
+    .size-indicator {
+      position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 18px;
+      padding: 14px 22px 14px;
+      width: 380px; max-width: 92vw;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+      pointer-events: none; z-index: 25;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+
+    .gauge-header {
+      display: flex; justify-content: space-between; align-items: center; width: 100%;
+    }
+    .gauge-title {
+      font-size: 11px; font-weight: 700; color: #475569;
+      letter-spacing: 0.09em; text-transform: uppercase;
+    }
+    .gauge-readout {
+      font-size: 13px; font-weight: 700; color: #0F172A;
+      background: #F1F5F9; border: 1px solid #E2E8F0;
+      padding: 2px 9px; border-radius: 6px; font-variant-numeric: tabular-nums;
+    }
+    .gauge-readout .unit { font-size: 10px; color: #64748B; margin-left: 1px; }
+
+    .size-track {
+      position: relative; width: 100%; height: 14px;
+      background: #E2E8F0; border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .size-fill {
+      position: absolute; top: 0; bottom: 0; left: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #38BDF8, #0284C7);
+      border-radius: 99px;
+      transition: width 0.06s ease-out, background 0.2s ease;
+      z-index: 1;
+    }
+    .size-fill.perfect {
+      background: linear-gradient(90deg, #34D399, #10B981);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    }
+    .size-fill.warning {
+      background: linear-gradient(90deg, #FBBF24, #F59E0B);
+    }
+    .size-fill.danger {
+      background: linear-gradient(90deg, #F87171, #EF4444);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    }
+
+    .size-target-zone {
+      position: absolute; top: 0; bottom: 0;
+      background: rgba(16, 185, 129, 0.2);
+      border-left: 2px solid #10B981; border-right: 2px solid #10B981;
+      z-index: 2; transition: left 0.2s ease, width 0.2s ease;
+    }
+
+    .size-danger-zone {
+      position: absolute; top: 0; bottom: 0; right: 0;
+      background: rgba(239, 68, 68, 0.25);
+      border-left: 2px dashed #EF4444;
+      z-index: 2;
+    }
+
+    .size-zones-legend {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; font-size: 10px; font-weight: 600; color: #64748B;
+      letter-spacing: 0.04em; padding: 0 2px;
+    }
+    .legend-tag.target { color: #059669; font-weight: 700; }
+    .legend-tag.danger { color: #DC2626; font-weight: 700; }
+
+    /* ─── Precision Telemetry Status ─── */
+    .gauge-status {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      font-size: 12.5px; font-weight: 650; letter-spacing: 0.01em;
+      color: #0369A1; padding: 7px 16px; border-radius: 10px;
+      background: #F0F9FF; border: 1px solid #BAE6FD;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gauge-status .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #0284C7; flex-shrink: 0;
+      animation: statusPulse 1.5s infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+    .gauge-status.perfect {
+      color: #065F46; background: #ECFDF5; border-color: #6EE7B7;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+      transform: scale(1.02);
+    }
+    .gauge-status.perfect .status-dot {
+      background: #10B981; box-shadow: 0 0 8px #10B981;
+    }
+    .gauge-status.warning {
+      color: #92400E; background: #FFFBEB; border-color: #FCD34D;
+      box-shadow: 0 3px 10px rgba(245, 158, 11, 0.15);
+    }
+    .gauge-status.warning .status-dot {
+      background: #F59E0B;
+    }
+    .gauge-status.danger {
+      color: #991B1B; background: #FEF2F2; border-color: #FCA5A5;
+      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.25);
+      animation: dangerPulse 0.4s infinite alternate;
+    }
+    .gauge-status.danger .status-dot {
+      background: #EF4444; box-shadow: 0 0 8px #EF4444;
+    }
+
+    .size-zones-legend {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; padding: 0 4px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 600; color: #64748B;
+    }
+    .legend-dot {
+      width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+    }
+    .legend-dot.blue { background: #0284C7; }
+    .legend-dot.green { background: #16A34A; box-shadow: 0 0 6px rgba(22, 163, 74, 0.5); }
+    .legend-dot.red { background: #DC2626; }
+
+    .size-status-pill {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: #F0F9FF; border: 1px solid #BAE6FD;
+      border-radius: 99px; padding: 6px 16px; width: 100%;
+      font-size: 13px; font-weight: 700; color: #0284C7;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .size-status-pill.perfect {
+      background: #DCFCE7; border-color: #86EFAC; color: #15803D;
+      transform: scale(1.02); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+    }
+    .size-status-pill.warning {
+      background: #FFFBEB; border-color: #FDE68A; color: #D97706;
+    }
+    .size-status-pill.danger {
+      background: #FEF2F2; border-color: #FECACA; color: #DC2626;
+      animation: dangerPulse 0.4s ease infinite alternate;
+    }
+    @keyframes dangerPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: absolute; top: 85px; left: 50%;
+      transform: translateX(-50%) translateY(-30px) scale(0.9);
+      background: linear-gradient(135deg, #FFF3E0, #FFFFFF);
+      border: 2px solid #F48FB1; border-radius: 60px;
+      padding: 10px 32px; color: #C2185B;
+      font-size: 16px; font-weight: 700;
+      box-shadow: 0 12px 40px rgba(233,30,99,0.2);
+      opacity: 0; pointer-events: none;
+      transition: all 0.35s cubic-bezier(.34,1.56,.64,1); z-index: 30;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ─── Clinical HUD Controls Bar ─── */
+    .controls-hint {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      padding: 7px 20px; border-radius: 9999px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      font-size: 12.5px; font-weight: 550; color: #334155;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+      display: flex; gap: 12px; align-items: center;
+      pointer-events: none; z-index: 20;
+      white-space: nowrap;
+    }
+    .hint-step {
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .motion-badge {
+      display: inline-flex; align-items: center;
+      background: #0F172A; color: #FFFFFF;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px; border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .motion-badge.alt {
+      background: #0284C7; color: #FFFFFF;
+    }
+    .motion-badge.target {
+      background: #059669; color: #FFFFFF;
+    }
+    .hint-sep {
+      width: 1px; height: 14px;
+      background: rgba(15, 23, 42, 0.15);
+      display: inline-block;
+    }
+    .hint-label {
+      color: #1E293B; font-weight: 600;
+    }
+
+    /* ── Level Complete ── */
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,243,224,0.7); backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease; z-index: 100;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: linear-gradient(135deg, #FFFFFF, #FCE4EC);
+      border-radius: 32px; padding: 48px; width: 90%; max-width: 460px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(233,30,99,0.15), 0 0 0 1px rgba(233,30,99,0.1);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+    }
+    .overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-emoji { font-size: 56px; margin-bottom: 12px; }
+    .modal-title { font-size: 28px; font-weight: 700; color: #C2185B; margin-bottom: 8px; }
+    .modal-sub { font-size: 14px; color: #795548; line-height: 1.6; margin-bottom: 8px; }
+    .modal-stars { font-size: 36px; margin-bottom: 20px; }
+    .modal-btn {
+      background: linear-gradient(135deg, #F48FB1, #C2185B);
+      color: white; border: none; padding: 16px 36px;
+      border-radius: 60px; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 8px 24px rgba(194,24,91,0.3);
+      transition: transform 0.15s ease;
+    }
+    .modal-btn:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-pill">
+      <div class="stat"><span class="stat-label">Balloons</span><span class="stat-val green" id="v-reps">0</span></div>
+      <div class="stat"><span class="stat-label">Score</span><span class="stat-val" id="v-score">0</span></div>
+      <div class="stat"><span class="stat-label">Perfect</span><span class="stat-val gold" id="v-perfect">0</span></div>
+      <div class="stat"><span class="stat-label">Combo</span><span class="stat-val blue" id="v-combo">×1</span></div>
+    </div>
+    <div class="level-pill">
+      <span>Level</span><span class="lvl-num" id="v-level">1</span>
+      <div class="level-bar"><div class="level-fill" id="level-fill" style="width:0%"></div></div>
+    </div>
+    <div class="grip-pill">
+      <span class="grip-label">Hand</span>
+      <div class="grip-track"><div class="grip-bar" id="grip-bar"></div></div>
+      <span class="grip-status" id="grip-status">OPEN</span>
+    </div>
+  </div>
+
+  <div class="size-indicator" id="size-indicator" style="display:none;">
+    <div class="gauge-header">
+      <span class="gauge-title">Inflation Volume</span>
+      <div class="gauge-readout">
+        <span id="size-pct-val">0</span><span class="unit">%</span>
+      </div>
+    </div>
+
+    <div class="size-track">
+      <div class="size-fill" id="size-fill"></div>
+      <div class="size-target-zone" id="target-zone"></div>
+      <div class="size-danger-zone" id="danger-zone"></div>
+    </div>
+
+    <div class="size-zones-legend">
+      <span class="legend-tag">Low</span>
+      <span class="legend-tag target">Target Window</span>
+      <span class="legend-tag danger">Burst Limit</span>
+    </div>
+
+    <div class="gauge-status" id="size-text"><span class="status-dot"></span><span>Close fist (grasp) to pump air</span></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="controls-hint">
+    <div class="hint-step">
+      <span class="motion-badge">Grasp</span>
+      <span class="hint-label">Pump Air</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge alt">Extend</span>
+      <span class="hint-label">Release Balloon</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge target">Target</span>
+      <span class="hint-label">Green Window</span>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-badge"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C2185B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+      <h2 class="modal-title" id="m-title">Festival Complete</h2>
+      <div class="modal-stars" id="m-stars"><span class="stars-text">PERFECT REPETITIONS</span></div>
+      <p class="modal-sub" id="m-sub">Rehabilitation target reached.</p>
+      <button class="modal-btn" id="m-btn">Next Level →</button>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script type="module">
+    import * as THREE from '../lib/three.module.min.js';
+
+    // ════════════════════════════════════════════════
+    // AUDIO ENGINE
+    // ════════════════════════════════════════════════
+    class SFX {
+      constructor() { this.ctx = null; }
+      init() {
+        if (!this.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) this.ctx = new A(); }
+        if (this.ctx?.state === 'suspended') this.ctx.resume();
+      }
+      tone(freq, type, dur, vol = 0.2) {
+        this.init(); if (!this.ctx) return;
+        const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.3, 20), t + dur);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.01);
+      }
+      pump(pitch = 1) {
+        // Satisfying air pump sound
+        this.init(); if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const noise = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        noise.type = 'sawtooth';
+        noise.frequency.setValueAtTime(80 * pitch, t);
+        noise.frequency.exponentialRampToValueAtTime(200 * pitch, t + 0.06);
+        noise.frequency.exponentialRampToValueAtTime(60 * pitch, t + 0.15);
+        gain.gain.setValueAtTime(0.15, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        noise.connect(gain); gain.connect(this.ctx.destination);
+        noise.start(t); noise.stop(t + 0.2);
+        // Whoosh component
+        const w = this.ctx.createOscillator();
+        const wg = this.ctx.createGain();
+        w.type = 'sine';
+        w.frequency.setValueAtTime(300 * pitch, t);
+        w.frequency.exponentialRampToValueAtTime(500 * pitch, t + 0.08);
+        wg.gain.setValueAtTime(0.08, t);
+        wg.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        w.connect(wg); wg.connect(this.ctx.destination);
+        w.start(t); w.stop(t + 0.12);
+      }
+      stretch(size) {
+        // Rubber stretching sound — higher pitch as bigger
+        this.tone(150 + size * 400, 'sine', 0.1, 0.05);
+      }
+      pop() {
+        this.init(); if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = 'square'; o.frequency.setValueAtTime(800, t);
+        o.frequency.exponentialRampToValueAtTime(40, t + 0.06);
+        g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.1);
+        // Secondary burst
+        const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
+        o2.type = 'sawtooth'; o2.frequency.setValueAtTime(200, t + 0.02);
+        o2.frequency.exponentialRampToValueAtTime(30, t + 0.12);
+        g2.gain.setValueAtTime(0.3, t + 0.02); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        o2.connect(g2); g2.connect(this.ctx.destination); o2.start(t + 0.02); o2.stop(t + 0.15);
+      }
+      release() {
+        // Happy tie-off and woosh upward
+        [440, 554, 659].forEach((f, i) => setTimeout(() => this.tone(f, 'triangle', 0.25, 0.2), i * 50));
+      }
+      perfect() {
+        [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.35, 0.25), i * 60));
+      }
+      fanfare() {
+        [392, 523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.7, 0.25), i * 65));
+      }
+    }
+    const sfx = new SFX();
+
+    // ════════════════════════════════════════════════
+    // RENDERER
+    // ════════════════════════════════════════════════
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.4;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+
+    // Sky gradient
+    const skyC = document.createElement('canvas');
+    skyC.width = 2; skyC.height = 512;
+    const sCtx = skyC.getContext('2d');
+    const sG = sCtx.createLinearGradient(0, 0, 0, 512);
+    sG.addColorStop(0, '#42A5F5');
+    sG.addColorStop(0.3, '#64B5F6');
+    sG.addColorStop(0.55, '#90CAF9');
+    sG.addColorStop(0.75, '#E1F5FE');
+    sG.addColorStop(1, '#FFF9C4');
+    sCtx.fillStyle = sG; sCtx.fillRect(0, 0, 2, 512);
+    const skyTex = new THREE.CanvasTexture(skyC);
+    skyTex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = skyTex;
+    scene.environment = skyTex;
+    scene.fog = new THREE.FogExp2(0xE1F5FE, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 300);
+    camera.position.set(0, 3.5, 10);
+    camera.lookAt(0, 3, 0);
+
+    // ════════════════════════════════════════════════
+    // LIGHTING — warm, sunny, festive
+    // ════════════════════════════════════════════════
+    scene.add(new THREE.AmbientLight(0xFFF8E1, 0.75));
+
+    const sun = new THREE.DirectionalLight(0xFFFDE7, 2.2);
+    sun.position.set(10, 20, 12);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 50;
+    sun.shadow.camera.left = -15; sun.shadow.camera.right = 15;
+    sun.shadow.camera.top = 15; sun.shadow.camera.bottom = -5;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.02;
+    scene.add(sun);
+
+    scene.add(new THREE.DirectionalLight(0x81D4FA, 0.6).translateX(-8).translateY(5));
+    scene.add(new THREE.DirectionalLight(0xFFCC80, 0.4).translateZ(10).translateY(3));
+
+    // ════════════════════════════════════════════════
+    // ENVIRONMENT — Sunny Park Festival
+    // ════════════════════════════════════════════════
+
+    // Rolling green ground
+    const groundGeo = new THREE.CircleGeometry(60, 64);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x81C784, roughness: 0.85 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2; ground.position.y = -1;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Flower patches
+    const flowerColors = [0xE91E63, 0xFFEB3B, 0xE040FB, 0xFF5722, 0x00BCD4, 0xFF9800];
+    for (let i = 0; i < 80; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 3 + Math.random() * 20;
+      const fx = Math.cos(angle) * dist;
+      const fz = Math.sin(angle) * dist;
+      if (Math.abs(fx) < 2.5 && fz > -3 && fz < 6) continue; // Keep center clear
+
+      const flower = new THREE.Group();
+      // Stem
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 0.3 + Math.random() * 0.3, 4),
+        new THREE.MeshStandardMaterial({ color: 0x4CAF50, roughness: 0.8 })
+      );
+      stem.position.y = 0.15;
+      flower.add(stem);
+      // Petals
+      const petalColor = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+      for (let p = 0; p < 5; p++) {
+        const petal = new THREE.Mesh(
+          new THREE.SphereGeometry(0.06 + Math.random() * 0.03, 6, 5),
+          new THREE.MeshStandardMaterial({ color: petalColor, roughness: 0.5, emissive: petalColor, emissiveIntensity: 0.1 })
+        );
+        const pa = (p / 5) * Math.PI * 2;
+        petal.position.set(Math.cos(pa) * 0.06, 0.35, Math.sin(pa) * 0.06);
+        flower.add(petal);
+      }
+      // Center
+      flower.add(new THREE.Mesh(
+        new THREE.SphereGeometry(0.04, 6, 5),
+        new THREE.MeshStandardMaterial({ color: 0xFFEB3B, roughness: 0.4 })
+      ).translateY(0.35));
+      flower.position.set(fx, -1, fz);
+      scene.add(flower);
+    }
+
+    // Trees
+    function makeTree(x, z, scale = 1) {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12 * scale, 0.18 * scale, 2 * scale, 8),
+        new THREE.MeshStandardMaterial({ color: 0x795548, roughness: 0.9 })
+      );
+      trunk.position.y = scale; trunk.castShadow = true;
+      g.add(trunk);
+      const leafColors = [0x66BB6A, 0x81C784, 0x4CAF50, 0xA5D6A7, 0x43A047];
+      for (let i = 0; i < 5; i++) {
+        const leaf = new THREE.Mesh(
+          new THREE.SphereGeometry((0.5 + Math.random() * 0.4) * scale, 10, 8),
+          new THREE.MeshStandardMaterial({ color: leafColors[i % 5], roughness: 0.7 })
+        );
+        leaf.position.set(
+          (Math.random() - 0.5) * scale * 0.6,
+          2 * scale + (Math.random() - 0.2) * scale * 0.6,
+          (Math.random() - 0.5) * scale * 0.6
+        );
+        leaf.castShadow = true;
+        g.add(leaf);
+      }
+      g.position.set(x, -1, z);
+      return g;
+    }
+    [-7, -4, 4, 7, -9, 9].forEach((x, i) => {
+      scene.add(makeTree(x, -4 - Math.random() * 6, 0.8 + Math.random() * 0.7));
+    });
+    [-6, 0, 6].forEach(x => scene.add(makeTree(x, -10 - Math.random() * 4, 1 + Math.random() * 0.5)));
+
+    // Festival bunting / pennant strings
+    function makeBunting(y, z, count = 16) {
+      const g = new THREE.Group();
+      const bColors = [0xE91E63, 0xFFEB3B, 0x2196F3, 0x4CAF50, 0xFF9800, 0x9C27B0];
+      const span = count * 0.9;
+      for (let i = 0; i < count; i++) {
+        const flag = new THREE.Mesh(
+          new THREE.ConeGeometry(0.18, 0.35, 3),
+          new THREE.MeshStandardMaterial({
+            color: bColors[i % bColors.length], roughness: 0.5,
+            side: THREE.DoubleSide
+          })
+        );
+        const x = (i / (count - 1)) * span - span / 2;
+        const sag = Math.sin((i / (count - 1)) * Math.PI) * 0.6;
+        flag.position.set(x, y - sag, z);
+        flag.rotation.x = Math.PI;
+        g.add(flag);
+      }
+      // Wire
+      const wire = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(
+          Array.from({ length: count }, (_, i) => {
+            const x = (i / (count - 1)) * span - span / 2;
+            const sag = Math.sin((i / (count - 1)) * Math.PI) * 0.6;
+            return new THREE.Vector3(x, y - sag + 0.18, z);
+          })
+        ),
+        new THREE.LineBasicMaterial({ color: 0x9E9E9E })
+      );
+      g.add(wire);
+      return g;
+    }
+    scene.add(makeBunting(6, -2, 18));
+    scene.add(makeBunting(7, -5, 14));
+
+    // Festival booth / table
+    const booth = new THREE.Group();
+    const tableTop = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 0.12, 1.5),
+      new THREE.MeshStandardMaterial({ color: 0xFFF8E1, roughness: 0.6 })
+    );
+    tableTop.position.y = 0.9; tableTop.castShadow = true; tableTop.receiveShadow = true;
+    booth.add(tableTop);
+    // Legs
+    [[-1.2, 0.3], [1.2, 0.3], [-1.2, -0.5], [1.2, -0.5]].forEach(([x, z]) => {
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8),
+        new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.7 })
+      );
+      leg.position.set(x, 0.45, z);
+      booth.add(leg);
+    });
+    // Pump on table
+    const pumpBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.25, 0.5, 16),
+      new THREE.MeshStandardMaterial({ color: 0xF44336, roughness: 0.4, metalness: 0.3 })
+    );
+    pumpBody.position.set(0, 1.25, 0);
+    booth.add(pumpBody);
+    const pumpHandle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8),
+      new THREE.MeshStandardMaterial({ color: 0x424242, metalness: 0.5, roughness: 0.4 })
+    );
+    pumpHandle.position.set(0, 1.65, 0);
+    booth.add(pumpHandle);
+    const pumpTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 0.06, 12),
+      new THREE.MeshStandardMaterial({ color: 0x212121, metalness: 0.6, roughness: 0.3 })
+    );
+    pumpTop.position.set(0, 1.87, 0);
+    booth.add(pumpTop);
+    // Hose
+    const hoseGeo = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.2, 1.2, 0),
+        new THREE.Vector3(0.5, 1.4, 0.3),
+        new THREE.Vector3(0.7, 1.8, 0.1),
+        new THREE.Vector3(0.3, 2.2, -0.1),
+      ]),
+      20, 0.03, 8, false
+    );
+    const hose = new THREE.Mesh(hoseGeo,
+      new THREE.MeshStandardMaterial({ color: 0x616161, roughness: 0.6 })
+    );
+    booth.add(hose);
+    booth.position.set(0, -1, 3);
+    scene.add(booth);
+
+    // Clouds
+    function makeCloud(x, y, z) {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.95 });
+      for (let i = 0; i < 6; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.5 + Math.random() * 0.7, 10, 8), mat);
+        p.position.set(i * 0.6 - 1.5, (Math.random() - 0.5) * 0.25, (Math.random() - 0.5) * 0.3);
+        p.scale.y = 0.55;
+        g.add(p);
+      }
+      g.position.set(x, y, z);
+      return g;
+    }
+    const clouds = [];
+    for (let i = 0; i < 8; i++) {
+      const c = makeCloud((Math.random() - 0.5) * 50, 14 + Math.random() * 8, -20 - Math.random() * 15);
+      c.userData.speed = 0.12 + Math.random() * 0.2;
+      scene.add(c); clouds.push(c);
+    }
+
+    // Ambient sparkles
+    const sparkles = [];
+    for (let i = 0; i < 25; i++) {
+      const sp = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.04 + Math.random() * 0.03, 0),
+        new THREE.MeshStandardMaterial({
+          color: [0xFFD54F, 0xF48FB1, 0x81D4FA, 0xA5D6A7, 0xFFCC80][i % 5],
+          emissive: [0xFFD54F, 0xF48FB1, 0x81D4FA, 0xA5D6A7, 0xFFCC80][i % 5],
+          emissiveIntensity: 0.5, roughness: 0.2
+        })
+      );
+      sp.position.set(
+        (Math.random() - 0.5) * 16, 2 + Math.random() * 12, (Math.random() - 0.5) * 10
+      );
+      sp.userData = { phase: Math.random() * Math.PI * 2, speed: 1 + Math.random() * 2 };
+      scene.add(sp); sparkles.push(sp);
+    }
+
+    // ════════════════════════════════════════════════
+    // BALLOON COLORS
+    // ════════════════════════════════════════════════
+    const BCOLORS = [
+      { color: 0xE91E63, emissive: 0x880E4F, name: 'Pink' },
+      { color: 0x2196F3, emissive: 0x0D47A1, name: 'Blue' },
+      { color: 0x4CAF50, emissive: 0x1B5E20, name: 'Green' },
+      { color: 0xFFEB3B, emissive: 0xF57F17, name: 'Yellow' },
+      { color: 0xFF9800, emissive: 0xE65100, name: 'Orange' },
+      { color: 0x9C27B0, emissive: 0x4A148C, name: 'Purple' },
+      { color: 0x00BCD4, emissive: 0x006064, name: 'Teal' },
+      { color: 0xF44336, emissive: 0xB71C1C, name: 'Red' },
+    ];
+
+    // ════════════════════════════════════════════════
+    // BALLOON CREATION — the one being inflated
+    // ════════════════════════════════════════════════
+    let activeBalloon = null;
+    let activeBalloonSize = 0; // 0 to 1+
+    let activeBalloonColor = null;
+    let activePumpCount = 0;
+
+    function createActiveBalloon() {
+      if (activeBalloon) { scene.remove(activeBalloon); activeBalloon = null; }
+      activeBalloonColor = BCOLORS[Math.floor(Math.random() * BCOLORS.length)];
+      activeBalloonSize = 0.05;
+      activePumpCount = 0;
+
+      const g = new THREE.Group();
+
+      // Balloon body — starts tiny
+      const bGeo = new THREE.SphereGeometry(1, 32, 24);
+      bGeo.scale(1, 1.3, 1);
+      const bMat = new THREE.MeshStandardMaterial({
+        color: activeBalloonColor.color,
+        roughness: 0.12, metalness: 0.02,
+        emissive: activeBalloonColor.emissive,
+        emissiveIntensity: 0.06,
+        transparent: true, opacity: 0.92
+      });
+      const bMesh = new THREE.Mesh(bGeo, bMat);
+      bMesh.castShadow = true;
+      g.add(bMesh);
+      g.userData.body = bMesh;
+
+      // Highlight reflection
+      const hl = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 12, 10),
+        new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.35 })
+      );
+      hl.position.set(-0.2, 0.3, 0.5);
+      g.add(hl);
+      g.userData.hl = hl;
+
+      // Neck / opening at bottom
+      const neck = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.12, 0.2, 12),
+        new THREE.MeshStandardMaterial({
+          color: activeBalloonColor.color,
+          roughness: 0.3, emissive: activeBalloonColor.emissive, emissiveIntensity: 0.04
+        })
+      );
+      neck.position.y = -1.35;
+      g.add(neck);
+      g.userData.neck = neck;
+
+      g.position.set(0.3, 2, 2.5);
+      g.scale.setScalar(activeBalloonSize);
+
+      scene.add(g);
+      activeBalloon = g;
+
+      // Show size indicator
+      document.getElementById('size-indicator').style.display = 'flex';
+      updateSizeIndicator();
+    }
+
+    // ════════════════════════════════════════════════
+    // RELEASED BALLOONS — float away beautifully
+    // ════════════════════════════════════════════════
+    const releasedBalloons = [];
+
+    function createReleasedBalloon(color, size, x, y, z) {
+      const g = new THREE.Group();
+      const bGeo = new THREE.SphereGeometry(size * 0.9, 28, 22);
+      bGeo.scale(1, 1.3, 1);
+      const bMat = new THREE.MeshStandardMaterial({
+        color: color.color, roughness: 0.12, metalness: 0.02,
+        emissive: color.emissive, emissiveIntensity: 0.06,
+        transparent: true, opacity: 0.9
+      });
+      const bMesh = new THREE.Mesh(bGeo, bMat);
+      bMesh.castShadow = true;
+      g.add(bMesh);
+
+      // Highlight
+      const hl = new THREE.Mesh(
+        new THREE.SphereGeometry(size * 0.22, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.3 })
+      );
+      hl.position.set(-size * 0.2, size * 0.3, size * 0.45);
+      g.add(hl);
+
+      // Knot
+      const knot = new THREE.Mesh(
+        new THREE.ConeGeometry(size * 0.08, size * 0.12, 8),
+        new THREE.MeshStandardMaterial({ color: color.color, roughness: 0.3 })
+      );
+      knot.position.y = -size * 1.35;
+      knot.rotation.x = Math.PI;
+      g.add(knot);
+
+      // String with curve
+      const stringPts = [];
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        stringPts.push(new THREE.Vector3(
+          Math.sin(t * Math.PI * 2) * 0.05 * size,
+          -size * 1.4 - t * size * 1.5,
+          Math.cos(t * Math.PI * 3) * 0.03 * size
+        ));
+      }
+      const stringGeo = new THREE.TubeGeometry(
+        new THREE.CatmullRomCurve3(stringPts), 20, 0.008 * size, 4, false
+      );
+      const string = new THREE.Mesh(stringGeo,
+        new THREE.MeshBasicMaterial({ color: 0x9E9E9E })
+      );
+      g.add(string);
+
+      g.position.set(x, y, z);
+      g.userData = {
+        floatSpeed: 0.8 + Math.random() * 0.6,
+        swayPhase: Math.random() * Math.PI * 2,
+        swaySpeed: 0.5 + Math.random() * 0.5,
+        driftX: (Math.random() - 0.5) * 0.3
+      };
+
+      scene.add(g);
+      releasedBalloons.push(g);
+    }
+
+    // ════════════════════════════════════════════════
+    // PARTICLES
+    // ════════════════════════════════════════════════
+    const particles = [];
+    function spawnParticles(x, y, z, count = 30, colors = null, big = false) {
+      const pColors = colors || [0xE91E63, 0x2196F3, 0xFFEB3B, 0x4CAF50, 0xFF9800, 0x9C27B0];
+      for (let i = 0; i < count; i++) {
+        const shapes = [
+          new THREE.SphereGeometry(0.04 + Math.random() * 0.03, 6, 5),
+          new THREE.BoxGeometry(0.06, 0.06, 0.015),
+          new THREE.OctahedronGeometry(0.04, 0)
+        ];
+        const c = pColors[i % pColors.length];
+        const p = new THREE.Mesh(shapes[i % 3],
+          new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.25, roughness: 0.3 })
+        );
+        p.position.set(x, y, z);
+        const a = Math.random() * Math.PI * 2;
+        const sp = (big ? 5 : 2.5) + Math.random() * 3;
+        p.userData = {
+          vx: Math.cos(a) * sp, vy: 2 + Math.random() * 4, vz: Math.sin(a) * sp * 0.5,
+          rx: Math.random() * 12, ry: Math.random() * 12, life: 1
+        };
+        scene.add(p); particles.push(p);
+      }
+    }
+
+    // Pop-specific fragments (rubber shreds)
+    function spawnPopFragments(x, y, z, color) {
+      for (let i = 0; i < 18; i++) {
+        const frag = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.08 + Math.random() * 0.1, 0.04 + Math.random() * 0.06),
+          new THREE.MeshStandardMaterial({
+            color: color.color, roughness: 0.3, side: THREE.DoubleSide,
+            emissive: color.emissive, emissiveIntensity: 0.1
+          })
+        );
+        frag.position.set(x, y, z);
+        const a = Math.random() * Math.PI * 2;
+        const sp = 3 + Math.random() * 4;
+        frag.userData = {
+          vx: Math.cos(a) * sp, vy: 2 + Math.random() * 5, vz: Math.sin(a) * sp * 0.6,
+          rx: Math.random() * 20, ry: Math.random() * 20, life: 1
+        };
+        scene.add(frag); particles.push(frag);
+      }
+    }
+
+    // ════════════════════════════════════════════════
+    // GAME STATE
+    // ════════════════════════════════════════════════
+    let level = 1, reps = 0, score = 0, perfectCount = 0, combo = 1;
+    let gameState = 'playing';
+    let isGripping = false;
+    let pumpTimer = null;
+
+    const LEVELS = [
+      { target: 4,  pumpRate: 0.09, deflateRate: 0.008, perfectZone: [0.38, 0.62], popAt: 0.88, title: 'Warm Up' },
+      { target: 6,  pumpRate: 0.08, deflateRate: 0.012, perfectZone: [0.40, 0.60], popAt: 0.85, title: 'Festival Fun' },
+      { target: 8,  pumpRate: 0.07, deflateRate: 0.015, perfectZone: [0.42, 0.58], popAt: 0.82, title: 'Balloon Artist' },
+      { target: 10, pumpRate: 0.065, deflateRate: 0.018, perfectZone: [0.43, 0.57], popAt: 0.80, title: 'Sky Master' },
+      { target: 12, pumpRate: 0.06, deflateRate: 0.02,  perfectZone: [0.45, 0.55], popAt: 0.78, title: 'Legendary Inflator' },
+    ];
+    function getLvl() { return LEVELS[Math.min(level - 1, LEVELS.length - 1)]; }
+
+    // ════════════════════════════════════════════════
+    // HUD
+    // ════════════════════════════════════════════════
+    const elReps = document.getElementById('v-reps');
+    const elScore = document.getElementById('v-score');
+    const elPerfect = document.getElementById('v-perfect');
+    const elCombo = document.getElementById('v-combo');
+    const elLevel = document.getElementById('v-level');
+    const elLevelFill = document.getElementById('level-fill');
+    const elToast = document.getElementById('toast');
+    const elGripBar = document.getElementById('grip-bar');
+    const elGripStatus = document.getElementById('grip-status');
+    const elSizeFill = document.getElementById('size-fill');
+    const elSizeText = document.getElementById('size-text');
+    const elTargetZone = document.getElementById('target-zone');
+    const elSizePctVal = document.getElementById('size-pct-val');
+
+    let toastTimer = null;
+    function toast(txt) {
+      elToast.textContent = txt; elToast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => elToast.classList.remove('show'), 2000);
+    }
+
+    function updateHUD() {
+      elReps.textContent = reps;
+      elScore.textContent = score.toLocaleString();
+      elPerfect.textContent = perfectCount;
+      elCombo.textContent = `×${combo}`;
+      elLevel.textContent = level;
+      const cfg = getLvl();
+      elLevelFill.style.width = `${Math.min(100, (reps / cfg.target) * 100)}%`;
+    }
+
+    function updateSizeIndicator() {
+      const pct = Math.min(100, Math.round(activeBalloonSize * 100));
+      if (elSizePctVal) elSizePctVal.textContent = pct;
+      if (elSizeFill) elSizeFill.style.width = `${pct}%`;
+
+      const cfg = getLvl();
+      elTargetZone.style.left = `${cfg.perfectZone[0] * 100}%`;
+      elTargetZone.style.width = `${(cfg.perfectZone[1] - cfg.perfectZone[0]) * 100}%`;
+
+      const elDangerZone = document.getElementById('danger-zone');
+      if (elDangerZone) {
+        elDangerZone.style.left = `${cfg.popAt * 100}%`;
+        elDangerZone.style.width = `${(1 - cfg.popAt) * 100}%`;
+      }
+
+      if (elSizeFill) elSizeFill.className = 'size-fill';
+      if (elSizeText) elSizeText.className = 'gauge-status';
+
+      if (activeBalloonSize < cfg.perfectZone[0]) {
+        elSizeText.innerHTML = '<span class="status-dot"></span><span>Close fist (grasp) to pump air</span>';
+      } else if (activeBalloonSize >= cfg.perfectZone[0] && activeBalloonSize <= cfg.perfectZone[1]) {
+        elSizeText.innerHTML = '<span class="status-dot"></span><span>Target reached — Open hand to release!</span>';
+        if (elSizeFill) elSizeFill.classList.add('perfect');
+        if (elSizeText) elSizeText.classList.add('perfect');
+      } else if (activeBalloonSize < cfg.popAt) {
+        elSizeText.innerHTML = '<span class="status-dot"></span><span>Caution: High pressure — Open hand now!</span>';
+        if (elSizeFill) elSizeFill.classList.add('warning');
+        if (elSizeText) elSizeText.classList.add('warning');
+      } else {
+        elSizeText.innerHTML = '<span class="status-dot"></span><span>Burst hazard — Open hand immediately!</span>';
+        if (elSizeFill) elSizeFill.classList.add('danger');
+        if (elSizeText) elSizeText.classList.add('danger');
+      }
+    }
+
+    // ════════════════════════════════════════════════
+    // PUMP ACTION
+    // ════════════════════════════════════════════════
+    function doPump() {
+      if (!activeBalloon || gameState !== 'playing') return;
+      const cfg = getLvl();
+      activeBalloonSize += cfg.pumpRate;
+      activePumpCount++;
+
+      // Sound gets higher pitched as balloon gets bigger
+      sfx.pump(1 + activeBalloonSize * 0.8);
+
+      // Animate pump handle
+      pumpHandle.position.y = 1.45;
+      setTimeout(() => { if (pumpHandle) pumpHandle.position.y = 1.65; }, 100);
+
+      // Squash-stretch on balloon
+      if (activeBalloon) {
+        activeBalloon.scale.set(
+          activeBalloonSize * 1.15,
+          activeBalloonSize * 0.85,
+          activeBalloonSize * 1.15
+        );
+      }
+
+      // Check for pop
+      if (activeBalloonSize >= cfg.popAt + 0.05) {
+        popCurrentBalloon();
+        return;
+      }
+
+      updateSizeIndicator();
+    }
+
+    function popCurrentBalloon() {
+      if (!activeBalloon) return;
+      sfx.pop();
+
+      const pos = activeBalloon.position.clone();
+      spawnPopFragments(pos.x, pos.y, pos.z, activeBalloonColor);
+      spawnParticles(pos.x, pos.y, pos.z, 20);
+
+      scene.remove(activeBalloon);
+      activeBalloon = null;
+
+      combo = 1;
+      score = Math.max(0, score - 50);
+      toast('POP! -50 points');
+      updateHUD();
+
+      // Spawn new balloon after delay
+      setTimeout(() => {
+        if (gameState === 'playing') createActiveBalloon();
+      }, 800);
+    }
+
+    function releaseBalloon() {
+      if (!activeBalloon || gameState !== 'playing') return;
+      const cfg = getLvl();
+
+      // Check if balloon is big enough
+      if (activeBalloonSize < 0.15) {
+        toast('Too small! Continue pumping');
+        return;
+      }
+
+      const pos = activeBalloon.position.clone();
+      const size = activeBalloonSize;
+
+      // Determine quality
+      let quality = 'ok';
+      let points = 50;
+      if (size >= cfg.perfectZone[0] && size <= cfg.perfectZone[1]) {
+        quality = 'perfect';
+        points = 200 * combo;
+        perfectCount++;
+        combo++;
+        sfx.perfect();
+        toast(`PERFECT INFLATION! +${points} ×${combo}`);
+        spawnParticles(pos.x, pos.y + 1, pos.z, 40, [0xFFD54F, 0xFFEB3B, 0xFFF176], true);
+      } else if (size >= cfg.perfectZone[0] * 0.7 && size < cfg.perfectZone[0]) {
+        quality = 'good';
+        points = 100 * combo;
+        sfx.release();
+        toast(`Good Release! +${points}`);
+        spawnParticles(pos.x, pos.y + 1, pos.z, 20);
+      } else if (size > cfg.perfectZone[1] && size < cfg.popAt) {
+        quality = 'big';
+        points = 80 * combo;
+        sfx.release();
+        toast(`Slightly Over-inflated! +${points}`);
+        spawnParticles(pos.x, pos.y + 1, pos.z, 20);
+      } else {
+        sfx.release();
+        toast(`Balloon Released! +${points}`);
+        spawnParticles(pos.x, pos.y + 1, pos.z, 15);
+      }
+
+      score += points;
+      reps++;
+
+      // Create the released balloon that floats away
+      scene.remove(activeBalloon);
+      activeBalloon = null;
+      createReleasedBalloon(activeBalloonColor, size * 0.9, pos.x + (Math.random() - 0.5) * 2, pos.y, pos.z - 1);
+
+      updateHUD();
+
+      // Level complete check
+      if (reps >= cfg.target) {
+        gameState = 'complete';
+        document.getElementById('size-indicator').style.display = 'none';
+        sfx.fanfare();
+        showComplete();
+        return;
+      }
+
+      // Spawn next balloon
+      setTimeout(() => {
+        if (gameState === 'playing') createActiveBalloon();
+      }, 600);
+    }
+
+    // ════════════════════════════════════════════════
+    // LEVEL COMPLETE
+    // ════════════════════════════════════════════════
+    function showComplete() {
+      const cfg = getLvl();
+      document.getElementById('m-title').textContent = cfg.title + ' Complete';
+      const mStars = document.getElementById('m-stars');
+      if (mStars) {
+        const rating = perfectCount >= Math.floor(cfg.target * 0.7) ? 'EXCELLENT (3/3 STARS)' :
+                       perfectCount >= Math.floor(cfg.target * 0.4) ? 'GREAT (2/3 STARS)' : 'GOOD (1/3 STARS)';
+        mStars.textContent = rating;
+      }
+      document.getElementById('m-sub').textContent =
+        `Level ${level} — ${reps} balloons released, ${perfectCount} perfect, ×${combo} max combo.\nScore: ${score.toLocaleString()}`;
+      document.getElementById('m-btn').textContent = level >= 5 ? 'Grand Festival Complete' : `Level ${level + 1} →`;
+      document.getElementById('overlay').classList.add('active');
+
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => spawnParticles(
+          (Math.random() - 0.5) * 6, 4 + Math.random() * 3, (Math.random() - 0.5) * 3, 35, null, true
+        ), i * 250);
+      }
+    }
+
+    document.getElementById('m-btn').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('active');
+      combo = 1; level++; reps = 0; perfectCount = 0;
+      gameState = 'playing';
+      createActiveBalloon();
+      updateHUD();
+    });
+
+    // ════════════════════════════════════════════════
+    // INPUT — Grip = Pump, Release = Tie off
+    // ════════════════════════════════════════════════
+    function onGrip() {
+      if (isGripping || gameState !== 'playing') return;
+      isGripping = true;
+      elGripBar.style.width = '100%';
+      elGripStatus.textContent = 'GRIP';
+
+      doPump();
+      // Continuous pumping while gripping
+      clearInterval(pumpTimer);
+      pumpTimer = setInterval(doPump, 280);
+    }
+
+    function onRelease() {
+      if (!isGripping) return;
+      isGripping = false;
+      elGripBar.style.width = '0%';
+      elGripStatus.textContent = 'OPEN';
+      clearInterval(pumpTimer);
+
+      releaseBalloon();
+    }
+
+    // Parent window messages (neuro glove)
+    window.addEventListener('message', e => {
+      if (!e.data) return;
+      if (e.data.type === 'neuro-game-action') {
+        if (e.data.movement === 'wrist_close' || e.data.action === 'primary_action') onGrip();
+        else if (e.data.movement === 'wrist_open' || e.data.action === 'secondary_action') onRelease();
+      }
+    });
+
+    // WebSocket glove telemetry
+    function connectGlove() {
+      try {
+        const ws = new WebSocket('ws://127.0.0.1:8765/ws');
+        ws.onmessage = (e) => {
+          try {
+            const p = JSON.parse(e.data);
+            const h = p.hands?.right || p.hands?.left;
+            if (h?.bend_sensors) {
+              const avg = h.bend_sensors.reduce((a, b) => a + b, 0) / h.bend_sensors.length;
+              if (avg > 0.6) onGrip(); else if (avg < 0.3) onRelease();
+            }
+          } catch {}
+        };
+        ws.onclose = () => setTimeout(connectGlove, 3000);
+        ws.onerror = () => {};
+      } catch {}
+    }
+    connectGlove();
+
+    // Keyboard + Mouse
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); onGrip(); }
+    });
+    window.addEventListener('keyup', e => {
+      if (e.code === 'Space' || e.key === ' ') onRelease();
+    });
+    window.addEventListener('mousedown', e => { e.preventDefault(); onGrip(); });
+    window.addEventListener('mouseup', () => onRelease());
+
+    // Ready signal
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    // ════════════════════════════════════════════════
+    // START FIRST BALLOON
+    // ════════════════════════════════════════════════
+    createActiveBalloon();
+    updateHUD();
+
+    // ════════════════════════════════════════════════
+    // GAME LOOP
+    // ════════════════════════════════════════════════
+    let lastTime = performance.now();
+    function animate(time) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      // Active balloon animation
+      if (activeBalloon) {
+        const cfg = getLvl();
+
+        // Slow deflation when not pumping (balloon loses air!)
+        if (!isGripping && activeBalloonSize > 0.05) {
+          activeBalloonSize -= cfg.deflateRate * dt;
+          activeBalloonSize = Math.max(0.05, activeBalloonSize);
+          updateSizeIndicator();
+        }
+
+        // Smooth scale
+        const targetScale = activeBalloonSize;
+        const currentScale = activeBalloon.scale.x;
+        const smoothed = currentScale + (targetScale - currentScale) * dt * 10;
+        activeBalloon.scale.setScalar(smoothed);
+
+        // Gentle bobbing
+        activeBalloon.position.y = 2 + Math.sin(time * 0.002) * 0.1 * activeBalloonSize;
+        activeBalloon.rotation.z = Math.sin(time * 0.0015) * 0.05;
+
+        // Wobble after pump (squash & stretch recovery)
+        const s = activeBalloon.scale;
+        const diff = s.y / s.x;
+        if (Math.abs(diff - 1) > 0.01) {
+          s.y += (s.x - s.y) * dt * 12;
+        }
+
+        // Color shift toward danger when over-inflated
+        if (activeBalloonSize > cfg.popAt * 0.9) {
+          const body = activeBalloon.userData.body;
+          if (body) {
+            const danger = (activeBalloonSize - cfg.popAt * 0.9) / (cfg.popAt * 0.15);
+            body.material.emissiveIntensity = 0.06 + danger * 0.3;
+            // Wobble more as getting close to pop
+            activeBalloon.rotation.z = Math.sin(time * (0.003 + danger * 0.01)) * (0.05 + danger * 0.1);
+          }
+        }
+      }
+
+      // Released balloons float upward
+      for (let i = releasedBalloons.length - 1; i >= 0; i--) {
+        const b = releasedBalloons[i];
+        b.position.y += b.userData.floatSpeed * dt;
+        b.position.x += b.userData.driftX * dt + Math.sin(time * 0.001 * b.userData.swaySpeed + b.userData.swayPhase) * 0.003;
+        b.rotation.z = Math.sin(time * 0.001 * b.userData.swaySpeed + b.userData.swayPhase) * 0.08;
+
+        // Shrink and fade as they go high
+        if (b.position.y > 30) {
+          const fade = Math.max(0, 1 - (b.position.y - 30) / 20);
+          b.scale.setScalar(fade * 0.8 + 0.2);
+        }
+
+        if (b.position.y > 55) {
+          scene.remove(b);
+          releasedBalloons.splice(i, 1);
+        }
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.position.x += p.userData.vx * dt;
+        p.position.y += p.userData.vy * dt;
+        p.position.z += p.userData.vz * dt;
+        p.userData.vy -= 10 * dt;
+        p.rotation.x += p.userData.rx * dt;
+        p.rotation.y += p.userData.ry * dt;
+        p.userData.life -= dt * 1.2;
+        p.scale.setScalar(Math.max(0.01, p.userData.life));
+        if (p.userData.life <= 0) { scene.remove(p); particles.splice(i, 1); }
+      }
+
+      // Clouds drift
+      clouds.forEach(c => {
+        c.position.x += c.userData.speed * dt;
+        if (c.position.x > 30) c.position.x = -30;
+      });
+
+      // Sparkles twinkle
+      sparkles.forEach(s => {
+        const t = time * 0.003 * s.userData.speed + s.userData.phase;
+        s.position.y += Math.sin(t) * 0.002;
+        s.rotation.x = t; s.rotation.y = t * 0.7;
+        s.scale.setScalar(0.7 + Math.sin(t * 2) * 0.4);
+      });
+
+      // Gentle camera sway
+      camera.position.x = Math.sin(time * 0.0003) * 0.25;
+      camera.position.y = 3.5 + Math.sin(time * 0.0005) * 0.12;
+      camera.lookAt(0, 3, 0);
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

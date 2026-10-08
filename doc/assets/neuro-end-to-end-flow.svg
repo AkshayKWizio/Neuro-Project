@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2480" viewBox="0 0 1600 2480" role="img" aria-labelledby="title desc">
+  <title id="title">Neuro end-to-end user and system flow</title>
+  <desc id="desc">Flow from local launch through license and doctor authentication, patient selection, XR Game glove connection, calibration, exercise gameplay, reporting, and return to doctor workspace.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8fbff"/><stop offset="1" stop-color="#edf5ff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0b376d" flood-opacity="0.12"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0 L12 6 L0 12 Z" fill="#4d6f98"/></marker>
+    <style>
+      .title{font:700 38px Arial,sans-serif;fill:#102b50}.sub{font:400 18px Arial,sans-serif;fill:#58708f}.lane{fill:#ffffff;stroke:#c9dbef;stroke-width:2}.laneTitle{font:700 20px Arial,sans-serif;fill:#2764c7;letter-spacing:1px}.node{filter:url(#shadow);stroke-width:2}.user{fill:#eefbf6;stroke:#278660}.system{fill:#f4f1ff;stroke:#6a54c7}.gate{fill:#e8f1ff;stroke:#2764c7}.data{fill:#fff5df;stroke:#bd7b20}.nodeTitle{font:700 18px Arial,sans-serif;fill:#152b45;text-anchor:middle}.nodeText{font:400 15px Arial,sans-serif;fill:#455c77;text-anchor:middle}.arrow{fill:none;stroke:#4d6f98;stroke-width:3;marker-end:url(#arrow)}.dash{fill:none;stroke:#8197b2;stroke-width:2.5;stroke-dasharray:8 7;marker-end:url(#arrow)}.label{font:700 14px Arial,sans-serif;fill:#31577f;text-anchor:middle}.phase{font:700 17px Arial,sans-serif;fill:#ffffff}.phaseBg{fill:#2764c7}.legend{font:600 15px Arial,sans-serif;fill:#334e6d}
+    </style>
+  </defs>
+  <rect width="1600" height="2480" fill="url(#bg)"/>
+  <text class="title" x="70" y="65">Neuro glove rehabilitation — end-to-end flow</text>
+  <text class="sub" x="70" y="98">User journey, local services, glove transport, exercise session, gameplay and reporting</text>
+
+  <rect class="lane" x="50" y="135" width="480" height="2260" rx="22"/>
+  <rect class="lane" x="560" y="135" width="480" height="2260" rx="22"/>
+  <rect class="lane" x="1070" y="135" width="480" height="2260" rx="22"/>
+  <text class="laneTitle" x="80" y="180">USER / CLINICAL WORKFLOW</text>
+  <text class="laneTitle" x="590" y="180">NEURO WEB + PYTHON</text>
+  <text class="laneTitle" x="1100" y="180">XR GAME + GLOVE + GAME</text>
+
+  <rect class="phaseBg" x="70" y="205" width="1460" height="42" rx="12"/><text class="phase" x="95" y="233">PHASE 1 · STARTUP, LICENSE AND DOCTOR ACCESS</text>
+  <rect class="node user" x="100" y="280" width="380" height="105" rx="18"/><text class="nodeTitle" x="290" y="320">Launch Neuro</text><text class="nodeText" x="290" y="350">Local URL opens in Chrome</text>
+  <rect class="node gate" x="610" y="280" width="380" height="105" rx="18"/><text class="nodeTitle" x="800" y="316">Validate license and expiry</text><text class="nodeText" x="800" y="346">Saved key or activation dialog</text><text class="nodeText" x="800" y="368">Invalid/expired access remains blocked</text>
+  <rect class="node user" x="100" y="435" width="380" height="105" rx="18"/><text class="nodeTitle" x="290" y="475">Doctor login</text><text class="nodeText" x="290" y="505">Local username and password</text>
+  <rect class="node system" x="610" y="435" width="380" height="105" rx="18"/><text class="nodeTitle" x="800" y="475">Create clinical session</text><text class="nodeText" x="800" y="505">HTTP-only cookie · 12-hour maximum</text>
+  <path class="arrow" d="M480 332 H610"/><path class="arrow" d="M800 385 V435"/><path class="arrow" d="M610 487 H480"/>
+
+  <rect class="phaseBg" x="70" y="585" width="1460" height="42" rx="12"/><text class="phase" x="95" y="613">PHASE 2 · DOCTOR WORKSPACE</text>
+  <rect class="node user" x="100" y="665" width="380" height="150" rx="18"/><text class="nodeTitle" x="290" y="704">Doctor landing page</text><text class="nodeText" x="290" y="735">Patient list · Add patient</text><text class="nodeText" x="290" y="760">Exercise preview + guidance</text><text class="nodeText" x="290" y="785">Reports without glove setup</text>
+  <rect class="node gate" x="610" y="665" width="380" height="150" rx="18"/><text class="nodeTitle" x="800" y="704">Choose patient path</text><text class="nodeText" x="800" y="735">Doctor selects assigned patient</text><text class="nodeText" x="800" y="760">or patient enters credentials</text><text class="nodeText" x="800" y="785">Patient context is visit-scoped</text>
+  <path class="arrow" d="M480 740 H610"/>
+
+  <rect class="phaseBg" x="70" y="860" width="1460" height="42" rx="12"/><text class="phase" x="95" y="888">PHASE 3 · CONNECT XR GAME AND GLOVES</text>
+  <rect class="node user" x="100" y="940" width="380" height="120" rx="18"/><text class="nodeTitle" x="290" y="980">Patient workspace opens</text><text class="nodeText" x="290" y="1010">Exercises, Live Data and Reports</text><text class="nodeText" x="290" y="1035">Connection popup if no live glove</text>
+  <rect class="node system" x="610" y="940" width="380" height="120" rx="18"/><text class="nodeTitle" x="800" y="980">Open WebSocket</text><text class="nodeText" x="800" y="1010">Start/adopt XR Game in background</text><text class="nodeText" x="800" y="1035">Register application over OSC</text>
+  <rect class="node user" x="1120" y="940" width="380" height="120" rx="18"/><text class="nodeTitle" x="1310" y="980">XR Game + glove</text><text class="nodeText" x="1310" y="1010">First-run permission handled by user</text><text class="nodeText" x="1310" y="1035">Bluetooth connection established</text>
+  <rect class="node data" x="1120" y="1100" width="380" height="135" rx="18"/><text class="nodeTitle" x="1310" y="1140">Processed OSC v1 stream</text><text class="nodeText" x="1310" y="1170">Orientation · accelerometer · sliders</text><text class="nodeText" x="1310" y="1195">26 joints · calibration · identity</text>
+  <rect class="node system" x="610" y="1100" width="380" height="135" rx="18"/><text class="nodeTitle" x="800" y="1140">Telemetry bridge</text><text class="nodeText" x="800" y="1170">Receive :9002 · command :9003</text><text class="nodeText" x="800" y="1195">Broadcast snapshots at ~30 Hz</text>
+  <path class="arrow" d="M480 1000 H610"/><path class="arrow" d="M990 1000 H1120"/><path class="arrow" d="M1310 1060 V1100"/><path class="arrow" d="M1120 1168 H990"/>
+
+  <rect class="phaseBg" x="70" y="1280" width="1460" height="42" rx="12"/><text class="phase" x="95" y="1308">PHASE 4 · HAND SELECTION, CALIBRATION AND GUIDANCE</text>
+  <rect class="node user" x="100" y="1360" width="380" height="140" rx="18"/><text class="nodeTitle" x="290" y="1400">Select hand and exercise</text><text class="nodeText" x="290" y="1430">Live left/right hand cards</text><text class="nodeText" x="290" y="1455">Only one detector is activated</text><text class="nodeText" x="290" y="1480">Calibration checked on selection</text>
+  <rect class="node gate" x="610" y="1360" width="380" height="140" rx="18"/><text class="nodeTitle" x="800" y="1400">BASIC calibration gate</text><text class="nodeText" x="800" y="1430">Match live glove serial + BASIC state</text><text class="nodeText" x="800" y="1455">Status 4 allows exercise</text><text class="nodeText" x="800" y="1480">Otherwise show popup</text>
+  <rect class="node user" x="1120" y="1360" width="380" height="140" rx="18"/><text class="nodeTitle" x="1310" y="1400">Calibration animation</text><text class="nodeText" x="1310" y="1430">XR Game Basic.json · 300 frames</text><text class="nodeText" x="1310" y="1455">User clicks Calibrate</text><text class="nodeText" x="1310" y="1480">Progress updates from live HandState</text>
+  <path class="arrow" d="M610 1168 C500 1168 500 1430 480 1430"/><path class="arrow" d="M480 1430 H610"/><path class="arrow" d="M990 1430 H1120"/><path class="dash" d="M1120 1480 C1040 1540 960 1540 900 1498"/>
+
+  <rect class="phaseBg" x="70" y="1550" width="1460" height="42" rx="12"/><text class="phase" x="95" y="1578">PHASE 5 · ACTIVE EXERCISE, GAMEPLAY AND LIVE FEEDBACK</text>
+  <rect class="node user" x="100" y="1630" width="380" height="175" rx="18"/><text class="nodeTitle" x="290" y="1670">Full-screen exercise session</text><text class="nodeText" x="290" y="1700">Primary Night Relay game panel</text><text class="nodeText" x="290" y="1725">Guidance animation + local camera</text><text class="nodeText" x="290" y="1750">Rep counter + detector drawer</text><text class="nodeText" x="290" y="1775">Tare wrist and Finish &amp; save</text>
+  <rect class="node system" x="610" y="1630" width="380" height="175" rx="18"/><text class="nodeTitle" x="800" y="1670">Selected exercise detector</text><text class="nodeText" x="800" y="1700">EMA / rolling window / state logic</text><text class="nodeText" x="800" y="1725">Confirmed movement increments count</text><text class="nodeText" x="800" y="1750">Latest event streamed to browser</text><text class="nodeText" x="800" y="1775">Report captures duration and metrics</text>
+  <rect class="node system" x="1120" y="1630" width="380" height="175" rx="18"/><text class="nodeTitle" x="1310" y="1670">Game action bridge</text><text class="nodeText" x="1310" y="1700">Movement event → postMessage</text><text class="nodeText" x="1310" y="1725">Pronation → left</text><text class="nodeText" x="1310" y="1750">Supination → right</text><text class="nodeText" x="1310" y="1775">Two-lane Night Relay response</text>
+  <path class="arrow" d="M800 1500 V1630"/><path class="arrow" d="M610 1718 H480"/><path class="arrow" d="M990 1718 H1120"/><path class="dash" d="M1120 1780 H990"/>
+
+  <rect class="phaseBg" x="70" y="1855" width="1460" height="42" rx="12"/><text class="phase" x="95" y="1883">PHASE 6 · SAVE, REPORT AND END PATIENT</text>
+  <rect class="node user" x="100" y="1935" width="380" height="135" rx="18"/><text class="nodeTitle" x="290" y="1975">Finish exercise</text><text class="nodeText" x="290" y="2005">Stop detector and close session</text><text class="nodeText" x="290" y="2030">Empty sessions are discarded</text>
+  <rect class="node data" x="610" y="1935" width="380" height="135" rx="18"/><text class="nodeTitle" x="800" y="1975">Persist report JSON</text><text class="nodeText" x="800" y="2005">Date / patient / session hierarchy</text><text class="nodeText" x="800" y="2030">Counts, duration, events and metrics</text>
+  <rect class="node user" x="1120" y="1935" width="380" height="135" rx="18"/><text class="nodeTitle" x="1310" y="1975">Report analytics</text><text class="nodeText" x="1310" y="2005">Daily trend · totals · duration</text><text class="nodeText" x="1310" y="2030">Exercise and session breakdown</text>
+  <rect class="node user" x="100" y="2125" width="380" height="135" rx="18"/><text class="nodeTitle" x="290" y="2165">End patient</text><text class="nodeText" x="290" y="2195">Return to doctor context</text><text class="nodeText" x="290" y="2220">No patient auto-restored next visit</text>
+  <rect class="node system" x="610" y="2125" width="380" height="135" rx="18"/><text class="nodeTitle" x="800" y="2165">Controlled shutdown</text><text class="nodeText" x="800" y="2195">Finish active report</text><text class="nodeText" x="800" y="2220">Stop managed XR Game and telemetry</text>
+  <path class="arrow" d="M290 1805 V1935"/><path class="arrow" d="M480 2002 H610"/><path class="arrow" d="M990 2002 H1120"/><path class="arrow" d="M290 2070 V2125"/><path class="arrow" d="M480 2192 H610"/><path class="arrow" d="M610 2192 C520 2315 370 2315 290 2260"/>
+
+  <rect x="80" y="2320" width="22" height="22" rx="5" class="user"/><text class="legend" x="115" y="2338">User-visible screen/action</text>
+  <rect x="380" y="2320" width="22" height="22" rx="5" class="system"/><text class="legend" x="415" y="2338">Application/service processing</text>
+  <rect x="735" y="2320" width="22" height="22" rx="5" class="gate"/><text class="legend" x="770" y="2338">Decision or access gate</text>
+  <rect x="1040" y="2320" width="22" height="22" rx="5" class="data"/><text class="legend" x="1075" y="2338">Data stream or persistence</text>
+  <text class="sub" x="70" y="2430">Current local prototype flow · 29 September 2026 · Doctor reports do not require glove connection</text>
+</svg>

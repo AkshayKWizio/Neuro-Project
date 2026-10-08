@@ -1,0 +1,66 @@
+flowchart TD
+    A[Launch Neuro locally] --> B{Saved license key?}
+    B -- No --> C[License activation dialog]
+    B -- Yes --> D[Validate key and expiry locally]
+    C --> D
+    D -- Invalid or expired --> E[Block application and show renew or retry]
+    D -- Valid --> F{Doctor session cookie valid?}
+    F -- No --> G[Doctor login]
+    F -- Yes --> H[Doctor workspace]
+    G --> H
+    H --> I[Patient directory and Add patient]
+    H --> J[Exercise preview and guidance animation]
+    H --> K[Reports: select patient and review history]
+    I --> L{Open patient}
+    L -- Doctor selects assigned patient --> M[Patient workspace]
+    L -- Patient credentials --> N[Patient login dialog]
+    N --> M
+    M --> O[Open telemetry WebSocket]
+    O --> P{Live glove packets received?}
+    P -- No --> Q[Connection dialog]
+    Q --> R[Start or adopt XR Game in background]
+    R --> S[User completes XR Game first-run permission if shown]
+    S --> T[XR Game connects StretchSense glove over Bluetooth]
+    T --> U[XR Game sends OSC v1 data to Python bridge]
+    U --> V[WebSocket updates UI and live 3D hands]
+    P -- Yes --> V
+    V --> W[Select left or right hand]
+    W --> X[Select one exercise]
+    X --> Y{Selected glove has current BASIC calibration?}
+    Y -- No --> Z[Calibration popup with XR Basic animation and progress]
+    Z --> AA[User clicks Calibrate]
+    AA --> AB[Python sends delete plus add BASIC OSC commands]
+    AB --> AC[XR Game captures calibration and streams progress]
+    AC --> Y
+    Y -- Yes --> AD[Start detector and report session]
+    AD --> AE[Full-screen exercise session]
+    AE --> AF[Night Relay game - primary panel]
+    AE --> AG[Guidance animation and local camera]
+    AE --> AH[Rep counter, detector drawer and wrist tare]
+    U --> AI[Exercise detector processes selected hand only]
+    AI --> AJ[Confirmed movement event]
+    AJ --> AK[Increment repetition and update live metrics]
+    AJ --> AL[Map movement to game action via postMessage]
+    AL --> AF
+    AK --> AM{Finish and save?}
+    AM -- Continue --> AI
+    AM -- Yes --> AN[Stop detector and calculate session result]
+    AN --> AO{At least one repetition?}
+    AO -- No --> AP[Discard empty session]
+    AO -- Yes --> AQ[Save date and patient JSON report]
+    AQ --> AR[Patient or doctor report analytics]
+    M --> AS[Live Data tab: rig, IMU, flexion and HandState]
+    M --> AT[End patient]
+    AT --> AU[Finish active report, disconnect XR Game, clear patient context]
+    AU --> H
+    H --> AV[Doctor logout]
+    AV --> G
+
+    classDef gate fill:#e8f1ff,stroke:#2764c7,color:#10264d;
+    classDef user fill:#eefbf6,stroke:#278660,color:#143f32;
+    classDef system fill:#f4f1ff,stroke:#6a54c7,color:#2c2254;
+    classDef data fill:#fff5df,stroke:#bd7b20,color:#51320b;
+    class B,D,F,L,P,Y,AM,AO gate;
+    class C,E,G,H,I,J,K,M,N,Q,S,W,X,Z,AA,AE,AF,AG,AH,AR,AS,AT,AV user;
+    class A,O,R,T,U,V,AB,AC,AD,AI,AJ,AK,AL,AN,AP,AU system;
+    class AQ data;

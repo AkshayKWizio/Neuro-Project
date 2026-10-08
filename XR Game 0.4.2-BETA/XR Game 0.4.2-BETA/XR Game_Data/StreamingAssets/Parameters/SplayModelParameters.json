@@ -1,0 +1,5 @@
+{
+  "ShouldBiasTowardsExtremes": true,
+  "SplaySharpness": 10.0,
+  "SplayExponentialDecay": 2.1
+}

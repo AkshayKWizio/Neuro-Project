@@ -1,0 +1,8 @@
+docs/
+.agents/
+.env*
+.qa/
+.local/
+.git/
+.github/
+coverage/

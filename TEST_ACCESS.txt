@@ -1,0 +1,13 @@
+NEURO SANITIZED HANDOFF TEST ACCESS
+
+License key: NEURO-DEMO-2026-TEAM
+Valid from: 2026-01-01 UTC
+Expires: 2027-12-31 UTC
+
+Doctor username: doctor
+Doctor password: doctor
+
+Patient username: patient
+Patient password: patient
+
+These credentials are synthetic and for local verification only. Replace them before any real patient use.

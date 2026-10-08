@@ -1,0 +1,18 @@
+[
+  {
+    "doctor_id": "DOC-DEMO-0001",
+    "patient_id": "PAT-0001"
+  },
+  {
+    "doctor_id": "DOC-DEMO-0001",
+    "patient_id": "PAT-0002"
+  },
+  {
+    "doctor_id": "DOC-DEMO-0001",
+    "patient_id": "PAT-0003"
+  },
+  {
+    "doctor_id": "DOC-DEMO-0001",
+    "patient_id": "PAT-0004"
+  }
+]

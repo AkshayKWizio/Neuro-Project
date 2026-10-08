@@ -1,0 +1,2065 @@
+{
+    "revision": "Reality",
+    "Left": [
+        {
+            "jointName": "LeftIndexMetacarpal",
+            "bendDriver": "INDEXBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.001239999,
+                -0.00016128163,
+                -0.64356697,
+                0.7653888
+            ],
+            "endQuat1": [
+                0.029310659,
+                0.033224437,
+                -0.64290035,
+                0.7646673
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftIndexProximal",
+            "bendDriver": "INDEXBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                8.249674e-05,
+                -0.00019200031,
+                -0.08715553,
+                0.9961947
+            ],
+            "endQuat1": [
+                -0.066711724,
+                -0.7632498,
+                -0.05608639,
+                0.6401981
+            ],
+            "splayDriver": "INDEXSPLAY",
+            "startQuat2": [
+                4.7461217e-05,
+                -0.00020133531,
+                0.08715841,
+                0.9961945
+            ],
+            "endQuat2": [
+                -0.066711724,
+                -0.7632498,
+                -0.05608639,
+                0.6401981
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftIndexIntermediate",
+            "bendDriver": "INDEXBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -1.9073486e-06,
+                9.301006e-12,
+                -5.83008e-06,
+                1.0
+            ],
+            "endQuat1": [
+                -7.94092e-06,
+                -0.7933533,
+                -4.645436e-06,
+                0.6087616
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftIndexDistal",
+            "bendDriver": "INDEXBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -9.536748e-06,
+                -1.9425296e-10,
+                2.0178157e-05,
+                1.0
+            ],
+            "endQuat1": [
+                5.2386426e-06,
+                -0.6087614,
+                2.1791464e-05,
+                0.7933534
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftMiddleMetacarpal",
+            "bendDriver": "MIDDLEBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.0012226006,
+                -0.00026240494,
+                -0.70782614,
+                0.7063856
+            ],
+            "endQuat1": [
+                0.032096807,
+                0.030550435,
+                -0.70709914,
+                0.7057247
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftMiddleProximal",
+            "bendDriver": "MIDDLEBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -4.768372e-07,
+                3.3378606e-06,
+                1.9875872e-08,
+                1.0
+            ],
+            "endQuat1": [
+                -0.02697304,
+                -0.7694069,
+                -0.02696334,
+                0.6376194
+            ],
+            "splayDriver": "MIDDLESPLAY",
+            "startQuat2": [
+                -4.768372e-07,
+                3.3378606e-06,
+                1.9875872e-08,
+                1.0
+            ],
+            "endQuat2": [
+                -0.02697304,
+                -0.7694069,
+                -0.02696334,
+                0.6376194
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftMiddleIntermediate",
+            "bendDriver": "MIDDLEBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                7.7425216e-07,
+                -4.448064e-06,
+                3.73443e-05,
+                1.0
+            ],
+            "endQuat1": [
+                2.9852077e-05,
+                -0.7933554,
+                2.2113076e-05,
+                0.6087588
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftMiddleDistal",
+            "bendDriver": "MIDDLEBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -2.3842978e-07,
+                -4.7683156e-07,
+                -2.3484223e-05,
+                1.0
+            ],
+            "endQuat1": [
+                -1.2322676e-05,
+                -0.5372991,
+                -1.9323661e-05,
+                0.84339184
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftRingMetacarpal",
+            "bendDriver": "RINGBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.0011967344,
+                -0.00036254126,
+                -0.7666982,
+                0.6420066
+            ],
+            "endQuat1": [
+                0.034637224,
+                0.027639983,
+                -0.76591635,
+                0.6414113
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftRingProximal",
+            "bendDriver": "RINGBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.00014590421,
+                0.00015771252,
+                0.08715536,
+                0.9961947
+            ],
+            "endQuat1": [
+                -0.0047119833,
+                -0.76635134,
+                0.006132514,
+                0.6423752
+            ],
+            "splayDriver": "RINGSPLAY",
+            "startQuat2": [
+                -0.00017015546,
+                0.00012932302,
+                -0.087153785,
+                0.99619484
+            ],
+            "endQuat2": [
+                -0.0047119833,
+                -0.76635134,
+                0.006132514,
+                0.6423752
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftRingIntermediate",
+            "bendDriver": "RINGBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                1.1924858e-06,
+                -7.486819e-13,
+                -6.2783295e-07,
+                1.0
+            ],
+            "endQuat1": [
+                -2.2309814e-06,
+                -0.7660441,
+                -2.6933826e-06,
+                0.642788
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftRingDistal",
+            "bendDriver": "RINGBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                1.882068e-11,
+                -1.470922e-05,
+                1.2795158e-06,
+                1.0
+            ],
+            "endQuat1": [
+                9.733269e-07,
+                -0.53731155,
+                1.1349672e-06,
+                0.8433839
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftPinkyMetacarpal",
+            "bendDriver": "PINKYBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.0012496862,
+                -4.3575164e-05,
+                -0.81973606,
+                0.57274014
+            ],
+            "endQuat1": [
+                0.037003197,
+                0.024938885,
+                -0.81890184,
+                0.5721963
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftPinkyProximal",
+            "bendDriver": "PINKYBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                4.3734254e-16,
+                7.711531e-17,
+                0.17364824,
+                0.9848078
+            ],
+            "endQuat1": [
+                0.06220957,
+                -0.76393086,
+                0.06196417,
+                0.63929653
+            ],
+            "splayDriver": "PINKYSPLAY",
+            "startQuat2": [
+                2.922023e-07,
+                -1.1571803e-06,
+                -0.17364752,
+                0.98480785
+            ],
+            "endQuat2": [
+                0.06220957,
+                -0.76393086,
+                0.06196417,
+                0.63929653
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftPinkyIntermediate",
+            "bendDriver": "PINKYBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                2.7135928e-07,
+                1.6260406e-11,
+                5.999406e-05,
+                1.0
+            ],
+            "endQuat1": [
+                4.4150263e-05,
+                -0.73727643,
+                4.084407e-05,
+                0.67559123
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftPinkyDistal",
+            "bendDriver": "PINKYBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -2.3830954e-07,
+                1.1921147e-06,
+                -9.146532e-05,
+                1.0
+            ],
+            "endQuat1": [
+                -4.859692e-05,
+                -0.5372977,
+                -7.714965e-05,
+                0.84339267
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftThumbMetacarpal",
+            "bendDriver": "THUMBBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 0.5,
+            "startQuat1": [
+                -0.58712125,
+                0.15749335,
+                -0.20662628,
+                0.76667476
+            ],
+            "endQuat1": [
+                -0.030894969,
+                -0.0077412203,
+                -0.49155265,
+                0.8702653
+            ],
+            "splayDriver": "THUMBSPLAY",
+            "startQuat2": [
+                -0.47933513,
+                -0.06894548,
+                -0.3919978,
+                0.78219056
+            ],
+            "endQuat2": [
+                -0.2047097,
+                -0.34759122,
+                -0.47799456,
+                0.78025347
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftThumbMetacarpal",
+            "bendDriver": "THUMBBEND1",
+            "bendStart": 0.5,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.030894969,
+                -0.0077412203,
+                -0.49155265,
+                0.8702653
+            ],
+            "endQuat1": [
+                -0.14757513,
+                -0.25713125,
+                -0.64904594,
+                0.70060295
+            ],
+            "splayDriver": "THUMBSPLAY",
+            "startQuat2": [
+                -0.2047097,
+                -0.34759122,
+                -0.47799456,
+                0.78025347
+            ],
+            "endQuat2": [
+                -0.22361977,
+                -0.55259556,
+                -0.4935212,
+                0.6333003
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftThumbProximal",
+            "bendDriver": "THUMBBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 0.5,
+            "startQuat1": [
+                -5.9163897e-19,
+                -1.4918621e-15,
+                -0.0003965775,
+                0.99999994
+            ],
+            "endQuat1": [
+                -0.21902554,
+                0.0244942,
+                -0.22070362,
+                0.9501146
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftThumbProximal",
+            "bendDriver": "THUMBBEND2",
+            "bendStart": 0.5,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.21902554,
+                0.0244942,
+                -0.22070362,
+                0.9501146
+            ],
+            "endQuat1": [
+                -2.2146844e-06,
+                -6.202606e-07,
+                -0.57390225,
+                0.81892383
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "LeftThumbDistal",
+            "bendDriver": "THUMBBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -2.6226046e-06,
+                -2.8974256e-12,
+                1.1046941e-06,
+                1.0
+            ],
+            "endQuat1": [
+                -1.8700941e-06,
+                -3.6009558e-06,
+                -0.70710534,
+                0.7071082
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        }
+    ],
+    "Right": [
+        {
+            "jointName": "RightIndexMetacarpal",
+            "bendDriver": "INDEXBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.001239999,
+                -0.00016128163,
+                0.64356697,
+                0.7653888
+            ],
+            "endQuat1": [
+                -0.029310659,
+                0.033224437,
+                0.64290035,
+                0.7646673
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightIndexProximal",
+            "bendDriver": "INDEXBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -8.249674e-05,
+                -0.00019200031,
+                0.08715553,
+                0.9961947
+            ],
+            "endQuat1": [
+                0.066711724,
+                -0.7632498,
+                0.05608639,
+                0.6401981
+            ],
+            "splayDriver": "INDEXSPLAY",
+            "startQuat2": [
+                -4.7461217e-05,
+                -0.00020133531,
+                -0.08715841,
+                0.9961945
+            ],
+            "endQuat2": [
+                0.066711724,
+                -0.7632498,
+                0.05608639,
+                0.6401981
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightIndexIntermediate",
+            "bendDriver": "INDEXBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                1.9073486e-06,
+                9.301006e-12,
+                5.83008e-06,
+                1.0
+            ],
+            "endQuat1": [
+                7.94092e-06,
+                -0.7933533,
+                4.645436e-06,
+                0.6087616
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightIndexDistal",
+            "bendDriver": "INDEXBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                9.536748e-06,
+                -1.9425296e-10,
+                -2.0178157e-05,
+                1.0
+            ],
+            "endQuat1": [
+                -5.2386426e-06,
+                -0.6087614,
+                -2.1791464e-05,
+                0.7933534
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightMiddleMetacarpal",
+            "bendDriver": "MIDDLEBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.0012226006,
+                -0.00026240494,
+                0.70782614,
+                0.7063856
+            ],
+            "endQuat1": [
+                -0.032096807,
+                0.030550435,
+                0.70709914,
+                0.7057247
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightMiddleProximal",
+            "bendDriver": "MIDDLEBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                4.768372e-07,
+                3.3378606e-06,
+                -1.9875872e-08,
+                1.0
+            ],
+            "endQuat1": [
+                0.02697304,
+                -0.7694069,
+                0.02696334,
+                0.6376194
+            ],
+            "splayDriver": "MIDDLESPLAY",
+            "startQuat2": [
+                4.768372e-07,
+                3.3378606e-06,
+                -1.9875872e-08,
+                1.0
+            ],
+            "endQuat2": [
+                0.02697304,
+                -0.7694069,
+                0.02696334,
+                0.6376194
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightMiddleIntermediate",
+            "bendDriver": "MIDDLEBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -7.7425216e-07,
+                -4.448064e-06,
+                -3.73443e-05,
+                1.0
+            ],
+            "endQuat1": [
+                -2.9852077e-05,
+                -0.7933554,
+                -2.2113076e-05,
+                0.6087588
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightMiddleDistal",
+            "bendDriver": "MIDDLEBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                2.3842978e-07,
+                -4.7683156e-07,
+                2.3484223e-05,
+                1.0
+            ],
+            "endQuat1": [
+                1.2322676e-05,
+                -0.5372991,
+                1.9323661e-05,
+                0.84339184
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightRingMetacarpal",
+            "bendDriver": "RINGBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.0011967344,
+                -0.00036254126,
+                0.7666982,
+                0.6420066
+            ],
+            "endQuat1": [
+                -0.034637224,
+                0.027639983,
+                0.76591635,
+                0.6414113
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightRingProximal",
+            "bendDriver": "RINGBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.00014590421,
+                0.00015771252,
+                -0.08715536,
+                0.9961947
+            ],
+            "endQuat1": [
+                0.0047119833,
+                -0.76635134,
+                -0.006132514,
+                0.6423752
+            ],
+            "splayDriver": "RINGSPLAY",
+            "startQuat2": [
+                0.00017015546,
+                0.00012932302,
+                0.087153785,
+                0.99619484
+            ],
+            "endQuat2": [
+                0.0047119833,
+                -0.76635134,
+                -0.006132514,
+                0.6423752
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightRingIntermediate",
+            "bendDriver": "RINGBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -1.1924858e-06,
+                -7.486819e-13,
+                6.2783295e-07,
+                1.0
+            ],
+            "endQuat1": [
+                2.2309814e-06,
+                -0.7660441,
+                2.6933826e-06,
+                0.642788
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightRingDistal",
+            "bendDriver": "RINGBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -1.882068e-11,
+                -1.470922e-05,
+                -1.2795158e-06,
+                1.0
+            ],
+            "endQuat1": [
+                -9.733269e-07,
+                -0.53731155,
+                -1.1349672e-06,
+                0.8433839
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightPinkyMetacarpal",
+            "bendDriver": "PINKYBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -0.0012496862,
+                -4.3575164e-05,
+                0.81973606,
+                0.57274014
+            ],
+            "endQuat1": [
+                -0.037003197,
+                0.024938885,
+                0.81890184,
+                0.5721963
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightPinkyProximal",
+            "bendDriver": "PINKYBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -4.3734254e-16,
+                7.711531e-17,
+                -0.17364824,
+                0.9848078
+            ],
+            "endQuat1": [
+                -0.06220957,
+                -0.76393086,
+                -0.06196417,
+                0.63929653
+            ],
+            "splayDriver": "PINKYSPLAY",
+            "startQuat2": [
+                -2.922023e-07,
+                -1.1571803e-06,
+                0.17364752,
+                0.98480785
+            ],
+            "endQuat2": [
+                -0.06220957,
+                -0.76393086,
+                -0.06196417,
+                0.63929653
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightPinkyIntermediate",
+            "bendDriver": "PINKYBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                -2.7135928e-07,
+                1.6260406e-11,
+                -5.999406e-05,
+                1.0
+            ],
+            "endQuat1": [
+                -4.4150263e-05,
+                -0.73727643,
+                -4.084407e-05,
+                0.67559123
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightPinkyDistal",
+            "bendDriver": "PINKYBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                2.3830954e-07,
+                1.1921147e-06,
+                9.146532e-05,
+                1.0
+            ],
+            "endQuat1": [
+                4.859692e-05,
+                -0.5372977,
+                7.714965e-05,
+                0.84339267
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightThumbMetacarpal",
+            "bendDriver": "THUMBBEND1",
+            "bendStart": 0.0,
+            "bendEnd": 0.5,
+            "startQuat1": [
+                0.58712125,
+                0.15749335,
+                0.20662628,
+                0.76667476
+            ],
+            "endQuat1": [
+                0.030894969,
+                -0.0077412203,
+                0.49155265,
+                0.8702653
+            ],
+            "splayDriver": "THUMBSPLAY",
+            "startQuat2": [
+                0.47933513,
+                -0.06894548,
+                0.3919978,
+                0.78219056
+            ],
+            "endQuat2": [
+                0.2047097,
+                -0.34759122,
+                0.47799456,
+                0.78025347
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightThumbMetacarpal",
+            "bendDriver": "THUMBBEND1",
+            "bendStart": 0.5,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.030894969,
+                -0.0077412203,
+                0.49155265,
+                0.8702653
+            ],
+            "endQuat1": [
+                0.14757513,
+                -0.25713125,
+                0.64904594,
+                0.70060295
+            ],
+            "splayDriver": "THUMBSPLAY",
+            "startQuat2": [
+                0.2047097,
+                -0.34759122,
+                0.47799456,
+                0.78025347
+            ],
+            "endQuat2": [
+                0.22361977,
+                -0.55259556,
+                0.4935212,
+                0.6333003
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightThumbProximal",
+            "bendDriver": "THUMBBEND2",
+            "bendStart": 0.0,
+            "bendEnd": 0.5,
+            "startQuat1": [
+                5.9163897e-19,
+                -1.4918621e-15,
+                0.0003965775,
+                0.99999994
+            ],
+            "endQuat1": [
+                0.21902554,
+                0.0244942,
+                0.22070362,
+                0.9501146
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightThumbProximal",
+            "bendDriver": "THUMBBEND2",
+            "bendStart": 0.5,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                0.21902554,
+                0.0244942,
+                0.22070362,
+                0.9501146
+            ],
+            "endQuat1": [
+                2.2146844e-06,
+                -6.202606e-07,
+                0.57390225,
+                0.81892383
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "jointName": "RightThumbDistal",
+            "bendDriver": "THUMBBEND3",
+            "bendStart": 0.0,
+            "bendEnd": 1.0,
+            "startQuat1": [
+                2.6226046e-06,
+                -2.8974256e-12,
+                -1.1046941e-06,
+                1.0
+            ],
+            "endQuat1": [
+                1.8700941e-06,
+                -3.6009558e-06,
+                0.70710534,
+                0.7071082
+            ],
+            "splayDriver": "NONE",
+            "startQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat2": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "twistDriver": "NONE",
+            "startQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "endQuat3": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "boneLoc": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        }
+    ]
+}

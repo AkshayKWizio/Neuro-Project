@@ -1,0 +1,6 @@
+v0.4.1 (2026-03-23)
+    - Remove redundant development code from mvn pipeline
+    - Add exports for src and win exe
+
+v0.4.0 (2026-03-12)
+    - Add support for Xsens MVN

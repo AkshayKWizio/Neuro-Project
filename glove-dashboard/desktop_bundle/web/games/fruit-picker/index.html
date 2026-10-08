@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fruit Picker — Neuro-Rehabilitation Rotational Biofeedback</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #fef9c3 0%, #fef08a 35%, #ecfdf5 100%);
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .hud {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 9999px;
+      padding: 6px 18px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(217, 119, 6, 0.1);
+    }
+    .stat { display: flex; align-items: baseline; gap: 5px; }
+    .stat-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #64748b; text-transform: uppercase; }
+    .stat-val { font-size: 20px; font-weight: 800; color: #ea580c; font-variant-numeric: tabular-nums; }
+    .stat-val.accent { color: #16a34a; }
+    .stat-val.combo { color: #ca8a04; }
+
+    /* Sleek Mini Wrist Gauge (Top Right) */
+    .mini-gauge {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(217, 119, 6, 0.1);
+    }
+    .gauge-label { font-size: 10px; font-weight: 800; color: #475569; letter-spacing: 0.06em; }
+    .rotation-meter {
+      position: relative;
+      width: 70px;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .rotation-needle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 6px;
+      margin-left: -3px;
+      background: #ea580c;
+      border-radius: 3px;
+      transition: left 0.08s ease-out;
+    }
+    .gauge-val { font-size: 12px; font-weight: 800; color: #ea580c; width: 32px; text-align: right; }
+
+    .controls-hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #475569;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cbd5e1;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      pointer-events: none;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: opacity 1s ease;
+    }
+    .controls-hint.fade-out {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-card">
+      <div class="stat">
+        <span class="stat-label">Score</span>
+        <span class="stat-val" id="score-val">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Repetitions</span>
+        <span class="stat-val accent" id="sliced-val">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Streak</span>
+        <span class="stat-val combo" id="combo-val">0x</span>
+      </div>
+    </div>
+
+    <div class="mini-gauge">
+      <span class="gauge-label">ROM:</span>
+      <div class="rotation-meter">
+        <div class="rotation-needle" id="rot-needle"></div>
+      </div>
+      <span class="gauge-val" id="deg-label">0°</span>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <div class="controls-hint" id="controls-hint">
+    <span style="background:#0F172A;color:#fff;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-right:6px">PRONATION / SUPINATION</span>
+    <span>Rotate forearm left and right to guide slicer</span>
+  </div>
+
+  <script>
+    // Fade out hint after 3.5s
+    setTimeout(() => {
+      const hint = document.getElementById('controls-hint');
+      if (hint) hint.classList.add('fade-out');
+    }, 3500);
+
+    // --- WebAudio Synthesizer for Blade Swooshes & Slashes ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSwooshSound() {
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+      } catch (e) {}
+    }
+
+    function playSplatSound(combo) {
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        const baseFreq = 520 + Math.min(combo * 60, 500);
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.8, now + 0.08);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.19);
+      } catch (e) {}
+    }
+
+    // --- Canvas Setup ---
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    let score = 0;
+    let fruitsSliced = 0;
+    let combo = 0;
+
+    // --- Fruits Definition ---
+    const FRUIT_TYPES = [
+      { name: 'Watermelon', radius: 48, skin: '#15803d', pulp: '#ef4444', seeds: true, points: 100 },
+      { name: 'Orange', radius: 40, skin: '#ea580c', pulp: '#fb923c', segments: true, points: 120 },
+      { name: 'Apple', radius: 38, skin: '#dc2626', pulp: '#fef08a', core: true, points: 90 },
+      { name: 'Banana', radius: 42, skin: '#eab308', pulp: '#fef9c3', curve: true, points: 110 },
+      { name: 'Kiwi', radius: 34, skin: '#78350f', pulp: '#84cc16', seeds: true, points: 150 }
+    ];
+
+    class Fruit {
+      constructor() {
+        this.reset();
+        this.y = height + 40;
+      }
+      reset() {
+        this.type = FRUIT_TYPES[Math.floor(Math.random() * FRUIT_TYPES.length)];
+        this.radius = this.type.radius;
+        this.x = width * 0.15 + Math.random() * (width * 0.7);
+        this.y = height + this.radius + 10;
+        this.vx = (Math.random() - 0.5) * 4.2;
+        this.vy = -(13.0 + Math.random() * 4.5);
+        this.gravity = 0.28;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.vRot = (Math.random() - 0.5) * 0.08;
+        this.sliced = false;
+        this.halves = [];
+      }
+      update() {
+        if (!this.sliced) {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.vy += this.gravity;
+          this.rotation += this.vRot;
+          return this.y > height + 80;
+        } else {
+          for (let h of this.halves) {
+            h.x += h.vx;
+            h.y += h.vy;
+            h.vy += this.gravity;
+            h.rotation += h.vRot;
+          }
+          return this.halves.every(h => h.y > height + 80);
+        }
+      }
+      draw(c) {
+        if (!this.sliced) {
+          c.save();
+          c.translate(this.x, this.y);
+          c.rotate(this.rotation);
+
+          // Outer Rind / Skin
+          c.beginPath();
+          c.arc(0, 0, this.radius, 0, Math.PI * 2);
+          c.fillStyle = this.type.skin;
+          c.shadowColor = 'rgba(0,0,0,0.15)';
+          c.shadowBlur = 10;
+          c.shadowOffsetY = 4;
+          c.fill();
+
+          // 3D Gloss Highlight
+          c.beginPath();
+          c.ellipse(-this.radius * 0.35, -this.radius * 0.35, this.radius * 0.35, this.radius * 0.18, -Math.PI / 4, 0, Math.PI * 2);
+          c.fillStyle = 'rgba(255, 255, 255, 0.45)';
+          c.fill();
+
+          c.restore();
+        } else {
+          for (let h of this.halves) {
+            c.save();
+            c.translate(h.x, h.y);
+            c.rotate(h.rotation);
+
+            c.beginPath();
+            c.arc(0, 0, this.radius, 0, Math.PI);
+            c.closePath();
+            c.fillStyle = this.type.skin;
+            c.fill();
+
+            c.beginPath();
+            c.arc(0, 0, this.radius * 0.88, 0, Math.PI);
+            c.closePath();
+            c.fillStyle = this.type.pulp;
+            c.fill();
+
+            if (this.type.seeds) {
+              c.fillStyle = '#0f172a';
+              c.beginPath();
+              c.arc(-this.radius * 0.4, this.radius * 0.3, 2, 0, Math.PI * 2);
+              c.arc(0, this.radius * 0.4, 2, 0, Math.PI * 2);
+              c.arc(this.radius * 0.4, this.radius * 0.3, 2, 0, Math.PI * 2);
+              c.fill();
+            }
+
+            c.restore();
+          }
+        }
+      }
+      slice(angle) {
+        if (this.sliced) return;
+        this.sliced = true;
+        const pushForce = 3.5;
+        this.halves = [
+          {
+            x: this.x - Math.cos(angle) * 10,
+            y: this.y - Math.sin(angle) * 10,
+            vx: this.vx - Math.cos(angle) * pushForce,
+            vy: this.vy - Math.sin(angle) * pushForce - 2,
+            rotation: this.rotation,
+            vRot: -0.06
+          },
+          {
+            x: this.x + Math.cos(angle) * 10,
+            y: this.y + Math.sin(angle) * 10,
+            vx: this.vx + Math.cos(angle) * pushForce,
+            vy: this.vy + Math.sin(angle) * pushForce - 2,
+            rotation: this.rotation,
+            vRot: 0.06
+          }
+        ];
+      }
+    }
+
+    class JuiceParticle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 4 + Math.random() * 8;
+        this.vx = Math.cos(ang) * spd;
+        this.vy = Math.sin(ang) * spd;
+        this.gravity = 0.25;
+        this.radius = 3 + Math.random() * 5;
+        this.life = 1.0;
+        this.decay = 0.02 + Math.random() * 0.02;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.life -= this.decay;
+        return this.life <= 0;
+      }
+      draw(c) {
+        c.save();
+        c.globalAlpha = Math.max(0, this.life);
+        c.fillStyle = this.color;
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    const fruits = [];
+    const juiceParticles = [];
+    const bladePoints = [];
+    let isSlicing = false;
+
+    for (let i = 0; i < 4; i++) fruits.push(new Fruit());
+
+    function checkSliceCollision(p1, p2) {
+      initAudio();
+      for (let f of fruits) {
+        if (!f.sliced) {
+          const dx = p2.x - p1.x;
+          const dy = p2.y - p1.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const u = Math.max(0, Math.min(1, ((f.x - p1.x) * dx + (f.y - p1.y) * dy) / (len * len)));
+          const closestX = p1.x + u * dx;
+          const closestY = p1.y + u * dy;
+          const dist = Math.hypot(f.x - closestX, f.y - closestY);
+
+          if (dist < f.radius * 1.25) {
+            const sliceAngle = Math.atan2(dy, dx) + Math.PI / 2;
+            f.slice(sliceAngle);
+            fruitsSliced++;
+            combo++;
+            score += f.type.points * combo;
+
+            for (let j = 0; j < 24; j++) {
+              juiceParticles.push(new JuiceParticle(f.x, f.y, f.type.pulp));
+            }
+
+            playSplatSound(combo);
+
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('sliced-val').innerText = fruitsSliced;
+            document.getElementById('combo-val').innerText = `${combo}x`;
+
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                type: 'neuro-game-score',
+                game: 'fruit-picker',
+                score,
+                fruitsSliced,
+                combo
+              }, '*');
+            }
+          }
+        }
+      }
+    }
+
+    // --- Mouse Drag Blade Controls ---
+    canvas.addEventListener('pointerdown', (e) => {
+      isSlicing = true;
+      bladePoints.length = 0;
+      bladePoints.push({ x: e.clientX, y: e.clientY, time: Date.now() });
+      playSwooshSound();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (isSlicing) {
+        const cur = { x: e.clientX, y: e.clientY, time: Date.now() };
+        if (bladePoints.length > 0) {
+          const prev = bladePoints[bladePoints.length - 1];
+          checkSliceCollision(prev, cur);
+        }
+        bladePoints.push(cur);
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      isSlicing = false;
+      setTimeout(() => bladePoints.length = 0, 100);
+    });
+
+    // --- Arrow Keys for Wrist Simulation ---
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'ArrowLeft') performWristSlice(-1);
+      else if (e.code === 'ArrowRight') performWristSlice(1);
+    });
+
+    function performWristSlice(direction) {
+      playSwooshSound();
+      const centerY = height * 0.45;
+      const startX = direction < 0 ? width * 0.85 : width * 0.15;
+      const endX = direction < 0 ? width * 0.15 : width * 0.85;
+      checkSliceCollision({ x: startX, y: centerY }, { x: endX, y: centerY });
+
+      bladePoints.push({ x: startX, y: centerY, time: Date.now() });
+      bladePoints.push({ x: endX, y: centerY, time: Date.now() });
+      setTimeout(() => bladePoints.length = 0, 140);
+    }
+
+    function updateWristDial(deg) {
+      const needle = document.getElementById('rot-needle');
+      const degLbl = document.getElementById('deg-label');
+      const pct = Math.max(0, Math.min(100, ((deg + 90) / 180) * 100));
+      if (needle) needle.style.left = `${pct}%`;
+      if (degLbl) degLbl.innerText = `${Math.round(deg)}°`;
+    }
+
+    function connectGloveTelemetry() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+      ws.onmessage = (evt) => {
+        try {
+          const telemetry = JSON.parse(evt.data);
+          const hand = telemetry?.hands?.right || telemetry?.hands?.left;
+          const quat = hand?.orientation?.orientation;
+          if (quat) {
+            const sinr = 2 * (quat.w * quat.x + quat.y * quat.z);
+            const cosr = 1 - 2 * (quat.x * quat.x + quat.y * quat.y);
+            const rollDeg = Math.atan2(sinr, cosr) * (180 / Math.PI);
+            updateWristDial(rollDeg);
+
+            if (Math.abs(rollDeg) > 42) {
+              performWristSlice(rollDeg > 0 ? 1 : -1);
+            }
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => setTimeout(connectGloveTelemetry, 2500);
+    }
+    connectGloveTelemetry();
+
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'neuro-game-action') {
+        if (data.movement === 'pronation' || data.action === 'move_left') {
+          updateWristDial(-55);
+          performWristSlice(-1);
+        } else if (data.movement === 'supination' || data.action === 'move_right') {
+          updateWristDial(55);
+          performWristSlice(1);
+        }
+      }
+    });
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    // --- Animation Loop ---
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      const now = Date.now();
+      for (let i = bladePoints.length - 1; i >= 0; i--) {
+        if (now - bladePoints[i].time > 180) bladePoints.splice(i, 1);
+      }
+
+      if (bladePoints.length > 1) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(bladePoints[0].x, bladePoints[0].y);
+        for (let i = 1; i < bladePoints.length; i++) {
+          ctx.lineTo(bladePoints[i].x, bladePoints[i].y);
+        }
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for (let i = fruits.length - 1; i >= 0; i--) {
+        const f = fruits[i];
+        if (f.update()) {
+          fruits.splice(i, 1);
+          fruits.push(new Fruit());
+        } else {
+          f.draw(ctx);
+        }
+      }
+
+      for (let i = juiceParticles.length - 1; i >= 0; i--) {
+        if (juiceParticles[i].update()) juiceParticles.splice(i, 1);
+        else juiceParticles[i].draw(ctx);
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

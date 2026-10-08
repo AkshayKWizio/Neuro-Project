@@ -1,0 +1,12 @@
+# "mode" options:
+#   - "left": Send haptics signals tot he left hand only
+#   - "right": Send haptics signals to the right hand only
+#   - "left_right: Send haptic signals to the left and right hands
+#   - "disabled": Disable handling of haptics signals
+mode: left_right
+send_mode: continuous  # Valid options are "oneshot" or "continuous"
+
+# Set which keypress triggers the left and right hand haptics for the demo sample
+triggers:
+  left: "l"
+  right: "r"

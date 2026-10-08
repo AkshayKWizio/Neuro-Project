@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "project": "Night Relay",
+  "purpose": "Public runtime asset provenance. Generation account identifiers, private result URLs, and raw service responses are intentionally omitted.",
+  "rights_notice": "ASSETS.md",
+  "assets": [
+    {
+      "path": "public/assets/runner-relay.glb",
+      "bytes": 3628480,
+      "sha256": "0ed1582541c433053c197d31f0b729fccfd43a508dfe2c4f194f99b44b5b9bf4",
+      "permission": "LICENSES/HIGGSFIELD-ASSETS.md",
+      "generated": "2026-09-04",
+      "service": "Higgsfield",
+      "reference_model": "Nano Banana Pro",
+      "mesh_model": "Multi-Image to 3D",
+      "input_origin": "Original text-only adult female courier brief; generated reference image; no source-game character image.",
+      "settings": {
+        "target_polycount": 40000,
+        "rigging": true,
+        "pbr": true,
+        "animation": "RunFast",
+        "height_m": 1.85
+      },
+      "processing": {
+        "embedded_texture": "2048 x 2048 JPEG, quality 91",
+        "bones": 24,
+        "animation_clip": "Armature|RunFast|baselayer",
+        "external_files": false
+      }
+    },
+    {
+      "path": "public/audio/wet-step-a.mp3",
+      "bytes": 5769,
+      "sha256": "30586a88d02420470e88eee2471753167b53c3f54a49c284a0aa328c83c6f107",
+      "permission": "LICENSES/HIGGSFIELD-ASSETS.md",
+      "generated": "2026-09-03",
+      "service": "Higgsfield",
+      "model": "Seed Audio 1.0",
+      "input_origin": "Original text-only sneaker impacts and shallow puddle splashes brief.",
+      "processing": {
+        "source_start_seconds": 0.775,
+        "duration_seconds": 0.54,
+        "sample_rate_hz": 32000,
+        "channels": 1,
+        "target_lufs": -21,
+        "codec": "MP3",
+        "edits": "Trimmed, high-pass filtered, loudness normalized, short fades."
+      }
+    },
+    {
+      "path": "public/audio/wet-step-b.mp3",
+      "bytes": 7209,
+      "sha256": "cf017c0dab0744d1f93d455f262cf8d82056d879ef51366b38acbb68b3792b1f",
+      "permission": "LICENSES/HIGGSFIELD-ASSETS.md",
+      "generated": "2026-09-03",
+      "service": "Higgsfield",
+      "model": "Seed Audio 1.0",
+      "input_origin": "Original text-only sneaker impacts and shallow puddle splashes brief.",
+      "processing": {
+        "source_start_seconds": 1.59,
+        "duration_seconds": 0.58,
+        "sample_rate_hz": 32000,
+        "channels": 1,
+        "target_lufs": -21,
+        "codec": "MP3",
+        "edits": "Trimmed, high-pass filtered, loudness normalized, short fades."
+      }
+    },
+    {
+      "path": "public/audio/wet-step-c.mp3",
+      "bytes": 5733,
+      "sha256": "9d8185dcd58ec18910694f04276b487219a6ae508b1f2ce818c1cd17f3eff451",
+      "permission": "LICENSES/HIGGSFIELD-ASSETS.md",
+      "generated": "2026-09-03",
+      "service": "Higgsfield",
+      "model": "Seed Audio 1.0",
+      "input_origin": "Original text-only sneaker impacts and shallow puddle splashes brief.",
+      "processing": {
+        "source_start_seconds": 2.4,
+        "duration_seconds": 0.59,
+        "sample_rate_hz": 32000,
+        "channels": 1,
+        "target_lufs": -21,
+        "codec": "MP3",
+        "edits": "Trimmed, high-pass filtered, loudness normalized, short fades."
+      }
+    },
+    {
+      "path": "public/audio/wet-landing.mp3",
+      "bytes": 8181,
+      "sha256": "299108122531c4b2b06bd5e9a279f8f338d5771214fe442aa976503de577da70",
+      "permission": "LICENSES/HIGGSFIELD-ASSETS.md",
+      "generated": "2026-09-03",
+      "service": "Higgsfield",
+      "model": "Seed Audio 1.0",
+      "input_origin": "Original text-only sneaker impacts and shallow puddle splashes brief.",
+      "processing": {
+        "source_start_seconds": 1.59,
+        "duration_seconds": 0.75,
+        "sample_rate_hz": 32000,
+        "channels": 1,
+        "target_lufs": -18,
+        "codec": "MP3",
+        "edits": "Trimmed, high-pass filtered, loudness normalized, short fades."
+      }
+    },
+    {
+      "path": "public/audio/runner-breath.mp3",
+      "bytes": 39741,
+      "sha256": "4b71ef32bd8e39cdfffef9b146e485158d27454f3d392bae79e468f3656dfd3c",
+      "permission": "LICENSES/HIGGSFIELD-ASSETS.md",
+      "generated": "2026-09-03",
+      "service": "Higgsfield",
+      "model": "Seed Audio 1.0",
+      "input_origin": "Original text-only athletic breathing brief.",
+      "processing": {
+        "source_start_seconds": 0.4,
+        "duration_seconds": 5.92,
+        "sample_rate_hz": 24000,
+        "channels": 1,
+        "target_lufs": -25,
+        "codec": "MP3",
+        "edits": "Trimmed, high-pass filtered, loudness normalized, short fades."
+      }
+    }
+  ]
+}

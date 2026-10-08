@@ -1,0 +1,62 @@
+rate_hz: 60.0
+host: 255.255.255.255
+port: 6940
+broadcast: true
+num_items_per_hand: 20
+character_id: 0
+output_quaternion_order: wxyz
+replace_with_kinematic_joint_names:
+- index_cmc
+- index_mcp
+- index_pip
+- index_dip
+- middle_cmc
+- middle_mcp
+- middle_pip
+- middle_dip
+- ring_cmc
+- ring_mcp
+- ring_pip
+- ring_dip
+- pinky_cmc
+- pinky_mcp
+- pinky_pip
+- pinky_dip
+- thumb_cmc
+- thumb_mcp
+- thumb_dip
+
+# Optional simple defaults file for packet-order joints
+default_bones_json_path: mvn_hand_defaults_simple.json
+
+target_transforms_json_path: mo_simple_reality.json
+
+# Optional post-step-8 finger mesh-skin twist correction (MCP/PIP/DIP only).
+# Set deg to 180 to test upside-down finger skin fixes; try axis x first, then y.
+finger_skin_twist_axis: y
+finger_skin_twist_deg: 180.0
+# Test toggle: invert non-thumb CMC bend direction without adding fixed offsets.
+invert_non_thumb_cmc_bend_direction: true
+thumb_kinematic_local_swizzle_enabled: false
+thumb_kinematic_local_swizzle_order: xyzw
+thumb_kinematic_local_swizzle_signs: [1, 1, 1, 1]
+thumb_kinematic_local_mirror_palm_plane: false
+thumb_kinematic_local_mirror_plane_axis: y
+thumb_kinematic_local_frame_remap_axis: x
+thumb_kinematic_local_frame_remap_deg: 90
+thumb_kinematic_cmc_rest_offset_deg_x: 0
+thumb_kinematic_cmc_rest_offset_deg_y: 0
+thumb_kinematic_cmc_rest_offset_deg_z: 0
+
+# Right-hand overrides (left settings used as baseline when not specified).
+thumb_kinematic_local_swizzle_enabled_right: true
+thumb_kinematic_local_swizzle_order_right: xyzw
+thumb_kinematic_local_swizzle_signs_right: [-1, -1, 1, 1]
+thumb_kinematic_local_mirror_palm_plane_right: false
+thumb_kinematic_local_mirror_plane_axis_right: y
+thumb_kinematic_local_frame_remap_axis_right: x
+thumb_kinematic_local_frame_remap_deg_right: -90
+thumb_kinematic_cmc_rest_offset_deg_x_right: 0
+thumb_kinematic_cmc_rest_offset_deg_y_right: 0
+thumb_kinematic_cmc_rest_offset_deg_z_right: 0
+

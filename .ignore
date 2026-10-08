@@ -1,0 +1,83 @@
+# ==============================================================================
+# Neuro Glove Rehabilitation Platform - Search / Ripgrep Ignore Rules (.ignore)
+# Mirrors .gitignore rules for ripgrep, ag, fd, and editor search indexers.
+# ==============================================================================
+
+# Dependencies & Package Managers
+node_modules/
+jspm_packages/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+*/.venv/
+backend/.venv/
+build/
+dist/
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Web Frameworks, Compilers & Build Artifacts
+.next/
+out/
+.vinext/
+.vite/
+*/.vite/
+dist/
+build/
+*.tsbuildinfo
+.wrangler/
+.vercel/
+
+# Logs & Temporary Files
+*.log
+!**/reality_sdk/change.log
+!**/change.log
+.logs/
+logs/
+processes.json
+*.bak
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Environment Variables
+.env
+.env.*
+.env.local
+!.env.example
+
+# Unity & Native Drivers
+*_BurstDebugInformation_DoNotShip/
+**/XR Game_BurstDebugInformation_DoNotShip/
+*.dmp
+
+# Developer Scratchpad
+scratch/
+**/scratch/
+
+# OS & Editor Metadata
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+.idea/
+.vs/
+.agents/
+.local/
+.qa/

@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rolling Wonder — Rainbow Meadow Hamster Adventure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #74C0FC 0%, #A5D8FF 35%, #D0EBFF 70%, #FFF3BF 100%);
+      font-family: 'Fredoka', 'Segoe UI', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      color: #1E293B;
+    }
+    canvas#game-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* ─── Premium Glass HUD ─── */
+    .hud {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .hud-pill {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(124, 58, 237, 0.25);
+      border-radius: 60px;
+      padding: 10px 28px;
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12), 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 700;
+      color: #7C3AED;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-val.stars { color: #F59E0B; }
+    .stat-val.reps  { color: #10B981; }
+    .stat-val.speed { color: #0284C7; }
+
+    /* Center Level Pill */
+    .level-pill {
+      background: linear-gradient(135deg, #A855F7, #7C3AED);
+      border-radius: 60px;
+      padding: 10px 26px;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 24px rgba(124, 58, 237, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+    .level-pill .lvl-num {
+      font-size: 22px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.25);
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+    .level-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .level-title {
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .level-bar {
+      width: 100px;
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .level-fill {
+      height: 100%;
+      background: #FDE047;
+      border-radius: 99px;
+      transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Right Action Pill */
+    .action-pill-container {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(124, 58, 237, 0.25);
+      border-radius: 60px;
+      padding: 10px 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.1);
+    }
+    .action-icon {
+      font-size: 20px;
+    }
+    .action-label-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .action-badge-sub {
+      font-size: 9px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .action-badge-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #7C3AED;
+      letter-spacing: 0.03em;
+    }
+
+    /* ─── Toast Banner ─── */
+    .toast {
+      position: absolute;
+      top: 88px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-25px) scale(0.9);
+      background: linear-gradient(135deg, #FAF5FF, #FFFFFF);
+      border: 2px solid #C084FC;
+      border-radius: 60px;
+      padding: 10px 32px;
+      color: #7C3AED;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 12px 36px rgba(124, 58, 237, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    /* ─── Clinical HUD Controls Bar ─── */
+    .controls-hint {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      padding: 7px 20px;
+      border-radius: 9999px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      font-size: 12.5px;
+      font-weight: 550;
+      color: #334155;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      pointer-events: none;
+      z-index: 20;
+      white-space: nowrap;
+    }
+    .hint-step {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .motion-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #0F172A;
+      color: #FFFFFF;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .motion-badge.alt {
+      background: #0284C7;
+      color: #FFFFFF;
+    }
+    .motion-badge.purple {
+      background: #7C3AED;
+      color: #FFFFFF;
+    }
+    .hint-sep {
+      width: 1px;
+      height: 14px;
+      background: rgba(15, 23, 42, 0.15);
+      display: inline-block;
+    }
+    .hint-label {
+      color: #1E293B;
+      font-weight: 600;
+    }
+
+    /* ─── Celebration Overlay ─── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(245, 243, 255, 0.75);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 100;
+    }
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .celebrate-card {
+      background: white;
+      border: 2px solid #C084FC;
+      border-radius: 36px;
+      padding: 36px 44px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(124, 58, 237, 0.2);
+      max-width: 440px;
+      width: 90%;
+      transform: scale(0.85);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .overlay.show .celebrate-card {
+      transform: scale(1);
+    }
+    .stars-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .star-icon {
+      font-size: 40px;
+      animation: bounceStar 0.6s ease infinite alternate;
+    }
+    .star-icon:nth-child(2) { animation-delay: 0.2s; }
+    .star-icon:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounceStar {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-8px) scale(1.1); }
+    }
+    .card-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #6B21A8;
+      margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 14px;
+      color: #64748B;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+    .card-stats {
+      display: flex;
+      justify-content: space-around;
+      background: #FAF5FF;
+      border-radius: 20px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      border: 1px solid #E9D5FF;
+    }
+    .card-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .card-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #7E22CE;
+      text-transform: uppercase;
+    }
+    .card-stat-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: #4C1D95;
+    }
+    .btn-next {
+      background: linear-gradient(135deg, #A855F7, #7C3AED);
+      color: white;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 60px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-next:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 10px 28px rgba(124, 58, 237, 0.45);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD -->
+  <div class="hud">
+    <!-- Left Stats -->
+    <div class="hud-pill">
+      <div class="stat">
+        <span class="stat-label">Stars</span>
+        <span class="stat-val stars" id="stat-stars">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Reps</span>
+        <span class="stat-val reps" id="stat-reps">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Velocity</span>
+        <span class="stat-val speed" id="stat-speed">32 km/h</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Score</span>
+        <span class="stat-val" id="stat-score">0</span>
+      </div>
+    </div>
+
+    <!-- Center Level -->
+    <div class="level-pill">
+      <span class="lvl-num" id="hud-lvl-num">1</span>
+      <div class="level-info">
+        <span class="level-title" id="hud-lvl-name">Sunny Meadow</span>
+        <div class="level-bar">
+          <div class="level-fill" id="hud-lvl-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Action Status -->
+    <div class="action-pill-container">
+      <div class="action-label-box">
+        <span class="action-badge-sub">Glove Motion</span>
+        <span class="action-badge-text" id="hud-action-text">ROLLING CRUISE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span id="toast-msg">STAR COLLECTED! +100</span>
+  </div>
+
+  <!-- Controls hint -->
+  <div class="controls-hint">
+    <div class="hint-step">
+      <span class="motion-badge">Wrist Tilt</span>
+      <span class="hint-label">Steer Left / Right</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge alt">Extend</span>
+      <span class="hint-label">Leap Jump</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge purple">360° Circle</span>
+      <span class="hint-label">Rainbow Turbo</span>
+    </div>
+  </div>
+
+  <!-- Level Complete Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="celebrate-card">
+      <div class="modal-badge"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+      <h2 class="card-title" id="modal-title">Meadow Conquered!</h2>
+      <p class="card-sub" id="modal-sub">Magnificent agility! Pip rolled across every rainbow hill and collected all golden stars!</p>
+      <div class="card-stats">
+        <div class="card-stat">
+          <span class="card-stat-label">Stars</span>
+          <span class="card-stat-val" id="modal-stars">12</span>
+        </div>
+        <div class="card-stat">
+          <span class="card-stat-label">Mobility Reps</span>
+          <span class="card-stat-val" id="modal-reps">8</span>
+        </div>
+        <div class="card-stat">
+          <span class="card-stat-label">Score</span>
+          <span class="card-stat-val" id="modal-score">1,400</span>
+        </div>
+      </div>
+      <button class="btn-next" id="btn-next-level">
+        <span id="btn-next-text">Next Course</span> →
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from '../lib/three.module.min.js';
+
+    // ════════════════════════════════════════════════════════════════
+    // 1. WEBAUDIO SYNTHESIZER ENGINE (Rich Procedural Happy Sounds)
+    // ════════════════════════════════════════════════════════════════
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playStarChime() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+          gain.gain.setValueAtTime(0.25, now + idx * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.22);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.04);
+          osc.stop(now + idx * 0.04 + 0.24);
+        });
+      }
+      playGemChime() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [659.25, 830.61, 987.77, 1318.5]; // E5, G#5, B5, E6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.035);
+          gain.gain.setValueAtTime(0.3, now + idx * 0.035);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.035 + 0.3);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.035);
+          osc.stop(now + idx * 0.035 + 0.32);
+        });
+      }
+      playJumpBoing() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(640, now + 0.16);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+      playBumperBounce() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.18);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      }
+      playTurboWhoosh() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(520, now + 0.25);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      }
+      playFanfare() {
+        this.init();
+        if (!this.ctx) return;
+        const notes = [
+          { f: 523.25, t: 0.00, d: 0.14 },
+          { f: 659.25, t: 0.12, d: 0.14 },
+          { f: 783.99, t: 0.24, d: 0.18 },
+          { f: 1046.5, t: 0.40, d: 0.45 },
+          { f: 1318.5, t: 0.55, d: 0.60 }
+        ];
+        const now = this.ctx.currentTime;
+        notes.forEach(n => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(n.f, now + n.t);
+          gain.gain.setValueAtTime(0.35, now + n.t);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + n.t);
+          osc.stop(now + n.t + n.d + 0.05);
+        });
+      }
+    }
+    const audio = new AudioEngine();
+
+    // ════════════════════════════════════════════════════════════════
+    // 2. LEVEL DEFINITIONS & GAME STATE
+    // ════════════════════════════════════════════════════════════════
+    const LEVELS = [
+      {
+        id: 1,
+        name: "Sunny Meadow",
+        targetStars: 10,
+        speed: 15.0,
+        obstacleRate: 0.12,
+        bgHills: 0x86EFAC,
+        trackColor: 0xA78BFA,
+        desc: "Steer Pip along gentle hills and collect delicious golden stars!"
+      },
+      {
+        id: 2,
+        name: "Candy Canyon",
+        targetStars: 15,
+        speed: 17.5,
+        obstacleRate: 0.22,
+        bgHills: 0xFBCFE8,
+        trackColor: 0x38BDF8,
+        desc: "Bouncy hurdles ahead! Open your hand to leap high in the air!"
+      },
+      {
+        id: 3,
+        name: "Rainbow Skyway",
+        targetStars: 20,
+        speed: 20.0,
+        obstacleRate: 0.28,
+        bgHills: 0xFEF08A,
+        trackColor: 0x34D399,
+        desc: "Whirl your wrist in circles to trigger Turbo Rainbow Boost!"
+      },
+      {
+        id: 4,
+        name: "Carnival Coaster",
+        targetStars: 25,
+        speed: 22.0,
+        obstacleRate: 0.35,
+        bgHills: 0xDDD6FE,
+        trackColor: 0xFBBF24,
+        desc: "Twisting pathways and rapid star rings! Demonstrate master mobility!"
+      },
+      {
+        id: 5,
+        name: "Grand Champion Tour",
+        targetStars: 30,
+        speed: 24.0,
+        obstacleRate: 0.40,
+        bgHills: 0xBAE6FD,
+        trackColor: 0xF43F5E,
+        desc: "The ultimate victory lap! Collect all golden stars for championship glory!"
+      }
+    ];
+
+    let currentLevelIdx = 0;
+    let score = 0;
+    let reps = 0;
+    let starsInLevel = 0;
+    let totalStars = 0;
+    let isGameOver = false;
+
+    // Movement state
+    let targetX = 0;
+    let currentX = 0;
+    let ballSpeed = LEVELS[0].speed;
+    let isJumping = false;
+    let ballVy = 0;
+    let isTurbo = false;
+    let turboTimer = 0;
+    let toastTimeout = null;
+
+    // ════════════════════════════════════════════════════════════════
+    // 3. THREE.JS SCENE SETUP
+    // ════════════════════════════════════════════════════════════════
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xF0FDF4);
+    scene.fog = new THREE.FogExp2(0xF0FDF4, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 140);
+    camera.position.set(0, 4.8, 8.5);
+    camera.lookAt(0, 1.2, -3);
+
+    // ─── Lights ───
+    const ambientLight = new THREE.AmbientLight(0xFFFBEB, 1.4);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xFFFFFF, 1.8);
+    sunLight.position.set(10, 18, 12);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 40;
+    sunLight.shadow.camera.left = -12;
+    sunLight.shadow.camera.right = 12;
+    sunLight.shadow.camera.top = 12;
+    sunLight.shadow.camera.bottom = -12;
+    scene.add(sunLight);
+
+    const rimLight = new THREE.DirectionalLight(0xC4B5FD, 0.9);
+    rimLight.position.set(-10, 8, -8);
+    scene.add(rimLight);
+
+    // ─── Sunny Sky Decorations (Sun & Clouds) ───
+    const skyGroup = new THREE.Group();
+    scene.add(skyGroup);
+
+    // Smiling 3D Sun
+    const sunGeo = new THREE.SphereGeometry(3.5, 24, 24);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xFDE047 });
+    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    sunMesh.position.set(18, 26, -55);
+    skyGroup.add(sunMesh);
+
+    // Sun rays ring
+    const sunRaysGeo = new THREE.RingGeometry(4.2, 5.5, 16);
+    const sunRaysMat = new THREE.MeshBasicMaterial({ color: 0xFACC15, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+    const sunRays = new THREE.Mesh(sunRaysGeo, sunRaysMat);
+    sunRays.position.copy(sunMesh.position);
+    skyGroup.add(sunRays);
+
+    // Low-poly drifting clouds
+    const clouds = [];
+    function createCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      const puffMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.9 });
+      for (let i = 0; i < 5; i++) {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(1.2 + Math.random() * 0.6, 12, 10), puffMat);
+        puff.position.set((i - 2) * 1.3, Math.sin(i * 0.8) * 0.4, (Math.random() - 0.5) * 0.6);
+        cloud.add(puff);
+      }
+      cloud.position.set(x, y, z);
+      cloud.scale.setScalar(scale);
+      cloud.userData = { speed: 0.8 + Math.random() * 0.8 };
+      scene.add(cloud);
+      clouds.push(cloud);
+    }
+    createCloud(-22, 18, -40, 1.8);
+    createCloud(8, 22, -50, 2.2);
+    createCloud(-10, 15, -30, 1.4);
+    createCloud(20, 19, -45, 1.6);
+
+    // ════════════════════════════════════════════════════════════════
+    // 4. PLAYER: PIP THE HAMSTER IN IRIDESCENT CRYSTAL BALL
+    // ════════════════════════════════════════════════════════════════
+    const playerGroup = new THREE.Group();
+    playerGroup.position.set(0, 0.75, 0);
+    scene.add(playerGroup);
+
+    // Outer Crystal Transparent Sphere
+    const ballGeo = new THREE.SphereGeometry(0.75, 32, 28);
+    const ballMat = new THREE.MeshPhysicalMaterial({
+      color: 0xE0E7FF,
+      transmission: 0.88,
+      opacity: 1.0,
+      transparent: true,
+      roughness: 0.08,
+      ior: 1.45,
+      metalness: 0.05,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
+    });
+    const ballMesh = new THREE.Mesh(ballGeo, ballMat);
+    ballMesh.castShadow = true;
+    playerGroup.add(ballMesh);
+
+    // Subtle rainbow equatorial band on the ball
+    const bandGeo = new THREE.TorusGeometry(0.74, 0.025, 12, 32);
+    const bandMat = new THREE.MeshStandardMaterial({ color: 0xF472B6, emissive: 0xF472B6, emissiveIntensity: 0.3 });
+    const bandMesh = new THREE.Mesh(bandGeo, bandMat);
+    bandMesh.rotation.x = Math.PI / 2;
+    ballMesh.add(bandMesh);
+
+    // Pip the Hamster (Inner Character)
+    const hamsterGroup = new THREE.Group();
+    hamsterGroup.position.y = -0.15;
+    playerGroup.add(hamsterGroup);
+
+    // Hamster Chubby Body
+    const bodyGeo = new THREE.SphereGeometry(0.38, 20, 16);
+    bodyGeo.scale(1.0, 0.95, 1.15);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, roughness: 0.8 }); // warm caramel fur
+    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.castShadow = true;
+    hamsterGroup.add(bodyMesh);
+
+    // Creamy White Belly
+    const bellyGeo = new THREE.SphereGeometry(0.30, 16, 14);
+    bellyGeo.scale(0.85, 0.75, 0.95);
+    const bellyMat = new THREE.MeshStandardMaterial({ color: 0xFFFBEB, roughness: 0.9 });
+    const bellyMesh = new THREE.Mesh(bellyGeo, bellyMat);
+    bellyMesh.position.set(0, -0.05, 0.16);
+    hamsterGroup.add(bellyMesh);
+
+    // Cheerful Hamster Head / Muzzle
+    const snoutGeo = new THREE.SphereGeometry(0.14, 12, 10);
+    const snoutMat = new THREE.MeshStandardMaterial({ color: 0xFEF3C7, roughness: 0.9 });
+    const snoutMesh = new THREE.Mesh(snoutGeo, snoutMat);
+    snoutMesh.position.set(0, 0.08, 0.36);
+    hamsterGroup.add(snoutMesh);
+
+    // Little Pink Nose
+    const noseGeo = new THREE.SphereGeometry(0.045, 8, 8);
+    const noseMat = new THREE.MeshStandardMaterial({ color: 0xFB7185, roughness: 0.5 });
+    const noseMesh = new THREE.Mesh(noseGeo, noseMat);
+    noseMesh.position.set(0, 0.12, 0.46);
+    hamsterGroup.add(noseMesh);
+
+    // Glossy Black Eyes with Highlights
+    const eyeGeo = new THREE.SphereGeometry(0.055, 12, 10);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.1 });
+    const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+    leftEye.position.set(-0.16, 0.18, 0.32);
+    hamsterGroup.add(leftEye);
+
+    const rightEye = leftEye.clone();
+    rightEye.position.set(0.16, 0.18, 0.32);
+    hamsterGroup.add(rightEye);
+
+    // White eye shine
+    const shineGeo = new THREE.SphereGeometry(0.018, 6, 6);
+    const shineMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+    const leftShine = new THREE.Mesh(shineGeo, shineMat);
+    leftShine.position.set(-0.18, 0.20, 0.36);
+    hamsterGroup.add(leftShine);
+    const rightShine = leftShine.clone();
+    rightShine.position.set(0.14, 0.20, 0.36);
+    hamsterGroup.add(rightShine);
+
+    // Cute Pink Ears
+    const earGeo = new THREE.SphereGeometry(0.11, 10, 8);
+    const earMat = new THREE.MeshStandardMaterial({ color: 0xFB7185, roughness: 0.7 });
+    const leftEar = new THREE.Mesh(earGeo, earMat);
+    leftEar.position.set(-0.26, 0.35, -0.02);
+    leftEar.scale.set(0.7, 1.2, 0.5);
+    hamsterGroup.add(leftEar);
+
+    const rightEar = leftEar.clone();
+    rightEar.position.set(0.26, 0.35, -0.02);
+    hamsterGroup.add(rightEar);
+
+    // Tiny cute paws
+    const pawGeo = new THREE.SphereGeometry(0.065, 8, 8);
+    const pawMat = new THREE.MeshStandardMaterial({ color: 0xFDE68A });
+    const leftPaw = new THREE.Mesh(pawGeo, pawMat);
+    leftPaw.position.set(-0.20, -0.26, 0.22);
+    hamsterGroup.add(leftPaw);
+    const rightPaw = leftPaw.clone();
+    rightPaw.position.set(0.20, -0.26, 0.22);
+    hamsterGroup.add(rightPaw);
+
+    // Tiny round tail
+    const tailGeo = new THREE.SphereGeometry(0.07, 8, 8);
+    const tailMesh = new THREE.Mesh(tailGeo, bodyMat);
+    tailMesh.position.set(0, -0.12, -0.38);
+    hamsterGroup.add(tailMesh);
+
+    // Rainbow Turbo Shield Mesh (visible during turbo)
+    const shieldGeo = new THREE.SphereGeometry(0.88, 24, 20);
+    const shieldMat = new THREE.MeshBasicMaterial({
+      color: 0xF43F5E,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.0
+    });
+    const shieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
+    playerGroup.add(shieldMesh);
+
+    // ════════════════════════════════════════════════════════════════
+    // 5. MODULAR ENDLESS TRACK & SCENERY SYSTEM
+    // ════════════════════════════════════════════════════════════════
+    const trackGroup = new THREE.Group();
+    scene.add(trackGroup);
+
+    const SEGMENT_COUNT = 24;
+    const SEGMENT_LEN = 8.0;
+    const segments = [];
+    const activeCollectibles = [];
+    const activeObstacles = [];
+
+    // Tree geometries
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.3, 1.4, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x92400E, roughness: 0.9 });
+    const foliageGeo = new THREE.ConeGeometry(1.2, 2.5, 8);
+    const foliageMat1 = new THREE.MeshStandardMaterial({ color: 0x22C55E, roughness: 0.8 });
+    const foliageMat2 = new THREE.MeshStandardMaterial({ color: 0x10B981, roughness: 0.8 });
+
+    function createTree(x, z) {
+      const tree = new THREE.Group();
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 0.7;
+      trunk.castShadow = true;
+      tree.add(trunk);
+
+      const fMat = Math.random() > 0.5 ? foliageMat1 : foliageMat2;
+      const foliage1 = new THREE.Mesh(foliageGeo, fMat);
+      foliage1.position.y = 2.0;
+      foliage1.castShadow = true;
+      tree.add(foliage1);
+
+      const foliage2 = new THREE.Mesh(foliageGeo, fMat);
+      foliage2.position.y = 2.8;
+      foliage2.scale.setScalar(0.75);
+      foliage2.castShadow = true;
+      tree.add(foliage2);
+
+      tree.position.set(x, 0, z);
+      return tree;
+    }
+
+    // Flower geometry
+    const stemGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.6, 6);
+    const stemMat = new THREE.MeshStandardMaterial({ color: 0x16A34A });
+    const petalGeo = new THREE.SphereGeometry(0.18, 8, 8);
+    const petalColors = [0xEC4899, 0xF59E0B, 0x8B5CF6, 0xEF4444];
+
+    function createFlower(x, z) {
+      const fl = new THREE.Group();
+      const stem = new THREE.Mesh(stemGeo, stemMat);
+      stem.position.y = 0.3;
+      fl.add(stem);
+      const pColor = petalColors[Math.floor(Math.random() * petalColors.length)];
+      const pMat = new THREE.MeshStandardMaterial({ color: pColor, roughness: 0.6 });
+      const petal = new THREE.Mesh(petalGeo, pMat);
+      petal.position.y = 0.6;
+      fl.add(petal);
+      fl.position.set(x, 0, z);
+      return fl;
+    }
+
+    // Star Collectible Mesh
+    function createStarMesh() {
+      const g = new THREE.Group();
+      // Golden faceted icosahedron star
+      const starGeo = new THREE.IcosahedronGeometry(0.42, 0);
+      const starMat = new THREE.MeshStandardMaterial({
+        color: 0xFBBF24,
+        emissive: 0xF59E0B,
+        emissiveIntensity: 0.6,
+        roughness: 0.2,
+        metalness: 0.8
+      });
+      const star = new THREE.Mesh(starGeo, starMat);
+      g.add(star);
+
+      // Sparkle halo ring
+      const haloGeo = new THREE.TorusGeometry(0.55, 0.03, 8, 20);
+      const haloMat = new THREE.MeshBasicMaterial({ color: 0xFEF08A });
+      const halo = new THREE.Mesh(haloGeo, haloMat);
+      halo.rotation.x = Math.PI / 4;
+      g.add(halo);
+
+      g.userData = { isStar: true, collected: false, rotSpeed: 2.5 + Math.random() };
+      return g;
+    }
+
+    // Gem Collectible Mesh
+    function createGemMesh() {
+      const g = new THREE.Group();
+      const gemGeo = new THREE.OctahedronGeometry(0.45, 0);
+      gemGeo.scale(1.0, 1.4, 1.0);
+      const gemMat = new THREE.MeshPhysicalMaterial({
+        color: 0xEC4899,
+        emissive: 0xDB2777,
+        emissiveIntensity: 0.5,
+        roughness: 0.1,
+        transmission: 0.7,
+        metalness: 0.3
+      });
+      const gem = new THREE.Mesh(gemGeo, gemMat);
+      g.add(gem);
+      g.userData = { isGem: true, collected: false, rotSpeed: 3.2 };
+      return g;
+    }
+
+    // Bouncy Mushroom Obstacle Mesh
+    function createMushroomMesh() {
+      const g = new THREE.Group();
+      const stemG = new THREE.CylinderGeometry(0.25, 0.35, 0.6, 12);
+      const stemM = new THREE.MeshStandardMaterial({ color: 0xFFFBEB, roughness: 0.8 });
+      const stem = new THREE.Mesh(stemG, stemM);
+      stem.position.y = 0.3;
+      stem.castShadow = true;
+      g.add(stem);
+
+      const capG = new THREE.SphereGeometry(0.65, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+      const capM = new THREE.MeshStandardMaterial({ color: 0xEF4444, roughness: 0.4 });
+      const cap = new THREE.Mesh(capG, capM);
+      cap.position.y = 0.6;
+      cap.castShadow = true;
+      g.add(cap);
+
+      // White polka dots
+      for (let i = 0; i < 4; i++) {
+        const dotG = new THREE.SphereGeometry(0.1, 8, 8);
+        const dotM = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        const dot = new THREE.Mesh(dotG, dotM);
+        const angle = (i / 4) * Math.PI * 2;
+        dot.position.set(Math.cos(angle) * 0.42, 0.82, Math.sin(angle) * 0.42);
+        g.add(dot);
+      }
+      g.userData = { isObstacle: true, hit: false };
+      return g;
+    }
+
+    // Build initial track segments
+    for (let i = 0; i < SEGMENT_COUNT; i++) {
+      const seg = new THREE.Group();
+      seg.position.z = -i * SEGMENT_LEN;
+
+      // Track Road Surface (Width 5.2)
+      const roadGeo = new THREE.BoxGeometry(5.2, 0.4, SEGMENT_LEN);
+      const roadMat = new THREE.MeshStandardMaterial({
+        color: [0xA78BFA, 0x38BDF8, 0x34D399, 0xFBBF24, 0xF472B6][i % 5],
+        roughness: 0.6
+      });
+      const roadMesh = new THREE.Mesh(roadGeo, roadMat);
+      roadMesh.position.y = -0.2;
+      roadMesh.receiveShadow = true;
+      seg.add(roadMesh);
+      seg.userData = { roadMesh };
+
+      // Rainbow Curbs
+      const curbGeo = new THREE.BoxGeometry(0.35, 0.55, SEGMENT_LEN);
+      const curbMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.5 });
+      const leftCurb = new THREE.Mesh(curbGeo, curbMat);
+      leftCurb.position.set(-2.7, -0.12, 0);
+      seg.add(leftCurb);
+
+      const rightCurb = leftCurb.clone();
+      rightCurb.position.set(2.7, -0.12, 0);
+      seg.add(rightCurb);
+
+      // Flanking Green Grass Meadow
+      const grassGeo = new THREE.BoxGeometry(16, 0.2, SEGMENT_LEN);
+      const grassMat = new THREE.MeshStandardMaterial({ color: 0x86EFAC, roughness: 0.9 });
+      const leftGrass = new THREE.Mesh(grassGeo, grassMat);
+      leftGrass.position.set(-11, -0.3, 0);
+      leftGrass.receiveShadow = true;
+      seg.add(leftGrass);
+
+      const rightGrass = leftGrass.clone();
+      rightGrass.position.set(11, -0.3, 0);
+      seg.add(rightGrass);
+
+      // Trees along grass margins
+      seg.add(createTree(-4.5 - Math.random() * 3, (Math.random() - 0.5) * 4));
+      seg.add(createTree(4.5 + Math.random() * 3, (Math.random() - 0.5) * 4));
+
+      // Flowers
+      for (let f = 0; f < 3; f++) {
+        seg.add(createFlower(-3.5 - Math.random() * 2, (Math.random() - 0.5) * 6));
+        seg.add(createFlower(3.5 + Math.random() * 2, (Math.random() - 0.5) * 6));
+      }
+
+      // Rainbow Arch on every 4th segment
+      if (i % 4 === 0) {
+        const archGeo = new THREE.TorusGeometry(3.0, 0.22, 12, 24, Math.PI);
+        const archMat = new THREE.MeshStandardMaterial({
+          color: 0xF472B6,
+          roughness: 0.4,
+          emissive: 0xEC4899,
+          emissiveIntensity: 0.2
+        });
+        const arch = new THREE.Mesh(archGeo, archMat);
+        arch.position.set(0, 0, 0);
+        seg.add(arch);
+      }
+
+      // Spawn Initial Items on segments (except right at starting player segment)
+      if (i > 1) {
+        populateSegmentItems(seg);
+      }
+
+      trackGroup.add(seg);
+      segments.push(seg);
+    }
+
+    function populateSegmentItems(seg) {
+      const lvl = LEVELS[currentLevelIdx];
+      // Random Lane: Left (-1.6), Center (0), Right (1.6)
+      const lanes = [-1.6, 0, 1.6];
+      const starLane = lanes[Math.floor(Math.random() * lanes.length)];
+
+      // Star or Gem
+      const isGem = Math.random() < 0.25;
+      const item = isGem ? createGemMesh() : createStarMesh();
+      item.position.set(starLane, 0.8, (Math.random() - 0.5) * 3);
+      seg.add(item);
+      activeCollectibles.push(item);
+
+      // Obstacle chance based on level
+      if (Math.random() < lvl.obstacleRate) {
+        const otherLanes = lanes.filter(l => l !== starLane);
+        const obsLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
+        const obs = createMushroomMesh();
+        obs.position.set(obsLane, 0, (Math.random() - 0.5) * 3);
+        seg.add(obs);
+        activeObstacles.push(obs);
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // 6. PARTICLE EFFECTS SYSTEM (Sparkles, Dust, Confetti)
+    // ════════════════════════════════════════════════════════════════
+    const particles = [];
+    const pGeo = new THREE.SphereGeometry(0.08, 6, 6);
+
+    function spawnStarBurst(x, y, z, color = 0xFBBF24) {
+      const pMat = new THREE.MeshBasicMaterial({ color });
+      for (let i = 0; i < 16; i++) {
+        const p = new THREE.Mesh(pGeo, pMat);
+        p.position.set(x, y, z);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.5 + Math.random() * 3.5;
+        p.userData = {
+          vx: Math.cos(angle) * speed,
+          vy: 2.0 + Math.random() * 3.5,
+          vz: Math.sin(angle) * speed,
+          life: 1.0
+        };
+        scene.add(p);
+        particles.push(p);
+      }
+    }
+
+    function spawnConfettiShower() {
+      const confettiColors = [0xEF4444, 0xF59E0B, 0x10B981, 0x3B82F6, 0x8B5CF6, 0xEC4899];
+      for (let i = 0; i < 60; i++) {
+        const cMat = new THREE.MeshBasicMaterial({
+          color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+          side: THREE.DoubleSide
+        });
+        const cGeo = new THREE.PlaneGeometry(0.18, 0.18);
+        const p = new THREE.Mesh(cGeo, cMat);
+        p.position.set(
+          playerGroup.position.x + (Math.random() - 0.5) * 6,
+          playerGroup.position.y + 4 + Math.random() * 3,
+          playerGroup.position.z + (Math.random() - 0.5) * 4
+        );
+        p.userData = {
+          vx: (Math.random() - 0.5) * 3,
+          vy: -1.0 - Math.random() * 2.5,
+          vz: (Math.random() - 0.5) * 3,
+          rx: Math.random() * 10,
+          ry: Math.random() * 10,
+          life: 2.2
+        };
+        scene.add(p);
+        particles.push(p);
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // 7. TOAST & HUD CONTROLLERS
+    // ════════════════════════════════════════════════════════════════
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('show'), 1600);
+    }
+
+    function updateHUD() {
+      const lvl = LEVELS[currentLevelIdx];
+      document.getElementById('stat-stars').innerText = totalStars;
+      document.getElementById('stat-reps').innerText = reps;
+      document.getElementById('stat-speed').innerText = `${Math.round(ballSpeed * 2)} km/h`;
+      document.getElementById('stat-score').innerText = score.toLocaleString();
+
+      document.getElementById('hud-lvl-num').innerText = lvl.id;
+      document.getElementById('hud-lvl-name').innerText = lvl.name;
+      const progress = Math.min(100, (starsInLevel / lvl.targetStars) * 100);
+      document.getElementById('hud-lvl-fill').style.width = `${progress}%`;
+    }
+
+    function updateActionBadge(text) {
+      document.getElementById('hud-action-text').innerText = text;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // 8. ACTIONS: STEERING, JUMPING, TURBO
+    // ════════════════════════════════════════════════════════════════
+    function updateSteering(rollDeg) {
+      const clamped = Math.max(-55, Math.min(55, rollDeg));
+      targetX = (clamped / 55) * 2.1;
+      if (clamped < -15) {
+        updateActionBadge('STEERING LEFT');
+      } else if (clamped > 15) {
+        updateActionBadge('STEERING RIGHT');
+      } else if (!isJumping && !isTurbo) {
+        updateActionBadge('ROLLING CRUISE');
+      }
+    }
+
+    function performJump() {
+      if (isJumping || isGameOver) return;
+      isJumping = true;
+      ballVy = 8.5; // Upward leap impulse
+      audio.playJumpBoing();
+      reps += 1;
+      score += 25;
+      updateHUD();
+      updateActionBadge('HIGH LEAP');
+      showToast('HIGH LEAP!');
+    }
+
+    function performTurbo() {
+      if (isGameOver) return;
+      isTurbo = true;
+      turboTimer = 2.4;
+      ballSpeed = LEVELS[currentLevelIdx].speed * 1.6;
+      shieldMesh.material.opacity = 0.6;
+      audio.playTurboWhoosh();
+      reps += 1;
+      score += 50;
+      updateHUD();
+      updateActionBadge('TURBO BOOST');
+      showToast('TURBO ROTATION BOOST!');
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // 9. LEVEL PROGRESSION & COMPLETION
+    // ════════════════════════════════════════════════════════════════
+    function completeLevel() {
+      isGameOver = true;
+      audio.playFanfare();
+      spawnConfettiShower();
+
+      const lvl = LEVELS[currentLevelIdx];
+      const isFinal = currentLevelIdx === LEVELS.length - 1;
+
+      document.getElementById('modal-title').innerText = `${lvl.name} Complete!`;
+      document.getElementById('modal-sub').innerText = isFinal
+        ? "Legendary achievement! Pip finished all 5 courses of the Rainbow Grand Prix!"
+        : `Spectacular agility! You collected all ${lvl.targetStars} stars and mastered this course!`;
+
+      document.getElementById('modal-stars').innerText = totalStars;
+      document.getElementById('modal-reps').innerText = reps;
+      document.getElementById('modal-score').innerText = score.toLocaleString();
+
+      document.getElementById('btn-next-text').innerText = isFinal ? "Play Again" : "Next Course";
+      document.getElementById('overlay').classList.add('show');
+    }
+
+    function nextLevel() {
+      document.getElementById('overlay').classList.remove('show');
+      currentLevelIdx = (currentLevelIdx + 1) % LEVELS.length;
+      starsInLevel = 0;
+      ballSpeed = LEVELS[currentLevelIdx].speed;
+      isGameOver = false;
+
+      // Update theme colors
+      const lvl = LEVELS[currentLevelIdx];
+      scene.background.set(lvl.bgHills);
+      scene.fog.color.set(lvl.bgHills);
+
+      // Re-skin track segments
+      segments.forEach((seg, idx) => {
+        if (seg.userData.roadMesh) {
+          seg.userData.roadMesh.material.color.set(lvl.trackColor);
+        }
+      });
+
+      updateHUD();
+      updateActionBadge('ROLLING CRUISE');
+      showToast(`WELCOME TO ${lvl.name.toUpperCase()}!`);
+    }
+
+    document.getElementById('btn-next-level').addEventListener('click', nextLevel);
+
+    // ════════════════════════════════════════════════════════════════
+    // 10. GLOVE TELEMETRY & INPUT BRIDGES
+    // ════════════════════════════════════════════════════════════════
+    // 1. Parent postMessage listener ('neuro-game-action')
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'neuro-game-action') {
+        if (data.movement === 'pronation' || data.action === 'move_left') {
+          updateSteering(-45);
+        } else if (data.movement === 'supination' || data.action === 'move_right') {
+          updateSteering(45);
+        } else if (data.movement === 'wrist_open' || data.action === 'secondary_action' || data.action === 'primary_action') {
+          performJump();
+        } else if (data.movement === 'clockwise' || data.movement === 'anticlockwise') {
+          performTurbo();
+        }
+      }
+    });
+
+    // 2. Direct WebSocket Glove Telemetry Fallback
+    function connectGloveTelemetry() {
+      const ws = new WebSocket('ws://127.0.0.1:8765/ws');
+      ws.onmessage = (event) => {
+        try {
+          const packet = JSON.parse(event.data);
+          const hand = packet.hands?.right || packet.hands?.left;
+          const quat = hand?.imu?.quaternion || hand?.fused_quaternion;
+          if (quat) {
+            const sinr = 2 * (quat.w * quat.x + quat.y * quat.z);
+            const cosr = 1 - 2 * (quat.x * quat.x + quat.y * quat.y);
+            const rollDeg = Math.atan2(sinr, cosr) * (180 / Math.PI);
+            updateSteering(rollDeg);
+          }
+          if (hand?.bend_sensors) {
+            const avgFlex = hand.bend_sensors.reduce((a, b) => a + b, 0) / hand.bend_sensors.length;
+            if (avgFlex < 0.28) {
+              performJump();
+            } else if (avgFlex > 0.85) {
+              performTurbo();
+            }
+          }
+        } catch (err) {}
+      };
+      ws.onclose = () => setTimeout(connectGloveTelemetry, 2500);
+    }
+    connectGloveTelemetry();
+
+    // 3. Keyboard & Mouse Fallback
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') updateSteering(-45);
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') updateSteering(45);
+      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') performJump();
+      if (e.key === 'Shift' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') performTurbo();
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+      if (!keys['ArrowLeft'] && !keys['ArrowRight'] && !keys['a'] && !keys['d'] && !keys['A'] && !keys['D']) {
+        updateSteering(0);
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const normX = (e.clientX / window.innerWidth) * 2 - 1;
+      updateSteering(normX * 50);
+    });
+
+    window.addEventListener('click', () => performJump());
+
+    // Signal parent readiness
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // 11. MAIN ANIMATION & REHABILITATION GAME LOOP
+    // ════════════════════════════════════════════════════════════════
+    let lastTime = performance.now();
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      if (!isGameOver) {
+        // Scroll Track Forward towards player
+        const speedUnits = ballSpeed * dt;
+        trackGroup.position.z += speedUnits;
+
+        // Turbo decay
+        if (isTurbo) {
+          turboTimer -= dt;
+          shieldMesh.rotation.y += dt * 6.0;
+          shieldMesh.rotation.x += dt * 4.0;
+          if (turboTimer <= 0) {
+            isTurbo = false;
+            ballSpeed = LEVELS[currentLevelIdx].speed;
+            shieldMesh.material.opacity = 0.0;
+            updateActionBadge('ROLLING CRUISE');
+          }
+        }
+
+        // Recycle Track Segments seamlessly
+        segments.forEach(seg => {
+          const worldZ = seg.position.z + trackGroup.position.z;
+          if (worldZ > SEGMENT_LEN * 2) {
+            // Move segment to the far end
+            seg.position.z -= SEGMENT_COUNT * SEGMENT_LEN;
+            // Clean old items from this segment
+            for (let i = seg.children.length - 1; i >= 0; i--) {
+              const child = seg.children[i];
+              if (child.userData?.isStar || child.userData?.isGem || child.userData?.isObstacle) {
+                seg.remove(child);
+                const cIdx = activeCollectibles.indexOf(child);
+                if (cIdx !== -1) activeCollectibles.splice(cIdx, 1);
+                const oIdx = activeObstacles.indexOf(child);
+                if (oIdx !== -1) activeObstacles.splice(oIdx, 1);
+              }
+            }
+            // Repopulate with new items
+            populateSegmentItems(seg);
+          }
+        });
+      }
+
+      // Smooth Lateral Steering (Tilt responsiveness)
+      currentX += (targetX - currentX) * (dt * 8.5);
+      playerGroup.position.x = currentX;
+
+      // Realistic Ball Rolling Rotation
+      ballMesh.rotation.x -= ballSpeed * dt * 1.8;
+      ballMesh.rotation.z = -currentX * 0.35;
+
+      // Hamster character animation inside ball
+      hamsterGroup.rotation.z = -currentX * 0.25;
+      hamsterGroup.position.y = -0.15 + Math.sin(time * 0.015) * 0.03; // cute running bounce
+      leftEar.rotation.z = Math.sin(time * 0.01) * 0.1;
+      rightEar.rotation.z = -Math.sin(time * 0.01) * 0.1;
+
+      // Jump Physics
+      if (isJumping) {
+        playerGroup.position.y += ballVy * dt;
+        ballVy -= 22.0 * dt; // Gravity
+        if (playerGroup.position.y <= 0.75) {
+          playerGroup.position.y = 0.75;
+          isJumping = false;
+          ballVy = 0;
+          if (!isTurbo) updateActionBadge('ROLLING CRUISE');
+        }
+      }
+
+      // Collectibles Rotation & Collision Check
+      for (let i = activeCollectibles.length - 1; i >= 0; i--) {
+        const item = activeCollectibles[i];
+        if (!item.userData.collected) {
+          item.rotation.y += (item.userData.rotSpeed || 2.5) * dt;
+
+          // Compute absolute world position of collectible
+          const worldX = item.position.x;
+          const worldZ = item.position.z + item.parent.position.z + trackGroup.position.z;
+          const worldY = item.position.y;
+
+          const distXZ = Math.hypot(worldX - playerGroup.position.x, worldZ - playerGroup.position.z);
+          const distY = Math.abs(worldY - playerGroup.position.y);
+
+          // Turbo magnetic attractor or standard radius pickup
+          const pickupRadius = isTurbo ? 2.4 : 1.1;
+
+          if (distXZ < pickupRadius && distY < 1.4) {
+            item.userData.collected = true;
+            item.visible = false;
+
+            if (item.userData.isGem) {
+              score += 250;
+              audio.playGemChime();
+              spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0xEC4899);
+              showToast('RAINBOW GEM! +250');
+            } else {
+              starsInLevel += 1;
+              totalStars += 1;
+              score += 100;
+              audio.playStarChime();
+              spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0xFBBF24);
+              showToast(`STAR ${starsInLevel}/${LEVELS[currentLevelIdx].targetStars}! +100`);
+            }
+
+            updateHUD();
+
+            // Check Level Victory
+            if (starsInLevel >= LEVELS[currentLevelIdx].targetStars && !isGameOver) {
+              completeLevel();
+            }
+          }
+        }
+      }
+
+      // Obstacle Collision Check (Friendly Bouncy Bumpers)
+      for (let i = 0; i < activeObstacles.length; i++) {
+        const obs = activeObstacles[i];
+        if (!obs.userData.hit) {
+          const worldX = obs.position.x;
+          const worldZ = obs.position.z + obs.parent.position.z + trackGroup.position.z;
+          const distXZ = Math.hypot(worldX - playerGroup.position.x, worldZ - playerGroup.position.z);
+
+          // If hamster hits obstacle while on ground
+          if (distXZ < 0.95 && playerGroup.position.y < 1.1) {
+            obs.userData.hit = true;
+            audio.playBumperBounce();
+            // Bouncy recoil leap!
+            playerGroup.position.y = 1.2;
+            ballVy = 5.0;
+            isJumping = true;
+            showToast('BOUNCY BUMP!');
+            setTimeout(() => { obs.userData.hit = false; }, 800);
+          }
+        }
+      }
+
+      // Particle Updates
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.position.x += p.userData.vx * dt;
+        p.position.y += p.userData.vy * dt;
+        p.position.z += p.userData.vz * dt;
+        p.userData.vy -= 9.8 * dt;
+        p.userData.life -= dt * 1.4;
+        p.scale.setScalar(Math.max(0.01, p.userData.life));
+
+        if (p.userData.rx) p.rotation.x += p.userData.rx * dt;
+        if (p.userData.ry) p.rotation.y += p.userData.ry * dt;
+
+        if (p.userData.life <= 0 || p.position.y < -0.4) {
+          scene.remove(p);
+          particles.splice(i, 1);
+        }
+      }
+
+      // Ambient Clouds Drift
+      clouds.forEach(c => {
+        c.position.x += c.userData.speed * dt;
+        if (c.position.x > 32) c.position.x = -32;
+      });
+
+      // Sun rotation
+      sunRays.rotation.z += dt * 0.15;
+
+      // Dynamic Camera
+      camera.position.x = playerGroup.position.x * 0.35;
+      camera.lookAt(playerGroup.position.x * 0.5, 1.3, -3);
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+
+    // Responsive Canvas Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Initial HUD refresh
+    updateHUD();
+  </script>
+</body>
+</html>

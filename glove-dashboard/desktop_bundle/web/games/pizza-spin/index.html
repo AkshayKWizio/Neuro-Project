@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizza Spin — Master Chef Rehabilitation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #87CEEB 0%, #E8F5E9 60%, #FFF8E1 100%);
+      font-family: 'Fredoka', 'Segoe UI', sans-serif;
+      overflow: hidden; width: 100vw; height: 100vh;
+    }
+    canvas#game-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: block; z-index: 1;
+    }
+
+    .hud {
+      position: absolute; top: 16px; left: 20px; right: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      pointer-events: none; z-index: 20;
+    }
+    .hud-pill {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(230,81,0,0.2);
+      border-radius: 60px; padding: 10px 28px;
+      display: flex; gap: 24px; align-items: center;
+      box-shadow: 0 8px 32px rgba(230,81,0,0.08);
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .stat-label { font-size: 10px; font-weight: 600; color: #78909C; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-val { font-size: 24px; font-weight: 700; color: #E65100; }
+    .stat-val.green { color: #2E7D32; }
+    .stat-val.gold { color: #F57F17; }
+    .stat-val.blue { color: #0277BD; }
+
+    .level-pill {
+      background: linear-gradient(135deg, #FF8A65, #E64A19);
+      border-radius: 60px; padding: 10px 24px;
+      color: white; font-weight: 700; font-size: 14px;
+      box-shadow: 0 6px 20px rgba(230,74,25,0.3);
+      display: flex; align-items: center; gap: 10px;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .level-pill .lvl-num { font-size: 22px; }
+    .level-bar { width: 80px; height: 8px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; }
+    .level-fill { height: 100%; background: white; border-radius: 99px; transition: width 0.4s ease; }
+
+    .circle-pill {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(24px) saturate(1.8);
+      border: 1.5px solid rgba(230,81,0,0.2);
+      border-radius: 60px; padding: 10px 20px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(230,81,0,0.08);
+    }
+    .circle-label { font-size: 10px; font-weight: 700; color: #78909C; letter-spacing: 0.08em; text-transform: uppercase; }
+    .circle-progress {
+      position: relative; width: 40px; height: 40px;
+    }
+    .circle-progress svg { width: 40px; height: 40px; transform: rotate(-90deg); }
+    .circle-progress .bg { fill: none; stroke: #FFCCBC; stroke-width: 4; }
+    .circle-progress .fg { fill: none; stroke: #E64A19; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.1s ease; }
+    .circle-val { font-size: 12px; font-weight: 700; color: #BF360C; }
+
+    /* Spin direction indicator */
+    .spin-guide {
+      position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      padding: 10px 22px; border-radius: 14px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.1);
+      pointer-events: none; z-index: 20;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    }
+    .spin-arrow {
+      display: flex; align-items: center; justify-content: center;
+      animation: spinArrow 2s linear infinite;
+    }
+    @keyframes spinArrow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .spin-text { font-size: 13.5px; font-weight: 700; color: #0F172A; }
+    .spin-sub { font-size: 11px; font-weight: 500; color: #64748B; margin-top: 2px; }
+
+    .toast {
+      position: absolute; top: 85px; left: 50%;
+      transform: translateX(-50%) translateY(-30px) scale(0.9);
+      background: linear-gradient(135deg, #FFF3E0, #FFFFFF);
+      border: 2px solid #FF8A65; border-radius: 60px;
+      padding: 10px 32px; color: #E65100;
+      font-size: 16px; font-weight: 700;
+      box-shadow: 0 12px 40px rgba(230,81,0,0.2);
+      opacity: 0; pointer-events: none;
+      transition: all 0.35s cubic-bezier(.34,1.56,.64,1); z-index: 30;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ─── Clinical HUD Controls Bar ─── */
+    .controls-hint {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      padding: 7px 20px; border-radius: 9999px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      font-size: 12.5px; font-weight: 550; color: #334155;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.05);
+      display: flex; gap: 12px; align-items: center;
+      pointer-events: none; z-index: 20;
+      white-space: nowrap;
+    }
+    .hint-step {
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .motion-badge {
+      display: inline-flex; align-items: center;
+      background: #0F172A; color: #FFFFFF;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px; border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .motion-badge.alt {
+      background: #0284C7; color: #FFFFFF;
+    }
+    .motion-badge.target {
+      background: #E65100; color: #FFFFFF;
+    }
+    .hint-sep {
+      width: 1px; height: 14px;
+      background: rgba(15, 23, 42, 0.15);
+      display: inline-block;
+    }
+    .hint-label {
+      color: #1E293B; font-weight: 600;
+    }
+
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,248,225,0.7); backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease; z-index: 100;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: linear-gradient(135deg, #FFFFFF, #FFF3E0);
+      border-radius: 32px; padding: 48px; width: 90%; max-width: 460px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(230,81,0,0.15);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+    }
+    .overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-emoji { font-size: 56px; margin-bottom: 12px; }
+    .modal-title { font-size: 28px; font-weight: 700; color: #E65100; margin-bottom: 8px; }
+    .modal-sub { font-size: 14px; color: #795548; line-height: 1.6; margin-bottom: 8px; }
+    .modal-stars { font-size: 36px; margin-bottom: 20px; }
+    .modal-btn {
+      background: linear-gradient(135deg, #FF8A65, #E64A19);
+      color: white; border: none; padding: 16px 36px;
+      border-radius: 60px; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 8px 24px rgba(230,74,25,0.3);
+      transition: transform 0.15s ease;
+    }
+    .modal-btn:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-pill">
+      <div class="stat"><span class="stat-label">Circles</span><span class="stat-val green" id="v-reps">0</span></div>
+      <div class="stat"><span class="stat-label">Score</span><span class="stat-val" id="v-score">0</span></div>
+      <div class="stat"><span class="stat-label">Pizzas</span><span class="stat-val gold" id="v-pizzas">0</span></div>
+      <div class="stat"><span class="stat-label">Combo</span><span class="stat-val blue" id="v-combo">×1</span></div>
+    </div>
+    <div class="level-pill">
+      <span>Level</span><span class="lvl-num" id="v-level">1</span>
+      <div class="level-bar"><div class="level-fill" id="level-fill" style="width:0%"></div></div>
+    </div>
+    <div class="circle-pill">
+      <span class="circle-label">Circle</span>
+      <div class="circle-progress">
+        <svg viewBox="0 0 40 40">
+          <circle class="bg" cx="20" cy="20" r="16"/>
+          <circle class="fg" id="circle-fg" cx="20" cy="20" r="16"
+            stroke-dasharray="100.53" stroke-dashoffset="100.53"/>
+        </svg>
+      </div>
+      <span class="circle-val" id="circle-val">0%</span>
+    </div>
+  </div>
+
+  <div class="spin-guide">
+    <span class="spin-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E64A19" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></span>
+    <div>
+      <div class="spin-text" id="spin-dir">Rotate Wrist Clockwise</div>
+      <div class="spin-sub">Trace smooth circular motion to spin dough</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="controls-hint">
+    <div class="hint-step">
+      <span class="motion-badge">Circumduction</span>
+      <span class="hint-label">Full Wrist Circle</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge alt">360° Rotation</span>
+      <span class="hint-label">1 Completed Rep</span>
+    </div>
+    <span class="hint-sep"></span>
+    <div class="hint-step">
+      <span class="motion-badge target">Target</span>
+      <span class="hint-label">Dough Size Goal</span>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-badge"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#E64A19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+      <h2 class="modal-title" id="m-title">Pizza Ready!</h2>
+      <div class="modal-stars" id="m-stars"><span class="stars-text">PERFECT ROTATIONS</span></div>
+      <p class="modal-sub" id="m-sub">Rehabilitation target reached.</p>
+      <button class="modal-btn" id="m-btn">Next Level →</button>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script type="module">
+    import * as THREE from '../lib/three.module.min.js';
+
+    // ════════════════════════════════════════
+    // AUDIO
+    // ════════════════════════════════════════
+    class SFX {
+      constructor() { this.ctx = null; }
+      init() {
+        if (!this.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) this.ctx = new A(); }
+        if (this.ctx?.state === 'suspended') this.ctx.resume();
+      }
+      tone(freq, type, dur, vol = 0.2) {
+        this.init(); if (!this.ctx) return;
+        const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.4, 20), t + dur);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.01);
+      }
+      whoosh(p = 1) { this.tone(200 * p, 'sine', 0.15, 0.1); }
+      toss() { this.tone(400, 'triangle', 0.2, 0.2); }
+      topping() { this.tone(600, 'sine', 0.1, 0.2); }
+      circle() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, 'triangle', 0.2, 0.2), i * 50)); }
+      perfect() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.3, 0.25), i * 55)); }
+      fanfare() { [392, 523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.7, 0.25), i * 60)); }
+    }
+    const sfx = new SFX();
+
+    // ════════════════════════════════════════
+    // RENDERER
+    // ════════════════════════════════════════
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+
+    // Sky
+    const skyC = document.createElement('canvas');
+    skyC.width = 2; skyC.height = 512;
+    const sCtx = skyC.getContext('2d');
+    const sG = sCtx.createLinearGradient(0, 0, 0, 512);
+    sG.addColorStop(0, '#42A5F5'); sG.addColorStop(0.4, '#90CAF9');
+    sG.addColorStop(0.7, '#E8F5E9'); sG.addColorStop(1, '#FFF9C4');
+    sCtx.fillStyle = sG; sCtx.fillRect(0, 0, 2, 512);
+    const skyTex = new THREE.CanvasTexture(skyC);
+    skyTex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = skyTex; scene.environment = skyTex;
+    scene.fog = new THREE.FogExp2(0xE8F5E9, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 6, 9);
+    camera.lookAt(0, 1.5, 0);
+
+    // ════════════════════════════════════════
+    // LIGHTING
+    // ════════════════════════════════════════
+    scene.add(new THREE.AmbientLight(0xFFF8E1, 0.8));
+
+    const sun = new THREE.DirectionalLight(0xFFFDE7, 2.0);
+    sun.position.set(8, 16, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 40;
+    sun.shadow.camera.left = -10; sun.shadow.camera.right = 10;
+    sun.shadow.camera.top = 10; sun.shadow.camera.bottom = -5;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.02;
+    scene.add(sun);
+
+    scene.add(new THREE.DirectionalLight(0xFFCC80, 0.6).translateX(-6).translateY(4));
+    scene.add(new THREE.DirectionalLight(0x81D4FA, 0.4).translateZ(8).translateY(3));
+
+    // Warm oven glow
+    const ovenGlow = new THREE.PointLight(0xFF6E40, 3, 10);
+    ovenGlow.position.set(-3, 1.5, -3);
+    scene.add(ovenGlow);
+
+    // ════════════════════════════════════════
+    // ENVIRONMENT — Italian Outdoor Kitchen
+    // ════════════════════════════════════════
+
+    // Floor — terracotta tiles
+    const floorGeo = new THREE.PlaneGeometry(30, 30);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0xFFE0B2, roughness: 0.8 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -0.5;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Tile pattern
+    for (let i = -5; i <= 5; i++) {
+      for (let j = -3; j <= 5; j++) {
+        if ((i + j) % 2 === 0) continue;
+        const t = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.4, 1.4),
+          new THREE.MeshStandardMaterial({ color: 0xFFCC80, roughness: 0.75 })
+        );
+        t.rotation.x = -Math.PI / 2; t.position.set(i * 1.45, -0.49, j * 1.45);
+        t.receiveShadow = true;
+        scene.add(t);
+      }
+    }
+
+    // Kitchen counter / marble table
+    const counter = new THREE.Group();
+    const counterTop = new THREE.Mesh(
+      new THREE.BoxGeometry(5, 0.2, 3),
+      new THREE.MeshStandardMaterial({ color: 0xFAFAFA, roughness: 0.15, metalness: 0.05 })
+    );
+    counterTop.position.y = 1.0; counterTop.castShadow = true; counterTop.receiveShadow = true;
+    counter.add(counterTop);
+    // Wooden legs
+    [[-2, 1], [2, 1], [-2, -1], [2, -1]].forEach(([x, z]) => {
+      const leg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 1, 8),
+        new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.7 })
+      );
+      leg.position.set(x, 0.5, z); leg.castShadow = true;
+      counter.add(leg);
+    });
+    counter.position.set(0, -0.5, 1);
+    scene.add(counter);
+
+    // Brick oven in background
+    const oven = new THREE.Group();
+    // Oven dome
+    const ovenDome = new THREE.Mesh(
+      new THREE.SphereGeometry(1.8, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: 0xBF360C, roughness: 0.8 })
+    );
+    ovenDome.position.y = 1.2; ovenDome.castShadow = true;
+    oven.add(ovenDome);
+    // Oven base
+    const ovenBase = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 1.2, 2.5),
+      new THREE.MeshStandardMaterial({ color: 0xA1887F, roughness: 0.8 })
+    );
+    ovenBase.position.y = 0.6;
+    oven.add(ovenBase);
+    // Oven opening
+    const ovenMouth = new THREE.Mesh(
+      new THREE.CircleGeometry(0.6, 16, 0, Math.PI),
+      new THREE.MeshStandardMaterial({ color: 0x1A1A1A, emissive: 0xFF3D00, emissiveIntensity: 0.3 })
+    );
+    ovenMouth.position.set(0, 1.3, 1.26);
+    oven.add(ovenMouth);
+    // Chimney
+    const chimney = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.35, 2, 12),
+      new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.8 })
+    );
+    chimney.position.set(0, 3.2, -0.3);
+    oven.add(chimney);
+    oven.position.set(-3, -0.5, -3);
+    scene.add(oven);
+
+    // Ingredient bowls on counter
+    function makeBowl(x, z, contentColor, contentName) {
+      const g = new THREE.Group();
+      const bowl = new THREE.Mesh(
+        new THREE.SphereGeometry(0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: 0xFAFAFA, roughness: 0.3, metalness: 0.1 })
+      );
+      bowl.rotation.x = Math.PI;
+      g.add(bowl);
+      const content = new THREE.Mesh(
+        new THREE.CircleGeometry(0.26, 16),
+        new THREE.MeshStandardMaterial({ color: contentColor, roughness: 0.5 })
+      );
+      content.rotation.x = -Math.PI / 2; content.position.y = 0.05;
+      g.add(content);
+      g.position.set(x, 1.15, z);
+      return g;
+    }
+    counter.add(makeBowl(-1.8, 0.5, 0xF44336, 'sauce'));
+    counter.add(makeBowl(-1.2, 0.8, 0xFFF9C4, 'cheese'));
+    counter.add(makeBowl(1.5, 0.6, 0x4CAF50, 'basil'));
+    counter.add(makeBowl(1.9, 0.2, 0x5D4037, 'olives'));
+
+    // Flour bag
+    const flourBag = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.7, 0.3),
+      new THREE.MeshStandardMaterial({ color: 0xFFF8E1, roughness: 0.8 })
+    );
+    flourBag.position.set(2.2, 1.45, -0.5);
+    counter.add(flourBag);
+
+    // Rolling pin
+    const rollingPin = new THREE.Group();
+    const pinBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 1, 12),
+      new THREE.MeshStandardMaterial({ color: 0xA1887F, roughness: 0.5 })
+    );
+    pinBody.rotation.z = Math.PI / 2;
+    rollingPin.add(pinBody);
+    [-0.55, 0.55].forEach(x => {
+      const handle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 0.2, 8),
+        new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.6 })
+      );
+      handle.rotation.z = Math.PI / 2; handle.position.x = x;
+      rollingPin.add(handle);
+    });
+    rollingPin.position.set(-0.5, 1.2, -0.8);
+    counter.add(rollingPin);
+
+    // Hanging herbs
+    [[-1, 4, -4], [0, 4.3, -4.5], [1.2, 3.8, -4]].forEach(([x, y, z]) => {
+      const herb = new THREE.Group();
+      for (let i = 0; i < 5; i++) {
+        const leaf = new THREE.Mesh(
+          new THREE.SphereGeometry(0.08 + Math.random() * 0.05, 6, 5),
+          new THREE.MeshStandardMaterial({ color: [0x4CAF50, 0x66BB6A, 0x2E7D32][i % 3], roughness: 0.7 })
+        );
+        leaf.position.set((Math.random() - 0.5) * 0.1, -i * 0.12, (Math.random() - 0.5) * 0.1);
+        herb.add(leaf);
+      }
+      const string = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.6, 4),
+        new THREE.MeshBasicMaterial({ color: 0x795548 })
+      );
+      string.position.y = 0.1;
+      herb.add(string);
+      herb.position.set(x, y, z);
+      scene.add(herb);
+    });
+
+    // Trees in background
+    function makeTree(x, z, s = 1) {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12 * s, 0.16 * s, 1.8 * s, 8),
+        new THREE.MeshStandardMaterial({ color: 0x795548, roughness: 0.9 })
+      ).translateY(s));
+      [0x66BB6A, 0x81C784, 0x4CAF50, 0xA5D6A7].forEach((c, i) => {
+        const l = new THREE.Mesh(
+          new THREE.SphereGeometry((0.4 + Math.random() * 0.3) * s, 10, 8),
+          new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 })
+        );
+        l.position.set((Math.random() - 0.5) * s * 0.5, 1.8 * s + (Math.random() - 0.2) * s * 0.5, (Math.random() - 0.5) * s * 0.5);
+        l.castShadow = true; g.add(l);
+      });
+      g.position.set(x, -0.5, z);
+      return g;
+    }
+    [-6, -3, 3, 6, -8, 8].forEach(x => scene.add(makeTree(x, -6 - Math.random() * 4, 0.8 + Math.random() * 0.5)));
+
+    // Clouds
+    const clouds = [];
+    for (let i = 0; i < 6; i++) {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.95 });
+      for (let j = 0; j < 5; j++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.4 + Math.random() * 0.5, 8, 6), mat);
+        p.position.set(j * 0.5 - 1, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2);
+        p.scale.y = 0.5; g.add(p);
+      }
+      g.position.set((Math.random() - 0.5) * 35, 10 + Math.random() * 6, -14 - Math.random() * 8);
+      g.userData.speed = 0.1 + Math.random() * 0.2;
+      scene.add(g); clouds.push(g);
+    }
+
+    // ════════════════════════════════════════
+    // PIZZA DOUGH — the main game object
+    // ════════════════════════════════════════
+    let doughGroup = null;
+    let doughSize = 0.3;
+    let doughSpin = 0;
+    let doughSpinSpeed = 0;
+    let doughTossHeight = 0;
+    let doughTossVel = 0;
+    let toppings = [];
+
+    const TOPPING_TYPES = [
+      { name: 'Pepperoni', color: 0xC62828, size: 0.08 },
+      { name: 'Olive', color: 0x33691E, size: 0.06 },
+      { name: 'Mushroom', color: 0xD7CCC8, size: 0.07 },
+      { name: 'Pepper', color: 0xF57F17, size: 0.06 },
+      { name: 'Basil', color: 0x2E7D32, size: 0.05 },
+    ];
+
+    function createDough() {
+      if (doughGroup) scene.remove(doughGroup);
+      doughGroup = new THREE.Group();
+      doughSize = 0.3;
+      doughSpin = 0;
+      doughSpinSpeed = 0;
+      doughTossHeight = 0;
+      doughTossVel = 0;
+      toppings = [];
+
+      // Dough disc
+      const doughGeo = new THREE.CylinderGeometry(1, 1, 0.12, 48);
+      const doughMat = new THREE.MeshStandardMaterial({
+        color: 0xFFE0B2, roughness: 0.55, metalness: 0.0,
+        emissive: 0xFFCC80, emissiveIntensity: 0.05
+      });
+      const doughMesh = new THREE.Mesh(doughGeo, doughMat);
+      doughMesh.castShadow = true; doughMesh.receiveShadow = true;
+      doughGroup.add(doughMesh);
+      doughGroup.userData.dough = doughMesh;
+
+      // Raised crust rim
+      const crustGeo = new THREE.TorusGeometry(1, 0.08, 10, 48);
+      const crustMat = new THREE.MeshStandardMaterial({
+        color: 0xE6A23C, roughness: 0.5, emissive: 0xBF8C30, emissiveIntensity: 0.03
+      });
+      const crust = new THREE.Mesh(crustGeo, crustMat);
+      crust.rotation.x = Math.PI / 2; crust.position.y = 0.04;
+      doughGroup.add(crust);
+      doughGroup.userData.crust = crust;
+
+      // Sauce layer (appears at certain size)
+      const sauceGeo = new THREE.CylinderGeometry(0.85, 0.85, 0.02, 48);
+      const sauceMat = new THREE.MeshStandardMaterial({
+        color: 0xE53935, roughness: 0.6, transparent: true, opacity: 0
+      });
+      const sauce = new THREE.Mesh(sauceGeo, sauceMat);
+      sauce.position.y = 0.08;
+      doughGroup.add(sauce);
+      doughGroup.userData.sauce = sauce;
+
+      // Cheese layer
+      const cheeseGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.02, 48);
+      const cheeseMat = new THREE.MeshStandardMaterial({
+        color: 0xFFF176, roughness: 0.35, transparent: true, opacity: 0
+      });
+      const cheese = new THREE.Mesh(cheeseGeo, cheeseMat);
+      cheese.position.y = 0.1;
+      doughGroup.add(cheese);
+      doughGroup.userData.cheese = cheese;
+
+      doughGroup.position.set(0, 1.3, 1);
+      doughGroup.scale.setScalar(doughSize);
+      scene.add(doughGroup);
+    }
+
+    function addTopping() {
+      if (!doughGroup || toppings.length >= 25) return;
+      const type = TOPPING_TYPES[Math.floor(Math.random() * TOPPING_TYPES.length)];
+      const t = new THREE.Mesh(
+        new THREE.CylinderGeometry(type.size, type.size, 0.03, 8),
+        new THREE.MeshStandardMaterial({
+          color: type.color, roughness: 0.5,
+          emissive: type.color, emissiveIntensity: 0.05
+        })
+      );
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 0.15 + Math.random() * 0.6;
+      t.position.set(Math.cos(angle) * dist, 0.13, Math.sin(angle) * dist);
+      doughGroup.add(t);
+      toppings.push(t);
+      sfx.topping();
+    }
+
+    // ════════════════════════════════════════
+    // PARTICLES
+    // ════════════════════════════════════════
+    const particles = [];
+    function spawnParticles(x, y, z, count = 25, colors = null) {
+      const pC = colors || [0xFFE0B2, 0xFFCC80, 0xFFB74D, 0xFFA726, 0xFFFFFF];
+      for (let i = 0; i < count; i++) {
+        const p = new THREE.Mesh(
+          new THREE.SphereGeometry(0.03 + Math.random() * 0.02, 6, 4),
+          new THREE.MeshStandardMaterial({ color: pC[i % pC.length], emissive: pC[i % pC.length], emissiveIntensity: 0.2 })
+        );
+        p.position.set(x, y, z);
+        const a = Math.random() * Math.PI * 2;
+        const sp = 2 + Math.random() * 2;
+        p.userData = { vx: Math.cos(a) * sp, vy: 1.5 + Math.random() * 3, vz: Math.sin(a) * sp, rx: Math.random() * 10, ry: Math.random() * 10, life: 1 };
+        scene.add(p); particles.push(p);
+      }
+    }
+
+    // ════════════════════════════════════════
+    // GAME STATE
+    // ════════════════════════════════════════
+    let level = 1, reps = 0, score = 0, pizzaCount = 0, combo = 1;
+    let gameState = 'playing';
+    let circleProgress = 0; // 0 to 1 (one full circle)
+    let lastAngle = null;
+    let totalAngle = 0;
+    let currentAngle = 0;
+
+    const LEVELS = [
+      { targetCircles: 5,  doughGrowth: 0.04, title: 'Apprentice Cook' },
+      { targetCircles: 8,  doughGrowth: 0.035, title: 'Pizzaiolo' },
+      { targetCircles: 10, doughGrowth: 0.03, title: 'Master Chef' },
+      { targetCircles: 12, doughGrowth: 0.025, title: 'Grand Maestro' },
+      { targetCircles: 15, doughGrowth: 0.02, title: 'Legendary Chef' },
+    ];
+    function getLvl() { return LEVELS[Math.min(level - 1, LEVELS.length - 1)]; }
+
+    // ════════════════════════════════════════
+    // HUD
+    // ════════════════════════════════════════
+    const elReps = document.getElementById('v-reps');
+    const elScore = document.getElementById('v-score');
+    const elPizzas = document.getElementById('v-pizzas');
+    const elCombo = document.getElementById('v-combo');
+    const elLevel = document.getElementById('v-level');
+    const elLevelFill = document.getElementById('level-fill');
+    const elToast = document.getElementById('toast');
+    const elCircleFg = document.getElementById('circle-fg');
+    const elCircleVal = document.getElementById('circle-val');
+
+    let toastTimer = null;
+    function toast(t) {
+      elToast.textContent = t; elToast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => elToast.classList.remove('show'), 2000);
+    }
+
+    function updateHUD() {
+      elReps.textContent = reps;
+      elScore.textContent = score.toLocaleString();
+      elPizzas.textContent = pizzaCount;
+      elCombo.textContent = `×${combo}`;
+      elLevel.textContent = level;
+      const cfg = getLvl();
+      elLevelFill.style.width = `${Math.min(100, (reps / cfg.targetCircles) * 100)}%`;
+    }
+
+    function updateCircleProgress() {
+      const circumference = 2 * Math.PI * 16;
+      const offset = circumference * (1 - circleProgress);
+      elCircleFg.style.strokeDashoffset = offset;
+      elCircleVal.textContent = `${Math.round(circleProgress * 100)}%`;
+    }
+
+    // ════════════════════════════════════════
+    // CIRCUMDUCTION TRACKING
+    // ════════════════════════════════════════
+    function onAngleUpdate(angleDeg) {
+      if (gameState !== 'playing') return;
+      const angleRad = angleDeg * Math.PI / 180;
+      currentAngle = angleRad;
+
+      if (lastAngle === null) {
+        lastAngle = angleRad;
+        return;
+      }
+
+      // Calculate angular difference (handling wrapping)
+      let diff = angleRad - lastAngle;
+      if (diff > Math.PI) diff -= Math.PI * 2;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+
+      totalAngle += diff;
+      lastAngle = angleRad;
+
+      // Progress = how many full circles completed (as fraction of current circle)
+      circleProgress = Math.abs(totalAngle % (Math.PI * 2)) / (Math.PI * 2);
+
+      // Spin the dough
+      doughSpinSpeed = Math.abs(diff) * 30;
+
+      // Grow dough with rotation
+      const cfg = getLvl();
+      doughSize = Math.min(1.5, doughSize + Math.abs(diff) * cfg.doughGrowth);
+
+      // Flour particles while spinning
+      if (Math.abs(diff) > 0.05 && Math.random() > 0.6) {
+        spawnParticles(
+          doughGroup.position.x + (Math.random() - 0.5) * doughSize,
+          doughGroup.position.y,
+          doughGroup.position.z + (Math.random() - 0.5) * doughSize,
+          3, [0xFFFFFF, 0xFFF8E1, 0xFFE0B2]
+        );
+      }
+
+      sfx.whoosh(0.5 + doughSize * 0.5);
+
+      // Full circle completed!
+      if (Math.abs(totalAngle) >= Math.PI * 2) {
+        onCircleComplete();
+        totalAngle = totalAngle % (Math.PI * 2);
+      }
+
+      updateCircleProgress();
+    }
+
+    function onCircleComplete() {
+      reps++;
+      const basePoints = 100;
+      score += basePoints * combo;
+      sfx.circle();
+
+      // Toss animation
+      doughTossVel = 3 + doughSize * 2;
+
+      // Growth effects — sauce, cheese, toppings at milestones
+      if (doughSize >= 0.6 && doughGroup.userData.sauce.material.opacity < 0.5) {
+        doughGroup.userData.sauce.material.opacity = 0.9;
+        toast('Tomato sauce added!');
+        combo++;
+      } else if (doughSize >= 0.9 && doughGroup.userData.cheese.material.opacity < 0.5) {
+        doughGroup.userData.cheese.material.opacity = 0.9;
+        toast('Mozzarella added!');
+        combo++;
+      } else if (doughSize >= 1.1 && toppings.length < 5) {
+        for (let i = 0; i < 3; i++) addTopping();
+        toast('Toppings added!');
+      } else if (reps % 3 === 0 && doughSize >= 0.8) {
+        addTopping();
+      }
+
+      spawnParticles(0, 2.5, 1, 20, [0xFFD54F, 0xFFEB3B, 0xFFF176, 0xFFCC80]);
+      updateHUD();
+
+      // Level complete
+      const cfg = getLvl();
+      if (reps >= cfg.targetCircles) {
+        gameState = 'complete';
+        pizzaCount++;
+        sfx.fanfare();
+        showComplete();
+      }
+    }
+
+    // ════════════════════════════════════════
+    // LEVEL COMPLETE
+    // ════════════════════════════════════════
+    function showComplete() {
+      const cfg = getLvl();
+      const rating = combo >= 4 ? 'EXCELLENT (3/3 STARS)' : combo >= 2 ? 'GREAT (2/3 STARS)' : 'GOOD (1/3 STARS)';
+      document.getElementById('m-title').textContent = cfg.title;
+      const mStars = document.getElementById('m-stars');
+      if (mStars) mStars.textContent = rating;
+      document.getElementById('m-sub').textContent =
+        `Level ${level} — ${reps} full rotations, pizza #${pizzaCount} complete.\nScore: ${score.toLocaleString()}`;
+      document.getElementById('m-btn').textContent = level >= 5 ? 'Master Pizza Complete' : `Level ${level + 1} →`;
+      document.getElementById('overlay').classList.add('active');
+
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => spawnParticles(
+          (Math.random() - 0.5) * 5, 3 + Math.random() * 2, (Math.random() - 0.5) * 3, 30,
+          [0xE91E63, 0xFFEB3B, 0x4CAF50, 0xFF9800, 0x2196F3]
+        ), i * 200);
+      }
+    }
+
+    document.getElementById('m-btn').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('active');
+      combo = 1; level++; reps = 0;
+      totalAngle = 0; lastAngle = null; circleProgress = 0;
+      gameState = 'playing';
+      createDough();
+      updateHUD();
+      updateCircleProgress();
+    });
+
+    // ════════════════════════════════════════
+    // INPUT — Circumduction + Mouse + Keyboard
+    // ════════════════════════════════════════
+    // Parent window messages
+    window.addEventListener('message', e => {
+      if (!e.data) return;
+      if (e.data.type === 'neuro-game-action') {
+        if (e.data.angle !== undefined) {
+          onAngleUpdate(e.data.angle);
+        }
+        // Fallback: quadrant-based
+        if (e.data.movement === 'circumduction_right') onAngleUpdate(currentAngle * 180 / Math.PI + 30);
+        if (e.data.movement === 'circumduction_left') onAngleUpdate(currentAngle * 180 / Math.PI - 30);
+      }
+    });
+
+    // WebSocket glove
+    function connectGlove() {
+      try {
+        const ws = new WebSocket('ws://127.0.0.1:8765/ws');
+        ws.onmessage = (e) => {
+          try {
+            const p = JSON.parse(e.data);
+            const h = p.hands?.right || p.hands?.left;
+            const q = h?.imu?.quaternion || h?.fused_quaternion;
+            if (q) {
+              // Compute yaw for circumduction
+              const siny = 2 * (q.w * q.z + q.x * q.y);
+              const cosy = 1 - 2 * (q.y * q.y + q.z * q.z);
+              const yawDeg = Math.atan2(siny, cosy) * 180 / Math.PI;
+              onAngleUpdate(yawDeg);
+            }
+          } catch {}
+        };
+        ws.onclose = () => setTimeout(connectGlove, 3000);
+        ws.onerror = () => {};
+      } catch {}
+    }
+    connectGlove();
+
+    // Mouse — track angle from center
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    window.addEventListener('mousemove', e => {
+      const dx = e.clientX - centerX;
+      const dy = e.clientY - centerY;
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      onAngleUpdate(angle);
+    });
+
+    // Keyboard — simulate rotation
+    let keyAngle = 0;
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'd') { keyAngle += 25; onAngleUpdate(keyAngle); }
+      if (e.key === 'ArrowLeft' || e.key === 'a') { keyAngle -= 25; onAngleUpdate(keyAngle); }
+    });
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    // ════════════════════════════════════════
+    // START
+    // ════════════════════════════════════════
+    createDough();
+    updateHUD();
+    updateCircleProgress();
+
+    // ════════════════════════════════════════
+    // GAME LOOP
+    // ════════════════════════════════════════
+    let lastTime = performance.now();
+    function animate(time) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      if (doughGroup) {
+        // Spin
+        doughSpin += doughSpinSpeed * dt;
+        doughSpinSpeed *= 0.95; // Friction
+        doughGroup.rotation.y = doughSpin;
+
+        // Scale
+        const s = doughGroup.scale.x;
+        doughGroup.scale.setScalar(s + (doughSize - s) * dt * 8);
+
+        // Update sub-elements to match size
+        const ds = doughGroup.userData.dough;
+        if (ds) {
+          ds.scale.set(doughSize / Math.max(0.3, doughGroup.scale.x), 1, doughSize / Math.max(0.3, doughGroup.scale.x));
+        }
+
+        // Toss physics
+        if (doughTossVel > 0.1 || doughTossHeight > 0.05) {
+          doughTossHeight += doughTossVel * dt;
+          doughTossVel -= 12 * dt; // Gravity
+          if (doughTossHeight <= 0) {
+            doughTossHeight = 0;
+            doughTossVel = 0;
+            // Landing squash
+            doughGroup.scale.y = 0.7;
+          }
+        }
+        doughGroup.position.y = 1.3 + doughTossHeight;
+
+        // Recover from squash
+        const sy = doughGroup.scale.y;
+        doughGroup.scale.y = sy + (doughSize - sy) * dt * 10;
+
+        // Gentle wobble
+        doughGroup.rotation.x = Math.sin(time * 0.001) * 0.03;
+        doughGroup.rotation.z = Math.cos(time * 0.0013) * 0.02;
+      }
+
+      // Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.position.x += p.userData.vx * dt;
+        p.position.y += p.userData.vy * dt;
+        p.position.z += p.userData.vz * dt;
+        p.userData.vy -= 10 * dt;
+        p.rotation.x += p.userData.rx * dt;
+        p.rotation.y += p.userData.ry * dt;
+        p.userData.life -= dt * 1.3;
+        p.scale.setScalar(Math.max(0.01, p.userData.life));
+        if (p.userData.life <= 0) { scene.remove(p); particles.splice(i, 1); }
+      }
+
+      // Clouds
+      clouds.forEach(c => { c.position.x += c.userData.speed * dt; if (c.position.x > 22) c.position.x = -22; });
+
+      // Oven glow flicker
+      ovenGlow.intensity = 2.5 + Math.sin(time * 0.005) * 0.8;
+
+      // Camera
+      camera.position.x = Math.sin(time * 0.0003) * 0.2;
+      camera.position.y = 6 + Math.sin(time * 0.0005) * 0.1;
+      camera.lookAt(0, 1.5, 0);
+
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

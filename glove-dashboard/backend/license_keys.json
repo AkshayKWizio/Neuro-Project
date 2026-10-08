@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "keys": [
+    {
+      "id": "LIC-DEMO-TEAM-2026",
+      "label": "Sanitized teammate handoff",
+      "key_hash": "1b24539a2871788b36a02a1216ea2f0f941b61d41ac10f5fbf84160ead84d176",
+      "valid_from": "2026-01-01T00:00:00Z",
+      "expires_at": "2027-12-31T23:59:59Z",
+      "enabled": true
+    },
+    {
+      "id": "LIC-EVAL-QUICK",
+      "label": "Quick Evaluation Access",
+      "key_hash": "d775733141dfa3e2f4eca2512b9929d58e2e89a36b0adb50f0a16db98a1634a2",
+      "valid_from": "2026-01-01T00:00:00Z",
+      "expires_at": "2030-12-31T23:59:59Z",
+      "enabled": true
+    },
+    {
+      "id": "LIC-EXPIRED-TEST",
+      "label": "Expired test license",
+      "key_hash": "52702483f8122313fe4b15dac9ad4be71ea3744ad20d7d004b983b11a048e84c",
+      "valid_from": "2024-01-01T00:00:00Z",
+      "expires_at": "2025-01-01T00:00:00Z",
+      "enabled": true
+    }
+  ]
+}

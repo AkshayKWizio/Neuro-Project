@@ -1,0 +1,58 @@
+{
+  "created_on": "2026-09-04",
+  "cover_reference_policy": "Original text-only brief; no reference uploads",
+  "cover_original": {
+    "format": "PNG",
+    "bytes": 5131937,
+    "sha256": "b6f4780c34c9c76a52a01165aafc90db57d62311ea5012f82991a869ba20ce42"
+  },
+  "files": {
+    "night-relay-cover.webp": {
+      "kind": "generated concept illustration",
+      "model": "GPT Image 2",
+      "provider": "Higgsfield",
+      "interface": "Higgsfield CLI",
+      "resolution_parameter": "2k",
+      "quality": "high",
+      "aspect_ratio": "21:9",
+      "width": 2688,
+      "height": 1152,
+      "webp_quality": 88,
+      "prompt_file": "night-relay-cover.prompt.txt",
+      "bytes": 624224,
+      "sha256": "fe83456519d9b7f964a5d78480b5c10ddfe0a6ef528d6392cefeba9e58281262",
+      "encoding": "cwebp, method 6, metadata removed; original dimensions preserved"
+    },
+    "gameplay.webp": {
+      "kind": "direct browser screenshot",
+      "context": "local game, no backend",
+      "width": 1440,
+      "height": 900,
+      "webp_quality": 87,
+      "bytes": 183542,
+      "sha256": "0ed4028576a03e660c9f9ced03f9807241d2483d5d6ba533d1c21940c3fc1470",
+      "encoding": "cwebp, method 6, metadata removed; original dimensions preserved"
+    },
+    "run-results.webp": {
+      "kind": "direct browser screenshot",
+      "context": "isolated development database with test couriers",
+      "width": 1280,
+      "height": 900,
+      "webp_quality": 90,
+      "bytes": 47184,
+      "sha256": "552c1ca32a457f88114cc0e2bd0d452e4aad55192d8ef5e4320586fc9cebaafb",
+      "encoding": "cwebp, method 6, metadata removed; original dimensions preserved"
+    },
+    "leaderboard-mobile.webp": {
+      "kind": "direct browser screenshot",
+      "context": "isolated development database with test couriers",
+      "width": 390,
+      "height": 844,
+      "webp_quality": 92,
+      "bytes": 30162,
+      "sha256": "6f88ce34c67ff8361d108130ad20d1a834a90e4c8f20d0ae8ab733531a68279b",
+      "encoding": "cwebp, method 6, metadata removed; original dimensions preserved"
+    }
+  },
+  "asset_notice": "../../ASSETS.md"
+}

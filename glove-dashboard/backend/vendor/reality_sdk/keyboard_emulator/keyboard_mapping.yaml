@@ -1,0 +1,133 @@
+# "mode" options:
+#   - "left": Create one virtual Xbox360 vgamepad and use the controller inputs from the left hand exclusively
+#   - "right": Create one virtual Xbox360 gamepad and Use the controller inputs from the right hand exclusively
+#   - "merged_or": Create one virtual Xbox360 gamepad and OR the inputs from the left hand and the right hand (i.e. either hand can activate a shared controller button)
+#   - "merged_preferred": Create one virtual Xbox360 gamepad but select which hand controls a controller input on a field by field basis
+#   - "independent": Create two virtual Xbox360 gamepads, one for each hand, and use the control inputs from each hand for its own controller
+mode: merged_preferred
+
+# LEFT MODE TEMPLATE ----------------------------------------------------------
+left:
+  joystick_y:
+    threshold: 0.9
+    key: hold_up
+
+  joystick_y_negative:
+    threshold: -0.9
+    key: hold_down
+
+  joystick_x:
+    threshold: 0.9
+    key: hold_right
+
+  joystick_x_negative:
+    threshold: -0.9
+    key: hold_left
+
+  grab_pressed: hold_a
+  button1: hold_b
+  button2: hold_c
+  trigger_pressed: hold_d
+  menu_pressed: hold_e
+
+
+# RIGHT MODE TEMPLATE ---------------------------------------------------------
+right:
+  joystick_y:
+    threshold: 0.9
+    key: hold_up
+
+  joystick_y_negative:
+    threshold: -0.9
+    key: hold_down
+
+  joystick_x:
+    threshold: 0.9
+    key: hold_right
+
+  joystick_x_negative:
+    threshold: -0.9
+    key: hold_left
+
+  grab_pressed: hold_a
+  button1: hold_b
+  button2: hold_c
+  trigger_pressed: hold_d
+  menu_pressed: hold_e
+
+
+# MERGED_OR MODE TEMPLATE -----------------------------------------------------
+merged_or:
+  joystick_y:
+    threshold: 0.9
+    key: hold_up
+
+  joystick_y_negative:
+    threshold: -0.9
+    key: hold_down
+
+  joystick_x:
+    threshold: 0.9
+    key: hold_right
+
+  joystick_x_negative:
+    threshold: -0.9
+    key: hold_left
+
+  grab_pressed: hold_a
+  button1: hold_b
+  button2: hold_c
+  trigger_pressed: hold_d
+  menu_pressed: hold_e
+
+
+# MERGED_PREFERRED MODE TEMPLATE ----------------------------------------------
+merged_preferred:
+
+  # Left hand joystick controls arrow keys
+  joystick_y:
+    source: left
+    threshold: 0.9
+    key: hold_up
+
+  joystick_y_negative:
+    source: left
+    threshold: -0.9
+    key: hold_down
+
+  joystick_x:
+    source: left
+    threshold: 0.9
+    key: hold_right
+
+  joystick_x_negative:
+    source: left
+    threshold: -0.9
+    key: hold_left
+
+  # Right hand buttons trigger A–E via press threshold
+  button1:
+    source: right
+    threshold: 0.5
+    key: hold_b
+
+  button2:
+    source: right
+    threshold: 0.5
+    key: hold_a
+
+  grab_pressed:
+    source: right
+    threshold: 0.5
+    key: hold_1
+
+  trigger_pressed:
+    source: right
+    threshold: 0.5
+    key: hold_2
+
+  menu_pressed:
+    source: right
+    threshold: 0.5
+    key: hold_3
+

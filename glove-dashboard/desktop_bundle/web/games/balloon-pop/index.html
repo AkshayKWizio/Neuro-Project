@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balloon Pop — Neuro-Rehabilitation Grasp Biofeedback</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #b9e6fe 0%, #e0f2fe 45%, #f0fdf4 100%);
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .hud {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hud-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      border-radius: 9999px;
+      padding: 6px 18px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(14, 116, 144, 0.1);
+    }
+    .stat { display: flex; align-items: baseline; gap: 5px; }
+    .stat-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #64748b; text-transform: uppercase; }
+    .stat-val { font-size: 20px; font-weight: 800; color: #0284c7; font-variant-numeric: tabular-nums; }
+    .stat-val.accent { color: #059669; }
+    .stat-val.combo { color: #d97706; }
+
+    /* Sleek Mini Squeeze Meter (Top Right) */
+    .mini-squeeze {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(14, 116, 144, 0.1);
+    }
+    .squeeze-label { font-size: 10px; font-weight: 800; color: #475569; letter-spacing: 0.06em; }
+    .squeeze-bar-track {
+      width: 70px;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .squeeze-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8 0%, #10b981 60%, #ef4444 100%);
+      border-radius: 9999px;
+      transition: width 0.08s ease-out;
+    }
+    .squeeze-pct { font-size: 12px; font-weight: 800; color: #0284c7; width: 32px; text-align: right; }
+
+    .controls-hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #475569;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cbd5e1;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      pointer-events: none;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: opacity 1s ease;
+    }
+    .controls-hint.fade-out { opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-card">
+      <div class="stat">
+        <span class="stat-label">Score</span>
+        <span class="stat-val" id="score-val">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Repetitions</span>
+        <span class="stat-val accent" id="reps-val">0 / 20</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Streak</span>
+        <span class="stat-val combo" id="combo-val">0x</span>
+      </div>
+    </div>
+
+    <div class="mini-squeeze">
+      <span class="squeeze-label">GRIP:</span>
+      <div class="squeeze-bar-track">
+        <div class="squeeze-bar-fill" id="squeeze-fill"></div>
+      </div>
+      <span class="squeeze-pct" id="squeeze-pct">0%</span>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <div class="controls-hint" id="controls-hint">
+    <span style="background:#0F172A;color:#fff;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-right:6px">GRASP / EXTEND</span>
+    <span>Squeeze fist to pop targets, then fully extend fingers to reload</span>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      const hint = document.getElementById('controls-hint');
+      if (hint) hint.classList.add('fade-out');
+    }, 3500);
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playPopSound(freq = 440) {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 2.8, audioCtx.currentTime + 0.07);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.13);
+      } catch (e) {}
+    }
+
+    function playChime(combo) {
+      if (!audioCtx) return;
+      try {
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 659.25];
+        const note = notes[Math.min(notes.length - 1, combo)];
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.36);
+      } catch (e) {}
+    }
+
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const clouds = [];
+    for (let i = 0; i < 6; i++) {
+      clouds.push({
+        x: Math.random() * width,
+        y: 40 + Math.random() * (height * 0.45),
+        radius: 40 + Math.random() * 50,
+        speed: 0.2 + Math.random() * 0.4
+      });
+    }
+
+    let score = 0;
+    let reps = 0;
+    let combo = 0;
+    let squeezeVal = 0;
+    let reticleX = width / 2;
+    let reticleTargetX = width / 2;
+    const SQUEEZE_THRESHOLD = 0.55;
+    let isSqueezing = false;
+
+    const BALLOON_PALETTES = [
+      { main: '#ff2e63', light: '#ff7597', dark: '#d80032' },
+      { main: '#ff7a00', light: '#ffa94d', dark: '#d95300' },
+      { main: '#ffd600', light: '#ffea75', dark: '#d4af00' },
+      { main: '#00e676', light: '#69f0ae', dark: '#00b248' },
+      { main: '#00b4d8', light: '#90e0ef', dark: '#0077b6' },
+      { main: '#8b5cf6', light: '#c4b5fd', dark: '#6d28d9' },
+      { main: '#ec4899', light: '#f472b6', dark: '#be185d' }
+    ];
+
+    class Balloon {
+      constructor() {
+        this.reset();
+        this.y = height + 50 + Math.random() * 200;
+      }
+      reset() {
+        this.radius = 34 + Math.random() * 22;
+        this.x = 80 + Math.random() * (width - 160);
+        this.y = height + this.radius + 10;
+        this.speed = 1.6 + Math.random() * 2.2;
+        this.wobbleSpeed = 0.02 + Math.random() * 0.03;
+        this.wobbleAmp = 20 + Math.random() * 25;
+        this.wobblePhase = Math.random() * Math.PI * 2;
+        this.color = BALLOON_PALETTES[Math.floor(Math.random() * BALLOON_PALETTES.length)];
+        this.scaleY = 1.18;
+      }
+      update() {
+        this.y -= this.speed;
+        this.wobblePhase += this.wobbleSpeed;
+        this.currentX = this.x + Math.sin(this.wobblePhase) * this.wobbleAmp;
+        return this.y + this.radius < -30;
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.currentX, this.y);
+
+        c.beginPath();
+        c.moveTo(0, this.radius * this.scaleY);
+        c.bezierCurveTo(
+          -10, this.radius * this.scaleY + 25,
+          10, this.radius * this.scaleY + 45,
+          0, this.radius * this.scaleY + 70
+        );
+        c.strokeStyle = 'rgba(100, 116, 139, 0.45)';
+        c.lineWidth = 1.8;
+        c.stroke();
+
+        c.scale(1, this.scaleY);
+        const grad = c.createRadialGradient(
+          -this.radius * 0.28, -this.radius * 0.28, this.radius * 0.1,
+          0, 0, this.radius
+        );
+        grad.addColorStop(0, this.color.light);
+        grad.addColorStop(0.65, this.color.main);
+        grad.addColorStop(1, this.color.dark);
+
+        c.beginPath();
+        c.arc(0, 0, this.radius, 0, Math.PI * 2);
+        c.fillStyle = grad;
+        c.shadowColor = 'rgba(0, 0, 0, 0.12)';
+        c.shadowBlur = 14;
+        c.shadowOffsetY = 6;
+        c.fill();
+
+        c.beginPath();
+        c.moveTo(-5, this.radius - 1);
+        c.lineTo(5, this.radius - 1);
+        c.lineTo(7, this.radius + 7);
+        c.lineTo(-7, this.radius + 7);
+        c.closePath();
+        c.fillStyle = this.color.dark;
+        c.fill();
+
+        c.beginPath();
+        c.ellipse(-this.radius * 0.36, -this.radius * 0.38, this.radius * 0.26, this.radius * 0.14, -Math.PI / 4, 0, Math.PI * 2);
+        c.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        c.fill();
+
+        c.restore();
+      }
+    }
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3.5 + Math.random() * 8.5;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.radius = 3 + Math.random() * 5;
+        this.life = 1.0;
+        this.decay = 0.015 + Math.random() * 0.025;
+        this.gravity = 0.22;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.vx *= 0.98;
+        this.life -= this.decay;
+        return this.life <= 0;
+      }
+      draw(c) {
+        c.save();
+        c.globalAlpha = Math.max(0, this.life);
+        c.fillStyle = this.color;
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    class FloatingText {
+      constructor(text, x, y, color = '#0284c7') {
+        this.text = text;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.life = 1.0;
+        this.vy = -2.2;
+      }
+      update() {
+        this.y += this.vy;
+        this.life -= 0.022;
+        return this.life <= 0;
+      }
+      draw(c) {
+        c.save();
+        c.globalAlpha = Math.max(0, this.life);
+        c.font = 'bold 22px -apple-system, sans-serif';
+        c.fillStyle = this.color;
+        c.textAlign = 'center';
+        c.fillText(this.text, this.x, this.y);
+        c.restore();
+      }
+    }
+
+    const balloons = [];
+    const MAX_BALLOONS = 7;
+    for (let i = 0; i < MAX_BALLOONS; i++) balloons.push(new Balloon());
+
+    const particles = [];
+    const floatingTexts = [];
+
+    function spawnBalloons() {
+      if (balloons.length < MAX_BALLOONS) balloons.push(new Balloon());
+    }
+
+    function triggerPop(overrideX = null) {
+      initAudio();
+      const targetX = overrideX !== null ? overrideX : reticleX;
+      let hit = false;
+
+      for (let i = balloons.length - 1; i >= 0; i--) {
+        const b = balloons[i];
+        const dist = Math.hypot(targetX - b.currentX, (height * 0.45) - b.y);
+        if (dist < b.radius * 1.35) {
+          for (let p = 0; p < 32; p++) {
+            particles.push(new Particle(b.currentX, b.y, b.color.main));
+            particles.push(new Particle(b.currentX, b.y, '#ffffff'));
+          }
+          combo++;
+          const pts = 100 * combo;
+          score += pts;
+          reps++;
+
+          playPopSound(380 + Math.min(combo * 45, 600));
+          playChime(combo);
+
+          floatingTexts.push(new FloatingText(`+${pts} (${combo}x)`, b.currentX, b.y, b.color.dark));
+          balloons.splice(i, 1);
+          hit = true;
+          break;
+        }
+      }
+
+      if (!hit && overrideX === null) playPopSound(180);
+
+      document.getElementById('score-val').innerText = score;
+      document.getElementById('reps-val').innerText = `${reps} / 20`;
+      document.getElementById('combo-val').innerText = `${combo}x`;
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'neuro-game-score',
+          game: 'balloon-pop',
+          score,
+          reps,
+          combo
+        }, '*');
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); triggerPop(); }
+      else if (e.code === 'ArrowLeft') reticleTargetX = Math.max(60, reticleTargetX - 70);
+      else if (e.code === 'ArrowRight') reticleTargetX = Math.min(width - 60, reticleTargetX + 70);
+    });
+
+    canvas.addEventListener('pointerdown', (e) => {
+      reticleTargetX = e.clientX;
+      triggerPop(e.clientX);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      reticleTargetX = e.clientX;
+    });
+
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'neuro-game-action') {
+        if (data.action === 'move_left') reticleTargetX = Math.max(60, reticleTargetX - 90);
+        else if (data.action === 'move_right') reticleTargetX = Math.min(width - 60, reticleTargetX + 90);
+        else if (data.action === 'primary_action' || data.action === 'secondary_action' || data.movement === 'wrist_close') triggerPop();
+      }
+    });
+
+    function connectGloveTelemetry() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+      ws.onmessage = (evt) => {
+        try {
+          const telemetry = JSON.parse(evt.data);
+          const hand = telemetry?.hands?.right || telemetry?.hands?.left;
+          if (hand) {
+            const sliders = hand.sliders || {};
+            const vals = Object.values(sliders);
+            if (vals.length > 0) {
+              const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+              squeezeVal = avg;
+              const fill = document.getElementById('squeeze-fill');
+              const pct = document.getElementById('squeeze-pct');
+              if (fill) fill.style.width = `${Math.min(100, Math.round(squeezeVal * 100))}%`;
+              if (pct) pct.innerText = `${Math.round(squeezeVal * 100)}%`;
+
+              if (squeezeVal >= SQUEEZE_THRESHOLD && !isSqueezing) {
+                isSqueezing = true;
+                triggerPop();
+              } else if (squeezeVal < SQUEEZE_THRESHOLD * 0.7) {
+                isSqueezing = false;
+              }
+            }
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => setTimeout(connectGloveTelemetry, 2500);
+    }
+    connectGloveTelemetry();
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      clouds.forEach(cl => {
+        cl.x += cl.speed;
+        if (cl.x - cl.radius > width) cl.x = -cl.radius;
+        ctx.beginPath();
+        ctx.arc(cl.x, cl.y, cl.radius, 0, Math.PI * 2);
+        ctx.arc(cl.x + cl.radius * 0.6, cl.y - cl.radius * 0.2, cl.radius * 0.8, 0, Math.PI * 2);
+        ctx.arc(cl.x - cl.radius * 0.6, cl.y - cl.radius * 0.1, cl.radius * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      reticleX += (reticleTargetX - reticleX) * 0.18;
+
+      ctx.save();
+      const beamGrad = ctx.createLinearGradient(reticleX - 25, 0, reticleX + 25, 0);
+      beamGrad.addColorStop(0, 'rgba(14, 165, 233, 0)');
+      beamGrad.addColorStop(0.5, 'rgba(14, 165, 233, 0.18)');
+      beamGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
+      ctx.fillStyle = beamGrad;
+      ctx.fillRect(reticleX - 25, 0, 50, height);
+
+      ctx.beginPath();
+      ctx.moveTo(reticleX, 0);
+      ctx.lineTo(reticleX, height);
+      ctx.strokeStyle = 'rgba(2, 132, 199, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      ctx.arc(reticleX, height * 0.45, 34, 0, Math.PI * 2);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(reticleX, height * 0.45, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#0284c7';
+      ctx.fill();
+      ctx.restore();
+
+      spawnBalloons();
+      for (let i = balloons.length - 1; i >= 0; i--) {
+        const b = balloons[i];
+        const offscreen = b.update();
+        if (offscreen) {
+          balloons.splice(i, 1);
+          combo = 0;
+          document.getElementById('combo-val').innerText = '0x';
+        } else {
+          b.draw(ctx);
+        }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        if (particles[i].update()) particles.splice(i, 1);
+        else particles[i].draw(ctx);
+      }
+
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        if (floatingTexts[i].update()) floatingTexts.splice(i, 1);
+        else floatingTexts[i].draw(ctx);
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

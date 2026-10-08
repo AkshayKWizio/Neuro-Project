@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Piano — Neuro-Rehabilitation Digit Articulation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 45%, #ede9fe 100%);
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .hud {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 9999px;
+      padding: 6px 18px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
+    }
+    .stat { display: flex; align-items: baseline; gap: 5px; }
+    .stat-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #64748b; text-transform: uppercase; }
+    .stat-val { font-size: 20px; font-weight: 800; color: #4f46e5; font-variant-numeric: tabular-nums; }
+    .stat-val.accent { color: #059669; }
+
+    /* Mini Finger Indicators */
+    .mini-fingers {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
+    }
+    .finger-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      transition: all 0.1s ease;
+    }
+    .finger-dot.active {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      transform: scale(1.2);
+    }
+
+    #waterfall-canvas {
+      flex: 1;
+      width: 100%;
+      display: block;
+    }
+
+    .piano-container {
+      position: relative;
+      height: 190px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      padding: 10px 24px 14px;
+      display: flex;
+      justify-content: center;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+      border-top: 3px solid #6366f1;
+    }
+    .keyboard {
+      position: relative;
+      display: flex;
+      height: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+    .key {
+      position: relative;
+      cursor: pointer;
+      border-radius: 0 0 6px 6px;
+      transition: all 0.08s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .white-key {
+      width: 64px;
+      height: 100%;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 85%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+      border-top: none;
+      color: #334155;
+      z-index: 1;
+      box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .white-key:hover { background: #f1f5f9; }
+    .white-key.active {
+      background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+      transform: translateY(3px);
+      color: #4338ca;
+    }
+    .black-key {
+      position: absolute;
+      width: 38px;
+      height: 60%;
+      background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+      border: 1px solid #000;
+      border-radius: 0 0 4px 4px;
+      color: #94a3b8;
+      z-index: 2;
+      box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.4);
+      font-size: 11px;
+    }
+    .black-key:hover { background: #1e293b; }
+    .black-key.active {
+      background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%) !important;
+      transform: translateY(2px);
+      box-shadow: 0 0 12px #6366f1 !important;
+      color: #fff;
+    }
+
+    .k-cs { left: 44px; }
+    .k-ds { left: 108px; }
+    .k-fs { left: 236px; }
+    .k-gs { left: 300px; }
+    .k-as { left: 364px; }
+
+    .controls-hint {
+      position: absolute;
+      bottom: 205px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #475569;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cbd5e1;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      pointer-events: none;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: opacity 1s ease;
+    }
+    .controls-hint.fade-out { opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-card">
+      <div class="stat">
+        <span class="stat-label">Articulations</span>
+        <span class="stat-val" id="notes-val">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-val accent" id="acc-val">100%</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Target Key</span>
+        <span class="stat-val" id="last-note" style="color:#d97706">—</span>
+      </div>
+    </div>
+
+    <div class="mini-fingers">
+      <span style="font-size:10px;font-weight:800;color:#64748b;margin-right:2px">DIGITS:</span>
+      <div class="finger-dot" id="dot-thumb" title="Thumb"></div>
+      <div class="finger-dot" id="dot-index" title="Index"></div>
+      <div class="finger-dot" id="dot-middle" title="Middle"></div>
+      <div class="finger-dot" id="dot-ring" title="Ring"></div>
+      <div class="finger-dot" id="dot-pinky" title="Pinky"></div>
+    </div>
+  </div>
+
+  <canvas id="waterfall-canvas"></canvas>
+
+  <div class="controls-hint" id="controls-hint">
+    <span style="background:#0F172A;color:#fff;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:0.05em;margin-right:6px">INDIVIDUAL DIGITS</span>
+    <span>Flex fingers to strike matching notes on the virtual piano</span>
+  </div>
+
+  <div class="piano-container">
+    <div class="keyboard" id="keyboard">
+      <div class="key white-key" data-note="C4" data-finger="Thumb"><span>C4</span><small style="font-size:9px;color:#94a3b8">1</small></div>
+      <div class="key white-key" data-note="D4" data-finger="Index"><span>D4</span><small style="font-size:9px;color:#94a3b8">2</small></div>
+      <div class="key white-key" data-note="E4" data-finger="Middle"><span>E4</span><small style="font-size:9px;color:#94a3b8">3</small></div>
+      <div class="key white-key" data-note="F4" data-finger="Ring"><span>F4</span><small style="font-size:9px;color:#94a3b8">4</small></div>
+      <div class="key white-key" data-note="G4" data-finger="Pinky"><span>G4</span><small style="font-size:9px;color:#94a3b8">5</small></div>
+      <div class="key white-key" data-note="A4" data-finger="Thumb"><span>A4</span><small style="font-size:9px;color:#94a3b8">6</small></div>
+      <div class="key white-key" data-note="B4" data-finger="Index"><span>B4</span><small style="font-size:9px;color:#94a3b8">7</small></div>
+      <div class="key white-key" data-note="C5" data-finger="Middle"><span>C5</span><small style="font-size:9px;color:#94a3b8">8</small></div>
+
+      <div class="key black-key k-cs" data-note="C#4">C#</div>
+      <div class="key black-key k-ds" data-note="D#4">D#</div>
+      <div class="key black-key k-fs" data-note="F#4">F#</div>
+      <div class="key black-key k-gs" data-note="G#4">G#</div>
+      <div class="key black-key k-as" data-note="A#4">A#</div>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      const hint = document.getElementById('controls-hint');
+      if (hint) hint.classList.add('fade-out');
+    }, 3500);
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    const NOTE_FREQS = {
+      'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+      'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+      'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+      'C5': 523.25
+    };
+
+    const NOTE_COLORS = {
+      'C4': '#ef4444', 'C#4': '#f97316', 'D4': '#f59e0b', 'D#4': '#eab308',
+      'E4': '#84cc16', 'F4': '#10b981', 'F#4': '#06b6d4', 'G4': '#0284c7',
+      'G#4': '#3b82f6', 'A4': '#6366f1', 'A#4': '#8b5cf6', 'B4': '#d946ef',
+      'C5': '#ec4899'
+    };
+
+    function playPianoTone(freq) {
+      if (!audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        const fundamental = audioCtx.createOscillator();
+        const harmonic2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        fundamental.type = 'triangle';
+        fundamental.frequency.setValueAtTime(freq, now);
+
+        harmonic2.type = 'sine';
+        harmonic2.frequency.setValueAtTime(freq * 2, now);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+        fundamental.connect(gain);
+        harmonic2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        fundamental.start(now);
+        harmonic2.start(now);
+        fundamental.stop(now + 1.25);
+        harmonic2.stop(now + 1.25);
+      } catch (e) {}
+    }
+
+    const canvas = document.getElementById('waterfall-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight - 190;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight - 190;
+    });
+
+    let notesHit = 0;
+    let totalAttempts = 0;
+
+    const SONG = [
+      { note: 'E4', delay: 0 }, { note: 'E4', delay: 45 }, { note: 'F4', delay: 90 }, { note: 'G4', delay: 135 },
+      { note: 'G4', delay: 180 }, { note: 'F4', delay: 225 }, { note: 'E4', delay: 270 }, { note: 'D4', delay: 315 },
+      { note: 'C4', delay: 360 }, { note: 'C4', delay: 405 }, { note: 'D4', delay: 450 }, { note: 'E4', delay: 495 },
+      { note: 'E4', delay: 540 }, { note: 'D4', delay: 600 }, { note: 'D4', delay: 645 }
+    ];
+
+    class FallingNote {
+      constructor(note, spawnFrame) {
+        this.note = note;
+        this.spawnFrame = spawnFrame;
+        this.y = -40;
+        this.speed = 2.4;
+        this.radius = 16;
+        this.color = NOTE_COLORS[note] || '#6366f1';
+      }
+      update() {
+        this.y += this.speed;
+        return this.y > height + 20;
+      }
+      draw(c, keyX) {
+        c.save();
+        c.beginPath();
+        c.arc(keyX, this.y, this.radius, 0, Math.PI * 2);
+        c.fillStyle = this.color;
+        c.shadowColor = this.color;
+        c.shadowBlur = 10;
+        c.fill();
+        c.beginPath();
+        c.arc(keyX, this.y, this.radius * 0.5, 0, Math.PI * 2);
+        c.fillStyle = '#ffffff';
+        c.fill();
+        c.restore();
+      }
+    }
+
+    const fallingNotes = [];
+    let frameCount = 0;
+
+    function spawnSongNotes() {
+      SONG.forEach(item => {
+        if (frameCount === item.delay) {
+          fallingNotes.push(new FallingNote(item.note, frameCount));
+        }
+      });
+      if (frameCount > 700 && fallingNotes.length === 0) {
+        frameCount = 0;
+      }
+    }
+
+    function triggerKey(note, fingerName = '') {
+      initAudio();
+      const freq = NOTE_FREQS[note];
+      if (freq) playPianoTone(freq);
+
+      const el = document.querySelector(`[data-note="${note}"]`);
+      if (el) {
+        el.classList.add('active');
+        setTimeout(() => el.classList.remove('active'), 180);
+      }
+
+      document.getElementById('last-note').innerText = note;
+
+      totalAttempts++;
+      let matched = false;
+      for (let i = 0; i < fallingNotes.length; i++) {
+        const fn = fallingNotes[i];
+        if (fn.note === note && Math.abs(fn.y - height) < 60) {
+          notesHit++;
+          matched = true;
+          fallingNotes.splice(i, 1);
+          break;
+        }
+      }
+      if (!matched && fallingNotes.length === 0) notesHit++;
+
+      document.getElementById('notes-val').innerText = notesHit;
+      const acc = totalAttempts > 0 ? Math.round((notesHit / totalAttempts) * 100) : 100;
+      document.getElementById('acc-val').innerText = `${acc}%`;
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'neuro-game-score',
+          game: 'virtual-piano',
+          score: notesHit * 50,
+          accuracy: acc,
+          note
+        }, '*');
+      }
+    }
+
+    document.querySelectorAll('.key').forEach(k => {
+      k.addEventListener('pointerdown', () => {
+        triggerKey(k.dataset.note, k.dataset.finger || '');
+      });
+    });
+
+    const KEY_MAP = {
+      '1': 'C4', '2': 'D4', '3': 'E4', '4': 'F4',
+      '5': 'G4', '6': 'A4', '7': 'B4', '8': 'C5'
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (KEY_MAP[e.key]) triggerKey(KEY_MAP[e.key]);
+    });
+
+    const fingerStates = {
+      thumb: { prev: false, note: 'C4', name: 'Thumb', dot: 'dot-thumb' },
+      index: { prev: false, note: 'D4', name: 'Index', dot: 'dot-index' },
+      middle: { prev: false, note: 'E4', name: 'Middle', dot: 'dot-middle' },
+      ring: { prev: false, note: 'F4', name: 'Ring', dot: 'dot-ring' },
+      pinky: { prev: false, note: 'G4', name: 'Pinky', dot: 'dot-pinky' }
+    };
+
+    function connectGloveTelemetry() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+      ws.onmessage = (evt) => {
+        try {
+          const telemetry = JSON.parse(evt.data);
+          const hand = telemetry?.hands?.right || telemetry?.hands?.left;
+          if (hand && hand.sliders) {
+            const s = hand.sliders;
+            const thumbVal = s['THUMBBEND1'] ?? s['Thumb_MCP_Flexion'] ?? 0.1;
+            const indexVal = s['INDEXBEND1'] ?? s['Index_MCP_Flexion'] ?? 0.1;
+            const midVal = s['MIDDLEBEND1'] ?? s['Middle_MCP_Flexion'] ?? 0.1;
+            const ringVal = s['RINGBEND1'] ?? s['Ring_MCP_Flexion'] ?? 0.1;
+            const pinkyVal = s['PINKYBEND1'] ?? s['Pinky_MCP_Flexion'] ?? 0.1;
+
+            const THRESH = 0.45;
+            const check = (key, val) => {
+              const f = fingerStates[key];
+              const flexed = val > THRESH;
+              const dot = document.getElementById(f.dot);
+              if (dot) {
+                if (flexed) dot.classList.add('active');
+                else dot.classList.remove('active');
+              }
+              if (flexed && !f.prev) {
+                f.prev = true;
+                triggerKey(f.note, f.name);
+              } else if (!flexed && f.prev) {
+                f.prev = false;
+              }
+            };
+
+            check('thumb', thumbVal);
+            check('index', indexVal);
+            check('middle', midVal);
+            check('ring', ringVal);
+            check('pinky', pinkyVal);
+          }
+        } catch (e) {}
+      };
+      ws.onclose = () => setTimeout(connectGloveTelemetry, 2500);
+    }
+    connectGloveTelemetry();
+
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'neuro-game-action') {
+        if (data.movement === 'pronation') triggerKey('D4', 'Index');
+        else if (data.movement === 'supination') triggerKey('G4', 'Pinky');
+        else if (data.movement === 'wrist_close') triggerKey('C4', 'Thumb');
+        else if (data.movement === 'wrist_open') triggerKey('E4', 'Middle');
+      }
+    });
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      const whiteKeys = document.querySelectorAll('.white-key');
+      whiteKeys.forEach(key => {
+        const rect = key.getBoundingClientRect();
+        const keyCenterX = rect.left + rect.width / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(keyCenterX, 0);
+        ctx.lineTo(keyCenterX, height);
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      ctx.beginPath();
+      ctx.moveTo(0, height - 12);
+      ctx.lineTo(width, height - 12);
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      frameCount++;
+      spawnSongNotes();
+
+      for (let i = fallingNotes.length - 1; i >= 0; i--) {
+        const fn = fallingNotes[i];
+        const keyEl = document.querySelector(`[data-note="${fn.note}"]`);
+        if (keyEl) {
+          const rect = keyEl.getBoundingClientRect();
+          const keyX = rect.left + rect.width / 2;
+          if (fn.update()) fallingNotes.splice(i, 1);
+          else fn.draw(ctx, keyX);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

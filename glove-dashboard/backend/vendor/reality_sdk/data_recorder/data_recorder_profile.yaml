@@ -1,0 +1,19 @@
+# Poll rate for checking packet updates in SharedState.
+poll_hz: 60.0
+
+# Output path: <home_directory>/recordings/<sub_directory>/<filename_prefix>_<timestamp>.csv
+home_directory: ""
+sub_directory: recordings
+filename_prefix: ""
+
+# Round floating-point values to this many significant figures before CSV write.
+# Use 3 for smaller files, 6 for higher precision, or null to disable rounding.
+significant_figures: 6
+
+# Include/exclude data groups in CSV output.
+include_joint_position: false
+include_joint_rotation: true
+include_sliders: false
+include_orientation: false
+include_controller_output: false
+include_openxr_configuration: false

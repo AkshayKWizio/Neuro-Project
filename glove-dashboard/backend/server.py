@@ -876,9 +876,22 @@ def start_report(report: ReportSessionRequest, request: Request) -> dict[str, st
 
 
 @app.post("/api/reports/session/finish")
-def finish_report(request: Request) -> dict[str, Any]:
-    token, _ = authenticated_session(request)
-    report = clinical_store.finish_report(token, bridge.snapshot(), "completed")
+async def finish_report(request: Request) -> dict[str, Any]:
+    token, session = authenticated_session(request)
+    payload = {}
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            payload = body
+    except Exception:
+        payload = {}
+    report = clinical_store.finish_report(
+        token,
+        bridge.snapshot(),
+        outcome=payload.get("outcome", "completed"),
+        session=session,
+        payload=payload,
+    )
     return {"status": "saved" if report else "idle", "report": report}
 
 

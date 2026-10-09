@@ -138,7 +138,20 @@
     <span>Rotate forearm left and right to guide slicer</span>
   </div>
 
-  <script>
+  <script type="module">
+    import { setupGameAudio } from '../lib/rehab-audio.js';
+
+    // ═══════════════════════════════════════════
+    // ADAPTIVE ZEN SOUNDSCAPE & ADJUSTABLE VOLUME HUD
+    // ═══════════════════════════════════════════
+    const gameAudio = setupGameAudio({
+      theme: 'zen',
+      title: 'Fruit Picker',
+      accentColor: '#16A34A',
+      hudContainer: '.hud'
+    });
+    window.gameAudio = gameAudio;
+
     // Fade out hint after 3.5s
     setTimeout(() => {
       const hint = document.getElementById('controls-hint');
@@ -146,17 +159,22 @@
     }, 3500);
 
     // --- WebAudio Synthesizer for Blade Swooshes & Slashes ---
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
-      if (!audioCtx) audioCtx = new AudioCtx();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (gameAudio.ctx) {
+        audioCtx = gameAudio.ctx;
+      } else {
+        gameAudio.initAudioContext();
+        audioCtx = gameAudio.ctx;
+      }
     }
 
     function playSwooshSound() {
+      initAudio();
       if (!audioCtx) return;
       try {
+        const dest = gameAudio.sfxGain || audioCtx.destination;
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -166,7 +184,7 @@
         gain.gain.setValueAtTime(0.25, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(dest);
         osc.start(now);
         osc.stop(now + 0.14);
       } catch (e) {}

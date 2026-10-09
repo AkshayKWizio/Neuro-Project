@@ -131,23 +131,41 @@
     <span>Squeeze fist to pop targets, then fully extend fingers to reload</span>
   </div>
 
-  <script>
+  <script type="module">
+    import { setupGameAudio } from '../lib/rehab-audio.js';
+
+    // ═══════════════════════════════════════════
+    // ADAPTIVE ZEN SOUNDSCAPE & ADJUSTABLE VOLUME HUD
+    // ═══════════════════════════════════════════
+    const gameAudio = setupGameAudio({
+      theme: 'zen',
+      title: 'Balloon Pop',
+      accentColor: '#E11D48',
+      hudContainer: '.hud'
+    });
+    window.gameAudio = gameAudio;
+
     setTimeout(() => {
       const hint = document.getElementById('controls-hint');
       if (hint) hint.classList.add('fade-out');
     }, 3500);
 
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
-      if (!audioCtx) audioCtx = new AudioCtx();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (gameAudio.ctx) {
+        audioCtx = gameAudio.ctx;
+      } else {
+        gameAudio.initAudioContext();
+        audioCtx = gameAudio.ctx;
+      }
     }
 
     function playPopSound(freq = 440) {
+      initAudio();
       if (!audioCtx) return;
       try {
+        const dest = gameAudio.sfxGain || audioCtx.destination;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
@@ -156,7 +174,7 @@
         gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(dest);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.13);
       } catch (e) {}

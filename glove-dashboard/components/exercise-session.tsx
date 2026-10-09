@@ -203,6 +203,15 @@ export const REHAB_GAMES: RehabGame[] = [
   }
 ];
 
+export interface SessionSummary {
+  exercise: ExerciseMode;
+  side: 'LEFT' | 'RIGHT';
+  reps: number;
+  score: number;
+  duration_seconds: number;
+  counts: Record<string, number>;
+}
+
 export function ExerciseSession({ mode, side, latest, guidance, tracker, details, onFinish, onTare, tarePending, tareDisabled, tareStatus, hand }: {
   mode: ExerciseMode;
   side: 'LEFT' | 'RIGHT';
@@ -210,7 +219,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
   guidance: ReactNode;
   tracker: ReactNode;
   details: ReactNode;
-  onFinish: () => void;
+  onFinish: (summary?: SessionSummary) => void;
   onTare: () => void;
   tarePending: boolean;
   tareDisabled: boolean;
@@ -219,10 +228,14 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
 }) {
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [gameReady, setGameReady] = useState(false);
+  const [countDown, setCountDown] = useState(3);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [showHandHud, setShowHandHud] = useState(true);
   const [handHudMinimized, setHandHudMinimized] = useState(false);
   const [handHudMode, setHandHudMode] = useState<'live' | 'guide'>('live');
+  const [sessionReps, setSessionReps] = useState(0);
+  const [sessionScore, setSessionScore] = useState(0);
+  const [sessionCounts, setSessionCounts] = useState<Record<string, number>>({});
 
   // Default game based on clinical exercise
   const initialGame: RehabGameId = useMemo(() => {
@@ -233,6 +246,14 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
   }, [mode]);
 
   const [selectedGame, setSelectedGame] = useState<RehabGameId>(initialGame);
+  useEffect(() => {
+    setSelectedGame(initialGame);
+    setGameReady(false);
+    setSessionReps(0);
+    setSessionScore(0);
+    setSessionCounts({});
+    setSecondsElapsed(0);
+  }, [initialGame]);
   const currentGame = useMemo(() => REHAB_GAMES.find(g => g.id === selectedGame) || REHAB_GAMES[0], [selectedGame]);
 
   const gameFrameRef = useRef<HTMLIFrameElement>(null);
@@ -246,6 +267,20 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
     const timer = setInterval(() => setSecondsElapsed((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    setCountDown(3);
+    const cTimer = setInterval(() => {
+      setCountDown((c) => {
+        if (c <= 1) {
+          clearInterval(cTimer);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(cTimer);
+  }, [selectedGame]);
 
   const formatDuration = (totalSeconds: number) => {
     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -262,11 +297,41 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
   useEffect(() => {
     const onGameMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== gameFrameRef.current?.contentWindow) return;
-      if ((event.data as { type?: unknown } | null)?.type === 'night-relay-ready') setGameReady(true);
+      const data = event.data as any;
+      if (!data) return;
+      if (data.type === 'night-relay-ready') setGameReady(true);
+      if (data.type === 'NEURO_REP_EVENT') {
+        const r = typeof data.reps === 'number' ? data.reps : 0;
+        const s = typeof data.score === 'number' ? data.score : 0;
+        const m = typeof data.movement === 'string' ? data.movement : mode;
+        setSessionReps((prev) => Math.max(prev, r));
+        setSessionScore((prev) => Math.max(prev, s));
+        setSessionCounts((prev) => ({
+          ...prev,
+          [m]: (prev[m] || 0) + 1,
+        }));
+      } else if (data.type === 'exercise_rep') {
+        const c = typeof data.count === 'number' ? data.count : 0;
+        const m = typeof data.movement === 'string' ? data.movement : mode;
+        setSessionReps((prev) => Math.max(prev, c));
+        setSessionCounts((prev) => ({
+          ...prev,
+          [m]: (prev[m] || 0) + 1,
+        }));
+      }
     };
     window.addEventListener('message', onGameMessage);
     return () => window.removeEventListener('message', onGameMessage);
-  }, []);
+  }, [mode]);
+
+  useEffect(() => {
+    if (!latest?.movement) return;
+    setSessionCounts((prev) => ({
+      ...prev,
+      [latest.movement]: (prev[latest.movement] || 0) + 1,
+    }));
+    setSessionReps((prev) => prev + 1);
+  }, [latest]);
 
   useEffect(() => {
     if (!bridgedAction || bridgedAction.timestamp_ms <= postedTimestampRef.current) return;
@@ -312,6 +377,14 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
           <span className="pulse-dot" />
           {formatDuration(secondsElapsed)}
         </span>
+        <span className="cinema-rep-counter" title="Completed Clinical Repetitions">
+          <strong>{sessionReps}</strong> REPS
+        </span>
+        {sessionScore > 0 && (
+          <span className="cinema-score-counter" title="Game Score">
+            ★ {sessionScore}
+          </span>
+        )}
         <Button
           type="button"
           variant="outline"
@@ -328,7 +401,21 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
         <Button type="button" variant="outline" className={`cinema-clinic-btn ${showClinicDrawer ? 'active' : ''}`} onClick={() => setShowClinicDrawer((v) => !v)}>
           {showClinicDrawer ? 'Close Oversight' : 'Clinical Oversight'}
         </Button>
-        <Button type="button" className="cinema-finish-btn" onClick={onFinish}>
+        <Button
+          type="button"
+          className="cinema-finish-btn"
+          onClick={() => {
+            const summary: SessionSummary = {
+              exercise: mode,
+              side,
+              reps: sessionReps,
+              score: sessionScore,
+              duration_seconds: secondsElapsed,
+              counts: Object.keys(sessionCounts).length > 0 ? sessionCounts : { [mode]: Math.max(1, sessionReps) },
+            };
+            onFinish(summary);
+          }}
+        >
           <Check />Finish session
         </Button>
       </div>
@@ -346,22 +433,143 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
           onLoad={() => setGameReady(true)}
         />
 
+        {(!gameReady || countDown > 0) && (
+          <div className={`cinema-countdown-overlay theme-${selectedGame}`}>
+            <div className="startup-bg-particles">
+              <div className="particle-balloon" style={{ width: 48, height: 60, top: '12%', left: '8%', background: selectedGame === 'sky_glider' ? '#0284C7' : selectedGame === 'rolling_wonder' ? '#8B5CF6' : '#F43F5E' }} />
+              <div className="particle-balloon" style={{ width: 34, height: 44, top: '65%', left: '6%', background: selectedGame === 'sky_glider' ? '#38BDF8' : selectedGame === 'rolling_wonder' ? '#EC4899' : '#0EA5E9', animationDelay: '1.2s' }} />
+              <div className="particle-balloon" style={{ width: 52, height: 66, top: '18%', right: '10%', background: selectedGame === 'sky_glider' ? '#10B981' : selectedGame === 'rolling_wonder' ? '#F59E0B' : '#F59E0B', animationDelay: '2.4s' }} />
+              <div className="particle-balloon" style={{ width: 38, height: 48, top: '70%', right: '14%', background: selectedGame === 'sky_glider' ? '#0D9488' : selectedGame === 'rolling_wonder' ? '#7C3AED' : '#10B981', animationDelay: '0.7s' }} />
+            </div>
+
+            <div className="startup-card">
+              <div className="startup-badge-icon">
+                {selectedGame === 'sky_glider' ? '✈️' : selectedGame === 'rolling_wonder' ? '🐹' : '🎈'}
+              </div>
+              <h2 className="startup-game-title">{currentGame.title}</h2>
+              <p className="startup-game-sub">
+                {selectedGame === 'sky_glider'
+                  ? '3D Canyon Flight & Ring Navigation · Rotational Biofeedback'
+                  : selectedGame === 'rolling_wonder'
+                    ? '3D Rainbow Meadow Runner · 360° Circumduction Biofeedback'
+                    : '3D Inflate & Fly Festival · Hand Grasp & Extension Biofeedback'}
+              </p>
+              <div className="startup-target-chip">
+                <span className="chip-dot" />
+                <span>
+                  {selectedGame === 'sky_glider'
+                    ? 'Target Protocol: Forearm Pronation / Supination'
+                    : selectedGame === 'rolling_wonder'
+                      ? 'Target Protocol: Wrist Circumduction (360°)'
+                      : 'Target Protocol: Wrist Open / Close (Grasp & Extension)'}
+                </span>
+              </div>
+
+              <div className="startup-steps-grid">
+                {selectedGame === 'sky_glider' ? (
+                  <>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#E0F2FE', color: '#0284C7' }}>PRONATION</span>
+                      <span className="startup-step-action">Palm Down (Turn Left)</span>
+                    </div>
+                    <span className="startup-arrow">⇄</span>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#DCFCE7', color: '#16A34A' }}>SUPINATION</span>
+                      <span className="startup-step-action">Palm Up (Turn Right)</span>
+                    </div>
+                    <span className="startup-arrow">➔</span>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#FEF3C7', color: '#D97706' }}>1 CLINICAL REP</span>
+                      <span className="startup-step-action">Navigate Ring Cycle</span>
+                    </div>
+                  </>
+                ) : selectedGame === 'rolling_wonder' ? (
+                  <>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#EDE9FE', color: '#7C3AED' }}>CLOCKWISE</span>
+                      <span className="startup-step-action">Turn Sphere Right</span>
+                    </div>
+                    <span className="startup-arrow">⇄</span>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#DCFCE7', color: '#16A34A' }}>ANTICLOCKWISE</span>
+                      <span className="startup-step-action">Turn Sphere Left</span>
+                    </div>
+                    <span className="startup-arrow">➔</span>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#FEF3C7', color: '#D97706' }}>1 CLINICAL REP</span>
+                      <span className="startup-step-action">Completed 360° Cycle</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#FEE2E2', color: '#DC2626' }}>WRIST CLOSE</span>
+                      <span className="startup-step-action">Fist Grasp (Pump Air)</span>
+                    </div>
+                    <span className="startup-arrow">➔</span>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#DCFCE7', color: '#16A34A' }}>WRIST OPEN</span>
+                      <span className="startup-step-action">Extend Hand (Launch)</span>
+                    </div>
+                    <span className="startup-arrow">➔</span>
+                    <div className="startup-step-card">
+                      <span className="startup-step-badge" style={{ background: '#FEF3C7', color: '#D97706' }}>1 CLINICAL REP</span>
+                      <span className="startup-step-action">Launch Into Sky</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="startup-action-section">
+                {!gameReady ? (
+                  <>
+                    <div className="startup-loading-text">
+                      <span className="pulse-dot" style={{ background: '#0F6C73', width: 7, height: 7, borderRadius: '50%', display: 'inline-block' }} />
+                      Calibrating 3D Engine &amp; Aligning Glove Telemetry…
+                    </div>
+                    <div className="startup-loading-bar-wrap">
+                      <div className="startup-loading-bar-fill" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="cinema-countdown-box">
+                    <div className="cinema-countdown-num">{countDown}</div>
+                    <div className="cinema-countdown-sub">
+                      {countDown === 1
+                        ? 'READY TO LAUNCH · BEGIN EXERCISE'
+                        : countDown === 2
+                          ? 'CALIBRATING ZERO DEGREES · STEADY'
+                          : 'PREPARE NEUTRAL POSTURE'}
+                    </div>
+                    <button
+                      type="button"
+                      className="startup-skip-btn"
+                      onClick={() => setCountDown(0)}
+                    >
+                      Start Immediately →
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {showHandHud && (
           <div className={`floating-hand-hud ${handHudMinimized ? 'minimized' : ''}`}>
             <div className="hand-hud-header">
               <div className="hand-hud-title">
                 <span className="live-dot" />
-                <strong>3D BIOMETRIC TWIN</strong>
-                <span className="hand-badge">{side} GLOVE</span>
+                <strong>{side === 'LEFT' ? 'Left Hand' : 'Right Hand'}</strong>
               </div>
               <div className="hand-hud-actions">
                 <button
                   type="button"
                   className="hud-mode-toggle"
                   onClick={() => setHandHudMode((m) => (m === 'live' ? 'guide' : 'live'))}
-                  title="Switch Live Telemetry vs Guide Pose"
+                  title="Switch Live vs Guide Pose"
                 >
-                  {handHudMode === 'live' ? 'Live Telemetry' : 'Guide Pose'}
+                  {handHudMode === 'live' ? 'Live' : 'Guide'}
                 </button>
                 <button
                   type="button"
@@ -375,7 +583,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                   type="button"
                   className="hud-close-btn"
                   onClick={() => setShowHandHud(false)}
-                  title="Close HUD"
+                  title="Close"
                 >
                   ✕
                 </button>
@@ -392,7 +600,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                 </div>
                 <div className="hand-hud-footer">
                   <div className="hud-metric">
-                    <span>FOREARM ROLL</span>
+                    <span>ROLL</span>
                     <strong>
                       {typeof hand?.orientation?.orientation?.x === 'number'
                         ? (hand.orientation.orientation.x * 100).toFixed(1) + '°'
@@ -400,7 +608,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                     </strong>
                   </div>
                   <div className="hud-metric">
-                    <span>FINGER BEND</span>
+                    <span>FLEXION</span>
                     <strong>
                       {typeof hand?.sliders?.index_mcp === 'number'
                         ? (hand.sliders.index_mcp * 100).toFixed(0) + '%'
@@ -415,16 +623,31 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                     disabled={tareDisabled || tarePending}
                     onClick={onTare}
                     title="Tare wrist neutral angle"
-                    style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', height: '28px', padding: '0 8px', color: '#38bdf8', borderColor: '#0F6C73' }}
+                    style={{
+                      marginLeft: 'auto',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      height: '28px',
+                      padding: '0 10px',
+                      background: '#0F6C73',
+                      color: '#FFFFFF',
+                      border: '1px solid #0D5C62',
+                      borderRadius: '6px',
+                      boxShadow: '0 1px 3px rgba(15, 108, 115, 0.25)',
+                      cursor: (tareDisabled || tarePending) ? 'not-allowed' : 'pointer'
+                    }}
                   >
-                    <Rotate3D style={{ width: '13px', height: '13px' }} />
+                    <Rotate3D style={{ width: '13px', height: '13px', color: '#FFFFFF', stroke: '#FFFFFF' }} />
                     {tarePending ? 'Taring…' : 'Tare Wrist'}
                   </Button>
                 </div>
               </>
             ) : (
               <div className="hand-hud-mini" onClick={() => setHandHudMinimized(false)}>
-                <span>{side} BIOMETRIC TWIN · ACTIVE</span>
+                <span>{side === 'LEFT' ? 'Left' : 'Right'} Hand · Active</span>
               </div>
             )}
           </div>

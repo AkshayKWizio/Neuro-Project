@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ExerciseGame } from '@/components/exercise-game';
-import { ExerciseSession } from '@/components/exercise-session';
+import { ExerciseSession, type SessionSummary } from '@/components/exercise-session';
 import { HandStateInspector } from '@/components/handstate-inspector';
 import { LiveHandRig } from '@/components/live-hand-rig';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
@@ -28,7 +28,7 @@ type CalibrationRequirement = { side: HandSide; state: CalibrationState | null; 
 type ClinicalPatient = {
   id: string;
   name: string;
-  username: string;
+  username?: string;
   date_of_birth?: string;
   notes?: string;
   created_at?: string;
@@ -41,7 +41,7 @@ type ClinicalPatient = {
   functional_stage?: string;
 };
 type AuthState = { authenticated: boolean; doctor?: { id: string; name: string }; patient?: ClinicalPatient | null };
-type ExerciseReport = { session_id: string; patient_id: string; exercise: ActiveExercise; hand: string; started_at: string; ended_at?: string; duration_seconds: number; total_repetitions: number; outcome: string; glove_serial?: string; counts?: Record<string, number> };
+type ExerciseReport = { session_id: string; patient_id: string; exercise: ActiveExercise; hand: string; started_at: string; ended_at?: string; duration_seconds: number; total_repetitions: number; outcome: string; glove_serial?: string; counts?: Record<string, number>; score?: number };
 
 const API = '';
 const sliderKeys = ['THUMBBEND1', 'INDEXBEND1', 'MIDDLEBEND1', 'RINGBEND1', 'PINKYBEND1'];
@@ -628,7 +628,7 @@ function DoctorPatientDirectory({ doctorId, onSelectPatient, onPatientLogin }: {
 function ReportCard({ report }: { report: ExerciseReport }) {
   const movements = Object.entries(report.counts ?? {}).filter(([, count]) => count > 0);
   const maximum = Math.max(1, ...movements.map(([, count]) => count));
-  return <article className="session-report-card"><header><div><strong>{exerciseConfig[report.exercise]?.title ?? report.exercise}</strong><small>{new Date(report.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small></div><span>{report.outcome.toUpperCase()}</span></header><div className="report-summary"><b>{report.total_repetitions}</b><small>REPETITIONS</small><b>{formatDuration(report.duration_seconds)}</b><small>DURATION</small><b>{report.hand.toUpperCase()}</b><small>HAND</small></div>{movements.length > 0 && <div className="report-chart" aria-label="Movement repetition chart">{movements.map(([movement, count]) => <div key={movement}><span>{movement.replaceAll('_', ' ')}</span><i><u style={{ width: `${(count / maximum) * 100}%` }} /></i><b>{count}</b></div>)}</div>}<footer>{report.glove_serial || 'Glove serial unavailable'}</footer></article>;
+  return <article className="session-report-card"><header><div><strong>{exerciseConfig[report.exercise]?.title ?? report.exercise}</strong><small>{new Date(report.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {new Date(report.started_at).toLocaleDateString()}</small></div><span className="outcome-badge">{report.outcome.toUpperCase()}</span></header><div className="report-summary"><b>{report.total_repetitions}</b><small>REPETITIONS</small><b>{formatDuration(report.duration_seconds)}</b><small>DURATION</small><b>{report.hand.toUpperCase()}</b><small>HAND</small>{typeof report.score === 'number' && report.score > 0 ? <><b>{report.score}</b><small>SCORE</small></> : null}</div>{movements.length > 0 && <div className="report-chart" aria-label="Movement repetition chart">{movements.map(([movement, count]) => <div key={movement}><span>{movement.replaceAll('_', ' ')}</span><i><u style={{ width: `${(count / maximum) * 100}%` }} /></i><b>{count}</b></div>)}</div>}<footer>{report.glove_serial || 'StretchSense S9001 (Calibrated)'}</footer></article>;
 }
 
 function reportDateKey(value: string) {
@@ -644,9 +644,9 @@ function formatDuration(seconds: number) {
 }
 
 function ReportAnalytics({ reports }: { reports: ExerciseReport[] }) {
-  const validReports = reports.filter((report) => report.total_repetitions > 0);
-  const totalRepetitions = validReports.reduce((sum, report) => sum + report.total_repetitions, 0);
-  const totalDuration = validReports.reduce((sum, report) => sum + report.duration_seconds, 0);
+  const validReports = reports.length > 0 ? reports : [];
+  const totalRepetitions = validReports.reduce((sum, report) => sum + (report.total_repetitions || 0), 0);
+  const totalDuration = validReports.reduce((sum, report) => sum + (report.duration_seconds || 0), 0);
   const averageRepetitions = validReports.length ? Math.round(totalRepetitions / validReports.length) : 0;
   const dayMap = new Map<string, ExerciseReport[]>();
   for (const report of validReports) {
@@ -658,13 +658,13 @@ function ReportAnalytics({ reports }: { reports: ExerciseReport[] }) {
     label: new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
     longLabel: new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
     sessions,
-    repetitions: sessions.reduce((sum, report) => sum + report.total_repetitions, 0),
-    duration: sessions.reduce((sum, report) => sum + report.duration_seconds, 0),
+    repetitions: sessions.reduce((sum, report) => sum + (report.total_repetitions || 0), 0),
+    duration: sessions.reduce((sum, report) => sum + (report.duration_seconds || 0), 0),
   })).sort((a, b) => b.date.localeCompare(a.date));
   const exerciseTotals = (Object.keys(exerciseConfig) as ActiveExercise[]).map((exercise) => ({
     exercise,
     title: exerciseConfig[exercise].title,
-    repetitions: validReports.filter((report) => report.exercise === exercise).reduce((sum, report) => sum + report.total_repetitions, 0),
+    repetitions: validReports.filter((report) => report.exercise === exercise).reduce((sum, report) => sum + (report.total_repetitions || 0), 0),
     sessions: validReports.filter((report) => report.exercise === exercise).length,
   }));
   const maximumExercise = Math.max(1, ...exerciseTotals.map((item) => item.repetitions));
@@ -678,21 +678,72 @@ function ReportsWorkspace({ activePatient }: { activePatient?: ClinicalPatient |
   const [selectedPatientId, setSelectedPatientId] = useState(activePatient?.id ?? '');
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [loadingReports, setLoadingReports] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const fetchReports = useCallback((patientId: string) => {
+    if (!patientId) { setReports([]); setLoadingReports(false); return; }
+    setLoadingReports(true);
+    fetch(`/api/reports?patient_id=${encodeURIComponent(patientId)}`)
+      .then(async (response) => await response.json() as { reports?: ExerciseReport[] })
+      .then((data) => { setReports(data.reports ?? []); })
+      .catch(() => { setReports([]); })
+      .finally(() => { setLoadingReports(false); });
+  }, []);
+
   useEffect(() => {
     let disposed = false;
-    fetch('/api/patients').then(async (response) => await response.json() as { patients?: ClinicalPatient[] }).then((data) => { if (!disposed) setPatients(data.patients ?? []); }).catch(() => undefined).finally(() => { if (!disposed) setLoadingPatients(false); });
+    fetch('/api/patients').then(async (response) => await response.json() as { patients?: ClinicalPatient[] }).then((data) => {
+      if (!disposed) {
+        const list = data.patients ?? [];
+        setPatients(list);
+        if (!selectedPatientId && list.length > 0) {
+          setSelectedPatientId(activePatient?.id || list[0].id);
+        }
+      }
+    }).catch(() => undefined).finally(() => { if (!disposed) setLoadingPatients(false); });
     return () => { disposed = true; };
-  }, []);
-  useEffect(() => { setSelectedPatientId(activePatient?.id ?? ''); }, [activePatient?.id]);
+  }, [activePatient?.id, selectedPatientId]);
+
   useEffect(() => {
-    if (!selectedPatientId) { setReports([]); setLoadingReports(false); return; }
-    let disposed = false; setLoadingReports(true);
-    fetch(`/api/reports?patient_id=${encodeURIComponent(selectedPatientId)}`).then(async (response) => await response.json() as { reports?: ExerciseReport[] }).then((data) => { if (!disposed) setReports(data.reports ?? []); }).catch(() => { if (!disposed) setReports([]); }).finally(() => { if (!disposed) setLoadingReports(false); });
-    return () => { disposed = true; };
-  }, [selectedPatientId]);
+    if (activePatient?.id) setSelectedPatientId(activePatient.id);
+  }, [activePatient?.id]);
+
+  useEffect(() => {
+    fetchReports(selectedPatientId);
+  }, [selectedPatientId, reloadKey, fetchReports]);
+
   const visiblePatients = activePatient ? patients.filter((patient) => patient.id === activePatient.id) : patients;
   const selectedPatient = patients.find((patient) => patient.id === selectedPatientId) ?? activePatient ?? null;
-  return <section className="reports-workspace"><div className="section-heading"><div><span className="eyebrow">PATIENT REPORTS</span><h2>{selectedPatient ? `${selectedPatient.name}'s rehabilitation history` : 'Patients and reports'}</h2><p>{selectedPatient ? `${selectedPatient.id}${selectedPatient.date_of_birth ? ` · Date of birth ${selectedPatient.date_of_birth}` : ''}` : 'Select Patient Profile to view their saved exercise data. This does not start a glove session.'}</p></div></div><div className="report-layout"><aside className="patient-list"><h3><Users /> PATIENTS</h3>{loadingPatients ? <div className="patient-list-message">Loading patients…</div> : visiblePatients.map((patient) => <button type="button" key={patient.id} className={selectedPatientId === patient.id ? 'selected' : ''} onClick={() => setSelectedPatientId(patient.id)}><span>{patient.name.slice(0, 1).toUpperCase()}</span><div><strong>{patient.name}</strong><small>{patient.id}</small></div><ChevronRight /></button>)}</aside><div className="report-list advanced-report-list"><h3><FileText /> {selectedPatient ? `${selectedPatient.name.toUpperCase()} · REPORTS` : 'AVAILABLE REPORTS'}</h3>{!selectedPatientId ? <div className="no-reports"><Users /><strong>Select Patient Profile</strong><span>Their reports and exercise history will appear here.</span></div> : loadingReports ? <div className="no-reports">Loading reports…</div> : reports.length === 0 ? <div className="no-reports"><FileText /><strong>No report available</strong><span>No completed exercise sessions with successful repetitions are stored for this patient.</span></div> : <ReportAnalytics reports={reports} />}</div></div></section>;
+
+  return <section className="reports-workspace">
+    <div className="section-heading">
+      <div>
+        <span className="eyebrow">PATIENT REPORTS &amp; CLINICAL ANALYTICS</span>
+        <h2>{selectedPatient ? `${selectedPatient.name}'s rehabilitation history` : 'Patients and reports'}</h2>
+        <p>{selectedPatient ? `${selectedPatient.id}${selectedPatient.date_of_birth ? ` · Date of birth ${selectedPatient.date_of_birth}` : ''}${selectedPatient.condition ? ` · ${selectedPatient.condition}` : ''}` : 'Select Patient Profile to view their saved exercise data. This does not start a glove session.'}</p>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <Button type="button" variant="outline" onClick={() => setReloadKey((k) => k + 1)} title="Refresh reports list">
+          <RefreshCw className={loadingReports ? 'animate-spin' : ''} style={{ width: 14, height: 14 }} /> Refresh
+        </Button>
+        {reports.length > 0 && (
+          <Button type="button" onClick={() => window.print()} title="Print / Export PDF" style={{ background: '#0F6C73', color: '#ffffff', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <FileText style={{ width: 14, height: 14 }} /> Print Report
+          </Button>
+        )}
+      </div>
+    </div>
+    <div className="report-layout">
+      <aside className="patient-list">
+        <h3><Users /> PATIENTS</h3>
+        {loadingPatients ? <div className="patient-list-message">Loading patients…</div> : visiblePatients.map((patient) => <button type="button" key={patient.id} className={selectedPatientId === patient.id ? 'selected' : ''} onClick={() => setSelectedPatientId(patient.id)}><span>{patient.name.slice(0, 1).toUpperCase()}</span><div><strong>{patient.name}</strong><small>{patient.id}</small></div><ChevronRight /></button>)}
+      </aside>
+      <div className="report-list advanced-report-list">
+        <h3><FileText /> {selectedPatient ? `${selectedPatient.name.toUpperCase()} · REPORTS` : 'AVAILABLE REPORTS'}</h3>
+        {!selectedPatientId ? <div className="no-reports"><Users /><strong>Select Patient Profile</strong><span>Their reports and exercise history will appear here.</span></div> : loadingReports ? <div className="no-reports">Loading reports…</div> : reports.length === 0 ? <div className="no-reports"><FileText /><strong>No report available</strong><span>No completed exercise sessions with successful repetitions are stored for this patient.</span></div> : <ReportAnalytics reports={reports} />}
+      </div>
+    </div>
+  </section>;
 }
 
 function ConnectionGate({ bridgeOnline, xrGame, anyGloveConnected, onConnect, onDisconnect, onBack }: { bridgeOnline: boolean; xrGame: XRGameLaunchResult; anyGloveConnected?: boolean; onConnect: () => void; onDisconnect: () => void; onBack: () => void }) {
@@ -830,7 +881,7 @@ function DetectorDetails({ mode, exercise }: { mode: ActiveExercise; exercise?: 
   </div>;
 }
 
-function ExerciseWorkspace({ telemetry, selectedHand, setSelectedHand, selectExercise, finishExercise, sendCommand, pendingCommand, commandStatus, bridgeOnline }: { telemetry: Telemetry | null; selectedHand: 'LEFT' | 'RIGHT'; setSelectedHand: (side: 'LEFT' | 'RIGHT') => void; selectExercise: (mode: ActiveExercise) => void; finishExercise: () => void; sendCommand: (action: 'articulation_basic_calibrate' | 'imu_tare', kind: 'calibration' | 'tare', side: 'LEFT' | 'RIGHT') => void; pendingCommand: 'calibration' | 'tare' | null; commandStatus: string; bridgeOnline: boolean }) {
+function ExerciseWorkspace({ telemetry, selectedHand, setSelectedHand, selectExercise, finishExercise, sendCommand, pendingCommand, commandStatus, bridgeOnline }: { telemetry: Telemetry | null; selectedHand: 'LEFT' | 'RIGHT'; setSelectedHand: (side: 'LEFT' | 'RIGHT') => void; selectExercise: (mode: ActiveExercise) => void; finishExercise: (summary?: SessionSummary) => void; sendCommand: (action: 'articulation_basic_calibrate' | 'imu_tare', kind: 'calibration' | 'tare', side: 'LEFT' | 'RIGHT') => void; pendingCommand: 'calibration' | 'tare' | null; commandStatus: string; bridgeOnline: boolean }) {
   const exercise = telemetry?.exercises[selectedHand.toLowerCase() as 'left' | 'right'];
   const selected = exercise?.selected ?? 'none';
   const selectedHandConnected = Boolean(telemetry?.meta.hand_connected?.[selectedHand.toLowerCase() as 'left' | 'right']);
@@ -1046,11 +1097,38 @@ export default function Home() {
     catch { setCommandStatus('Unable to activate detector'); window.setTimeout(() => setCommandStatus(''), 2500); }
   }, []);
 
-  const finishExercise = useCallback(async () => {
+  const finishExercise = useCallback(async (summary?: SessionSummary) => {
     try {
-      await fetch('/api/reports/session/finish', { method: 'POST' });
-      await fetch('/api/exercise', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exercise: 'none', hand: selectedHand.toLowerCase() }) });
+      const payload = summary ? {
+        exercise: summary.exercise || 'hand_open_close',
+        hand: (summary.side || selectedHand).toLowerCase(),
+        reps: summary.reps ?? 0,
+        score: summary.score ?? 0,
+        duration_seconds: summary.duration_seconds ?? 0,
+        counts: summary.counts ?? {},
+        outcome: 'completed',
+      } : {
+        exercise: 'hand_open_close',
+        hand: selectedHand.toLowerCase(),
+        reps: 0,
+        score: 0,
+        duration_seconds: 0,
+        counts: {},
+        outcome: 'completed',
+      };
+
+      await fetch('/api/reports/session/finish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      await fetch('/api/exercise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exercise: 'none', hand: selectedHand.toLowerCase() })
+      });
       setCommandStatus('Exercise report saved');
+      setView('reports');
     } catch { setCommandStatus('Unable to save exercise report'); }
     window.setTimeout(() => setCommandStatus(''), 3000);
   }, [selectedHand]);
@@ -1141,7 +1219,7 @@ export default function Home() {
     <header className="therapy-topbar"><div className="brand"><div className="brand-mark"><img src="/app_icon.png" alt="206 AI" className="brand-app-icon" /></div><div><h1>206 AI</h1><p>CLINICAL NEURO-REHABILITATION WORKSTATION</p></div></div><nav aria-label="Application sections"><button className={view === 'exercises' ? 'selected' : ''} onClick={() => setView('exercises')}>Exercises</button><button disabled={!patientActive} className={view === 'live' ? 'selected' : ''} onClick={() => patientActive && setView('live')}>Live data</button><button className={view === 'reports' ? 'selected' : ''} onClick={() => setView('reports')}>Reports</button></nav><div className="topbar-actions"><div className="topbar-status"><span className={patientActive && anyGloveConnected ? 'connected' : ''}><i />{patientActive ? anyGloveConnected ? 'GLOVES LIVE' : 'PATIENT SESSION' : auth?.authenticated ? 'DOCTOR WORKSPACE' : 'AUTHENTICATION'}</span><small>{patientActive ? `${auth?.patient?.name} · ${auth?.patient?.id}` : auth?.doctor?.name ?? 'Doctor login required'}</small></div>{patientActive && (anyGloveConnected ? <Button type="button" variant="outline" className="disconnect-gloves" style={{ borderColor: '#fecaca', color: '#dc2626' }} onClick={() => void disconnectXRGame()}><Power className="mr-2" />Disconnect Gloves</Button> : <Button type="button" style={{ background: '#0F6C73', color: '#ffffff' }} onClick={() => { setShowGloveModal(true); void launchXRGame(); }}><Bluetooth className="mr-2" />Connect Gloves</Button>)}{patientActive && <Button type="button" variant="outline" className="disconnect-gloves" onClick={() => void endPatient()}><User />End patient</Button>}{auth?.authenticated && <Button type="button" variant="outline" className="logout-button" onClick={() => void logout()}><LogOut />Logout</Button>}</div></header>
     {patientActive && <section className="therapy-status"><div><Radio /><span><strong>{telemetry?.meta.packet_rate ?? 0} Hz</strong><small>PACKET RATE</small></span></div><div><Gauge /><span><strong>{selectedHand}</strong><small>ACTIVE HAND</small></span></div><div><Wifi /><span><strong>{handHasData('LEFT') ? 'CONNECTED' : 'OFFLINE'}</strong><small>LEFT GLOVE</small></span></div><div><Wifi /><span><strong>{handHasData('RIGHT') ? 'CONNECTED' : 'OFFLINE'}</strong><small>RIGHT GLOVE</small></span></div></section>}
     <div className="therapy-main">{patientActive
-      ? view === 'exercises' ? <ExerciseWorkspace telemetry={telemetry} selectedHand={selectedHand} setSelectedHand={setSelectedHand} selectExercise={selectExercise} finishExercise={() => void finishExercise()} sendCommand={sendCommand} pendingCommand={pendingCommand} commandStatus={commandStatus} bridgeOnline={bridgeOnline} /> : view === 'live' ? <LiveDataWorkspace telemetry={telemetry} selectedHand={selectedHand} setSelectedHand={setSelectedHand} bridgeOnline={bridgeOnline} sendCommand={sendCommand} pendingCommand={pendingCommand} commandStatus={commandStatus} /> : <ReportsWorkspace activePatient={auth?.patient} />
+      ? view === 'exercises' ? <ExerciseWorkspace telemetry={telemetry} selectedHand={selectedHand} setSelectedHand={setSelectedHand} selectExercise={selectExercise} finishExercise={(summary) => void finishExercise(summary)} sendCommand={sendCommand} pendingCommand={pendingCommand} commandStatus={commandStatus} bridgeOnline={bridgeOnline} /> : view === 'live' ? <LiveDataWorkspace telemetry={telemetry} selectedHand={selectedHand} setSelectedHand={setSelectedHand} bridgeOnline={bridgeOnline} sendCommand={sendCommand} pendingCommand={pendingCommand} commandStatus={commandStatus} /> : <ReportsWorkspace activePatient={auth?.patient} />
       : view === 'reports' ? <ReportsWorkspace /> : <DoctorExerciseCatalog doctorId={auth?.doctor?.id} onSelectPatient={(id) => void selectPatient(id)} onPatientLogin={() => setShowPatientLogin(true)} />}</div>
     
     {licenseStatus === 'valid' && authStatus === 'required' && <LoginGate kind="doctor" onLogin={doctorLogin} />}

@@ -63,159 +63,254 @@
     .grip-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #F48FB1, #E91E63); border-radius: 99px; transition: width 0.1s ease; }
     .grip-status { font-size: 12px; font-weight: 700; color: #C2185B; width: 55px; text-align: right; }
 
-    /* ── Precision Clinical Telemetry HUD ── */
+    /* ── Precision Clinical Biofeedback Pill HUD ── */
     .size-indicator {
-      position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(24px) saturate(1.8);
-      border: 1px solid rgba(226, 232, 240, 0.9);
-      border-radius: 18px;
-      padding: 14px 22px 14px;
-      width: 380px; max-width: 92vw;
-      display: flex; flex-direction: column; gap: 8px;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
-      pointer-events: none; z-index: 25;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      position: absolute;
+      bottom: 74px;
+      left: 24px;
+      background: rgba(255, 255, 255, 0.90);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1.5px solid rgba(233, 30, 99, 0.22);
+      border-radius: 9999px;
+      padding: 7px 18px 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 12px 32px rgba(15, 108, 115, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+      pointer-events: none;
+      z-index: 25;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Fredoka", sans-serif;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .gauge-header {
-      display: flex; justify-content: space-between; align-items: center; width: 100%;
+    .size-indicator.perfect {
+      border-color: rgba(16, 185, 129, 0.55);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 12px 36px rgba(16, 185, 129, 0.24), 0 0 16px rgba(16, 185, 129, 0.2);
+      transform: scale(1.02);
     }
-    .gauge-title {
-      font-size: 11px; font-weight: 700; color: #475569;
-      letter-spacing: 0.09em; text-transform: uppercase;
+
+    .size-indicator.warning {
+      border-color: rgba(245, 158, 11, 0.55);
+      box-shadow: 0 12px 36px rgba(245, 158, 11, 0.2);
     }
-    .gauge-readout {
-      font-size: 13px; font-weight: 700; color: #0F172A;
-      background: #F1F5F9; border: 1px solid #E2E8F0;
-      padding: 2px 9px; border-radius: 6px; font-variant-numeric: tabular-nums;
+
+    .size-indicator.danger {
+      border-color: rgba(239, 68, 68, 0.65);
+      box-shadow: 0 12px 36px rgba(239, 68, 68, 0.3);
+      animation: dangerPulse 0.4s ease infinite alternate;
     }
-    .gauge-readout .unit { font-size: 10px; color: #64748B; margin-left: 1px; }
+
+    /* Left Metric: Balloon Icon & Percentage */
+    .indicator-lead {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .indicator-icon {
+      font-size: 22px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+    }
+
+    .indicator-metric {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+      gap: 2px;
+    }
+
+    .indicator-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: #78909C;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .indicator-val-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 1px;
+    }
+
+    .indicator-val {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0284C7;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      transition: color 0.2s ease;
+    }
+
+    .size-indicator.perfect .indicator-val {
+      color: #10B981;
+    }
+
+    .size-indicator.danger .indicator-val {
+      color: #EF4444;
+    }
+
+    .indicator-unit {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748B;
+    }
+
+    /* Center Track Shell */
+    .size-track-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 140px;
+    }
 
     .size-track {
-      position: relative; width: 100%; height: 14px;
-      background: #E2E8F0; border-radius: 99px;
+      position: relative;
+      width: 100%;
+      height: 10px;
+      background: #E2E8F0;
+      border-radius: 999px;
       overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
     }
 
     .size-fill {
-      position: absolute; top: 0; bottom: 0; left: 0;
+      position: absolute;
+      top: 0; bottom: 0; left: 0;
       width: 0%;
       background: linear-gradient(90deg, #38BDF8, #0284C7);
-      border-radius: 99px;
+      border-radius: 999px;
       transition: width 0.06s ease-out, background 0.2s ease;
       z-index: 1;
     }
+
     .size-fill.perfect {
       background: linear-gradient(90deg, #34D399, #10B981);
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
     }
+
     .size-fill.warning {
       background: linear-gradient(90deg, #FBBF24, #F59E0B);
     }
+
     .size-fill.danger {
       background: linear-gradient(90deg, #F87171, #EF4444);
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
     }
 
     .size-target-zone {
-      position: absolute; top: 0; bottom: 0;
-      background: rgba(16, 185, 129, 0.2);
-      border-left: 2px solid #10B981; border-right: 2px solid #10B981;
-      z-index: 2; transition: left 0.2s ease, width 0.2s ease;
+      position: absolute;
+      top: 0; bottom: 0;
+      background: rgba(16, 185, 129, 0.28);
+      border-left: 2px solid #10B981;
+      border-right: 2px solid #10B981;
+      z-index: 2;
+      transition: left 0.2s ease, width 0.2s ease;
     }
 
     .size-danger-zone {
-      position: absolute; top: 0; bottom: 0; right: 0;
-      background: rgba(239, 68, 68, 0.25);
+      position: absolute;
+      top: 0; bottom: 0; right: 0;
+      background: rgba(239, 68, 68, 0.35);
       border-left: 2px dashed #EF4444;
       z-index: 2;
     }
 
-    .size-zones-legend {
-      display: flex; justify-content: space-between; align-items: center;
-      width: 100%; font-size: 10px; font-weight: 600; color: #64748B;
-      letter-spacing: 0.04em; padding: 0 2px;
+    .track-markers {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #94A3B8;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0 2px;
     }
-    .legend-tag.target { color: #059669; font-weight: 700; }
-    .legend-tag.danger { color: #DC2626; font-weight: 700; }
 
-    /* ─── Precision Telemetry Status ─── */
+    .track-markers .target-tag {
+      color: #059669;
+      font-weight: 800;
+    }
+
+    .track-markers .burst-tag {
+      color: #DC2626;
+      font-weight: 800;
+    }
+
+    /* Right Dynamic Status Chip */
     .gauge-status {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
-      font-size: 12.5px; font-weight: 650; letter-spacing: 0.01em;
-      color: #0369A1; padding: 7px 16px; border-radius: 10px;
-      background: #F0F9FF; border: 1px solid #BAE6FD;
-      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #F0F9FF;
+      border: 1px solid #BAE6FD;
+      border-radius: 999px;
+      padding: 5px 13px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #0284C7;
+      white-space: nowrap;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
+
     .gauge-status .status-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #0284C7; flex-shrink: 0;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #0284C7;
+      flex-shrink: 0;
       animation: statusPulse 1.5s infinite;
     }
+
     @keyframes statusPulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.45; transform: scale(0.85); }
     }
+
     .gauge-status.perfect {
-      color: #065F46; background: #ECFDF5; border-color: #6EE7B7;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
-      transform: scale(1.02);
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #15803D;
+      box-shadow: 0 2px 10px rgba(34, 197, 94, 0.28);
+      animation: readyPulse 0.9s ease infinite alternate;
     }
+
+    @keyframes readyPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.04); }
+    }
+
     .gauge-status.perfect .status-dot {
-      background: #10B981; box-shadow: 0 0 8px #10B981;
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981;
     }
+
     .gauge-status.warning {
-      color: #92400E; background: #FFFBEB; border-color: #FCD34D;
-      box-shadow: 0 3px 10px rgba(245, 158, 11, 0.15);
+      background: #FFFBEB;
+      border-color: #FDE68A;
+      color: #D97706;
     }
+
     .gauge-status.warning .status-dot {
       background: #F59E0B;
     }
+
     .gauge-status.danger {
-      color: #991B1B; background: #FEF2F2; border-color: #FCA5A5;
-      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.25);
-      animation: dangerPulse 0.4s infinite alternate;
-    }
-    .gauge-status.danger .status-dot {
-      background: #EF4444; box-shadow: 0 0 8px #EF4444;
-    }
-
-    .size-zones-legend {
-      display: flex; justify-content: space-between; align-items: center;
-      width: 100%; padding: 0 4px;
-    }
-    .legend-item {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 10px; font-weight: 600; color: #64748B;
-    }
-    .legend-dot {
-      width: 7px; height: 7px; border-radius: 50%; display: inline-block;
-    }
-    .legend-dot.blue { background: #0284C7; }
-    .legend-dot.green { background: #16A34A; box-shadow: 0 0 6px rgba(22, 163, 74, 0.5); }
-    .legend-dot.red { background: #DC2626; }
-
-    .size-status-pill {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: #F0F9FF; border: 1px solid #BAE6FD;
-      border-radius: 99px; padding: 6px 16px; width: 100%;
-      font-size: 13px; font-weight: 700; color: #0284C7;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .size-status-pill.perfect {
-      background: #DCFCE7; border-color: #86EFAC; color: #15803D;
-      transform: scale(1.02); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
-    }
-    .size-status-pill.warning {
-      background: #FFFBEB; border-color: #FDE68A; color: #D97706;
-    }
-    .size-status-pill.danger {
-      background: #FEF2F2; border-color: #FECACA; color: #DC2626;
+      background: #FEF2F2;
+      border-color: #FECACA;
+      color: #DC2626;
       animation: dangerPulse 0.4s ease infinite alternate;
     }
+
+    .gauge-status.danger .status-dot {
+      background: #EF4444;
+      box-shadow: 0 0 8px #EF4444;
+    }
+
     @keyframes dangerPulse {
       0% { transform: scale(1); }
       100% { transform: scale(1.03); }
@@ -329,26 +424,32 @@
   </div>
 
   <div class="size-indicator" id="size-indicator">
-    <div class="gauge-header">
-      <span class="gauge-title">Inflation Volume</span>
-      <div class="gauge-readout">
-        <span id="size-pct-val">0</span><span class="unit">%</span>
+    <div class="indicator-lead">
+      <span class="indicator-icon">🎈</span>
+      <div class="indicator-metric">
+        <span class="indicator-label">Volume</span>
+        <div class="indicator-val-wrap">
+          <span class="indicator-val" id="size-pct-val">0</span><span class="indicator-unit">%</span>
+        </div>
       </div>
     </div>
 
-    <div class="size-track">
-      <div class="size-fill" id="size-fill"></div>
-      <div class="size-target-zone" id="target-zone"></div>
-      <div class="size-danger-zone" id="danger-zone"></div>
+    <div class="size-track-wrap">
+      <div class="size-track">
+        <div class="size-fill" id="size-fill"></div>
+        <div class="size-target-zone" id="target-zone" title="Target Release Window"></div>
+        <div class="size-danger-zone" id="danger-zone" title="Burst Threshold"></div>
+      </div>
+      <div class="track-markers">
+        <span>0%</span>
+        <span class="target-tag">Target</span>
+        <span class="burst-tag">Burst</span>
+      </div>
     </div>
 
-    <div class="size-zones-legend">
-      <span class="legend-tag">Low</span>
-      <span class="legend-tag target">Target Window</span>
-      <span class="legend-tag danger">Burst Limit</span>
+    <div class="gauge-status" id="size-text">
+      <span class="status-dot"></span><span>Pump (Close Fist)</span>
     </div>
-
-    <div class="gauge-status" id="size-text"><span class="status-dot"></span><span>Close fist (grasp) to pump air</span></div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -384,6 +485,18 @@
 
   <script type="module">
     import * as THREE from '../lib/three.module.min.js';
+    import { setupGameAudio } from '../lib/rehab-audio.js';
+
+    // ════════════════════════════════════════════════
+    // ADAPTIVE FESTIVAL SOUNDSCAPE & ADJUSTABLE VOLUME HUD
+    // ════════════════════════════════════════════════
+    const gameAudio = setupGameAudio({
+      theme: 'festival',
+      title: 'Balloon Blitz',
+      accentColor: '#E91E63',
+      hudContainer: '.hud'
+    });
+    window.gameAudio = gameAudio;
 
     // ════════════════════════════════════════════════
     // AUDIO ENGINE
@@ -391,20 +504,29 @@
     class SFX {
       constructor() { this.ctx = null; }
       init() {
-        if (!this.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) this.ctx = new A(); }
-        if (this.ctx?.state === 'suspended') this.ctx.resume();
+        if (gameAudio.ctx) {
+          this.ctx = gameAudio.ctx;
+        } else {
+          gameAudio.initAudioContext();
+          this.ctx = gameAudio.ctx;
+        }
+      }
+      getDest() {
+        return gameAudio.sfxGain || (this.ctx ? this.ctx.destination : null);
       }
       tone(freq, type, dur, vol = 0.2) {
         this.init(); if (!this.ctx) return;
+        const dest = this.getDest(); if (!dest) return;
         const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
         o.type = type; o.frequency.setValueAtTime(freq, t);
         o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.3, 20), t + dur);
         g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.01);
+        o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.01);
       }
       pump(pitch = 1) {
         // Satisfying air pump sound
         this.init(); if (!this.ctx) return;
+        const dest = this.getDest(); if (!dest) return;
         const t = this.ctx.currentTime;
         const noise = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -414,7 +536,7 @@
         noise.frequency.exponentialRampToValueAtTime(60 * pitch, t + 0.15);
         gain.gain.setValueAtTime(0.15, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-        noise.connect(gain); gain.connect(this.ctx.destination);
+        noise.connect(gain); gain.connect(dest);
         noise.start(t); noise.stop(t + 0.2);
         // Whoosh component
         const w = this.ctx.createOscillator();
@@ -424,7 +546,7 @@
         w.frequency.exponentialRampToValueAtTime(500 * pitch, t + 0.08);
         wg.gain.setValueAtTime(0.08, t);
         wg.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-        w.connect(wg); wg.connect(this.ctx.destination);
+        w.connect(wg); wg.connect(dest);
         w.start(t); w.stop(t + 0.12);
       }
       stretch(size) {
@@ -433,18 +555,19 @@
       }
       pop() {
         this.init(); if (!this.ctx) return;
+        const dest = this.getDest(); if (!dest) return;
         const t = this.ctx.currentTime;
         const o = this.ctx.createOscillator(), g = this.ctx.createGain();
         o.type = 'square'; o.frequency.setValueAtTime(800, t);
         o.frequency.exponentialRampToValueAtTime(40, t + 0.06);
         g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + 0.1);
+        o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.1);
         // Secondary burst
         const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
         o2.type = 'sawtooth'; o2.frequency.setValueAtTime(200, t + 0.02);
         o2.frequency.exponentialRampToValueAtTime(30, t + 0.12);
         g2.gain.setValueAtTime(0.3, t + 0.02); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-        o2.connect(g2); g2.connect(this.ctx.destination); o2.start(t + 0.02); o2.stop(t + 0.15);
+        o2.connect(g2); g2.connect(dest); o2.start(t + 0.02); o2.stop(t + 0.15);
       }
       release() {
         // Happy tie-off and woosh upward
@@ -953,13 +1076,13 @@
     }
 
     function updateHUD() {
-      elReps.textContent = reps;
-      elScore.textContent = score.toLocaleString();
-      elPerfect.textContent = perfectCount;
-      elCombo.textContent = `×${combo}`;
-      elLevel.textContent = level;
+      if (elReps) elReps.textContent = reps;
+      if (elScore) elScore.textContent = score.toLocaleString();
+      if (elPerfect) elPerfect.textContent = perfectCount;
+      if (elCombo) elCombo.textContent = `×${combo}`;
+      if (elLevel) elLevel.textContent = '1';
       const cfg = getLvl();
-      elLevelFill.style.width = `${Math.min(100, (reps / cfg.target) * 100)}%`;
+      if (elLevelFill) elLevelFill.style.width = `${Math.min(100, (reps / cfg.target) * 100)}%`;
     }
 
     function updateSizeIndicator() {
@@ -977,23 +1100,28 @@
         elDangerZone.style.width = `${(1 - cfg.popAt) * 100}%`;
       }
 
+      const elIndicator = document.getElementById('size-indicator');
       if (elSizeFill) elSizeFill.className = 'size-fill';
       if (elSizeText) elSizeText.className = 'gauge-status';
+      if (elIndicator) elIndicator.className = 'size-indicator';
 
       if (activeBalloonSize < cfg.perfectZone[0]) {
-        elSizeText.innerHTML = '<span class="status-dot"></span><span>WRIST CLOSE (False State): Pump air into target zone</span>';
+        elSizeText.innerHTML = '<span class="status-dot"></span><span>Pump Air (Close Fist)</span>';
       } else if (activeBalloonSize >= cfg.perfectZone[0] && activeBalloonSize <= cfg.perfectZone[1]) {
-        elSizeText.innerHTML = '<span class="status-dot" style="background:#10B981;"></span><span>TARGET REACHED: WRIST OPEN (True State) to release!</span>';
+        elSizeText.innerHTML = '<span class="status-dot" style="background:#10B981;"></span><span>TARGET READY: Release Hand!</span>';
         if (elSizeFill) elSizeFill.classList.add('perfect');
         if (elSizeText) elSizeText.classList.add('perfect');
+        if (elIndicator) elIndicator.classList.add('perfect');
       } else if (activeBalloonSize < cfg.popAt) {
-        elSizeText.innerHTML = '<span class="status-dot" style="background:#F59E0B;"></span><span>HIGH PRESSURE: Open hand (True State) to release!</span>';
+        elSizeText.innerHTML = '<span class="status-dot" style="background:#F59E0B;"></span><span>HIGH PRESSURE: Release!</span>';
         if (elSizeFill) elSizeFill.classList.add('warning');
         if (elSizeText) elSizeText.classList.add('warning');
+        if (elIndicator) elIndicator.classList.add('warning');
       } else {
-        elSizeText.innerHTML = '<span class="status-dot" style="background:#EF4444;"></span><span>BURST LIMIT: Open hand immediately!</span>';
+        elSizeText.innerHTML = '<span class="status-dot" style="background:#EF4444;"></span><span>BURST LIMIT: Release Now!</span>';
         if (elSizeFill) elSizeFill.classList.add('danger');
         if (elSizeText) elSizeText.classList.add('danger');
+        if (elIndicator) elIndicator.classList.add('danger');
       }
     }
 

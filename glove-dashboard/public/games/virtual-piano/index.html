@@ -217,18 +217,34 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { setupGameAudio } from '../lib/rehab-audio.js';
+
+    // ═══════════════════════════════════════════
+    // ADAPTIVE ZEN SOUNDSCAPE & ADJUSTABLE VOLUME HUD
+    // ═══════════════════════════════════════════
+    const gameAudio = setupGameAudio({
+      theme: 'zen',
+      title: 'Virtual Piano',
+      accentColor: '#4F46E5',
+      hudContainer: '.hud'
+    });
+    window.gameAudio = gameAudio;
+
     setTimeout(() => {
       const hint = document.getElementById('controls-hint');
       if (hint) hint.classList.add('fade-out');
     }, 3500);
 
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
-      if (!audioCtx) audioCtx = new AudioCtx();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (gameAudio.ctx) {
+        audioCtx = gameAudio.ctx;
+      } else {
+        gameAudio.initAudioContext();
+        audioCtx = gameAudio.ctx;
+      }
     }
 
     const NOTE_FREQS = {
@@ -264,7 +280,7 @@
 
         fundamental.connect(gain);
         harmonic2.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(gameAudio.sfxGain || audioCtx.destination);
 
         fundamental.start(now);
         harmonic2.start(now);

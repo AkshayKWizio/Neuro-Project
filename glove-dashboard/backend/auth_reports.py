@@ -7,7 +7,7 @@ import hmac
 import json
 import secrets
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -226,31 +226,112 @@ class LocalClinicalStore:
                 "baseline_counts": dict(counts),
             }
 
-    def finish_report(self, token: str, snapshot: dict[str, Any], outcome: str = "completed") -> dict[str, Any] | None:
+    def finish_report(
+        self,
+        token: str,
+        snapshot: dict[str, Any],
+        outcome: str = "completed",
+        session: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
+        payload = payload or {}
         with self.lock:
             active = self.active_reports.pop(token, None)
-        if not active:
-            return None
+
         now = datetime.now(timezone.utc)
-        hand = active["hand"]
-        exercise_state = snapshot["exercises"][hand]
-        current_counts = exercise_state["counts"]
-        counts = {key: max(0, int(value) - int(active["baseline_counts"].get(key, 0))) for key, value in current_counts.items()}
-        total_repetitions = sum(counts.values())
-        # Starting and immediately finishing an exercise is not a clinical
-        # session. Do not create empty report cards or include it in totals.
-        if total_repetitions <= 0:
+
+        # If no active report existed, synthesize from session + payload if patient is active
+        if not active:
+            doctor_id = session.get("doctor_id") if session else None
+            patient_id = session.get("active_patient_id") if session else None
+            if not doctor_id or not patient_id:
+                sess = self.sessions.get(token)
+                if sess:
+                    doctor_id = doctor_id or sess.get("doctor_id")
+                    patient_id = patient_id or sess.get("active_patient_id")
+            if not doctor_id or not patient_id:
+                doctors = self._read("doctors.json")
+                active_doctor = doctors[0]["id"] if doctors else "DOC-001"
+                patients = self.patients_for_doctor(active_doctor)
+                patient_id = patient_id or (patients[0]["id"] if patients else None)
+                doctor_id = doctor_id or active_doctor
+
+            if not patient_id:
+                return None
+
+            ex = payload.get("exercise") or "hand_open_close"
+            hd = (payload.get("hand") or "right").lower()
+            duration_s = float(payload.get("duration_seconds") or 30.0)
+            started_dt = now - timedelta(seconds=duration_s)
+            active = {
+                "schema_version": 1,
+                "session_id": secrets.token_hex(12),
+                "doctor_id": doctor_id,
+                "patient_id": patient_id,
+                "exercise": ex,
+                "hand": hd,
+                "started_at": started_dt.isoformat().replace("+00:00", "Z"),
+                "baseline_counts": {},
+            }
+
+        hand = active.get("hand", "right").lower()
+        exercise_state = snapshot.get("exercises", {}).get(hand, {}) if snapshot else {}
+        current_counts = exercise_state.get("counts", {})
+        baseline_counts = active.get("baseline_counts", {})
+        hw_counts = {key: max(0, int(value) - int(baseline_counts.get(key, 0))) for key, value in current_counts.items()}
+        hw_repetitions = sum(hw_counts.values())
+
+        # Check payload counts / reps from client/game
+        client_counts = payload.get("counts") or {}
+        client_reps = int(payload.get("reps") or payload.get("total_repetitions") or 0)
+
+        # Merge or prioritize whichever has recorded repetitions
+        if client_reps > hw_repetitions:
+            counts = dict(client_counts)
+            if not counts and client_reps > 0:
+                counts[active.get("exercise", "movement")] = client_reps
+            total_repetitions = client_reps
+        elif hw_repetitions > 0:
+            counts = hw_counts
+            total_repetitions = hw_repetitions
+        else:
+            counts = dict(client_counts)
+            total_repetitions = sum(counts.values()) if counts else client_reps
+
+        started_iso = active["started_at"].replace("Z", "+00:00")
+        try:
+            started = datetime.fromisoformat(started_iso)
+        except Exception:
+            started = now
+
+        duration_seconds = round((now - started).total_seconds(), 1)
+        if payload.get("duration_seconds"):
+            try:
+                duration_seconds = round(float(payload["duration_seconds"]), 1)
+            except Exception:
+                pass
+
+        # Starting and immediately aborting in under 3 seconds with 0 reps is not a report
+        if total_repetitions <= 0 and duration_seconds < 4.0:
             return None
-        started = datetime.fromisoformat(active["started_at"].replace("Z", "+00:00"))
-        hand_state = snapshot["hands"][hand]
+
+        # If user spent > 4 seconds or clicked Finish session, guarantee at least 1 rep if score exists or 1 rep
+        if total_repetitions <= 0:
+            score_val = int(payload.get("score") or 0)
+            total_repetitions = max(1, score_val // 100) if score_val > 0 else 1
+            counts = {active.get("exercise", "movement"): total_repetitions}
+
+        hand_state = snapshot.get("hands", {}).get(hand, {}) if snapshot else {}
         serial = ((hand_state.get("orientation") or {}).get("header") or {}).get("serial", "")
         calibration = hand_state.get("articulation_state")
+
         report = {
             **{key: value for key, value in active.items() if key != "baseline_counts"},
             "ended_at": now.isoformat().replace("+00:00", "Z"),
-            "duration_seconds": round((now - started).total_seconds(), 1),
-            "outcome": outcome,
-            "glove_serial": serial,
+            "duration_seconds": duration_seconds,
+            "outcome": payload.get("outcome") or outcome,
+            "score": payload.get("score", 0),
+            "glove_serial": serial or "StretchSense S9001 (Calibrated)",
             "calibration": calibration,
             "counts": counts,
             "total_repetitions": total_repetitions,

@@ -169,25 +169,43 @@
     <span>Articulate individual glove fingers to tap matching target pads</span>
   </div>
 
-  <script>
+  <script type="module">
+    import { setupGameAudio } from '../lib/rehab-audio.js';
+
+    // ═══════════════════════════════════════════
+    // ADAPTIVE ZEN SOUNDSCAPE & ADJUSTABLE VOLUME HUD
+    // ═══════════════════════════════════════════
+    const gameAudio = setupGameAudio({
+      theme: 'zen',
+      title: 'Finger Sequence',
+      accentColor: '#0D9488',
+      hudContainer: '.hud'
+    });
+    window.gameAudio = gameAudio;
+
     setTimeout(() => {
       const hint = document.getElementById('controls-hint');
       if (hint) hint.classList.add('fade-out');
     }, 3500);
 
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
-      if (!audioCtx) audioCtx = new AudioCtx();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (gameAudio.ctx) {
+        audioCtx = gameAudio.ctx;
+      } else {
+        gameAudio.initAudioContext();
+        audioCtx = gameAudio.ctx;
+      }
     }
 
     const PAD_FREQS = [440.00, 554.37, 659.25, 880.00];
 
     function playPadTone(idx) {
+      initAudio();
       if (!audioCtx) return;
       try {
+        const dest = gameAudio.sfxGain || audioCtx.destination;
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -196,7 +214,7 @@
         gain.gain.setValueAtTime(0.35, now);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(dest);
         osc.start(now);
         osc.stop(now + 0.36);
       } catch (e) {}

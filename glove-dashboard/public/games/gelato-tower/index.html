@@ -223,6 +223,18 @@
 
   <script type="module">
     import * as THREE from '../lib/three.module.min.js';
+    import { setupGameAudio } from '../lib/rehab-audio.js';
+
+    // ═══════════════════════════════════════════
+    // ADAPTIVE SOUNDSCAPE & ADJUSTABLE VOLUME HUD
+    // ═══════════════════════════════════════════
+    const gameAudio = setupGameAudio({
+      theme: 'bakery',
+      title: 'Gelato Tower',
+      accentColor: '#0284C7',
+      hudContainer: '.hud'
+    });
+    window.gameAudio = gameAudio;
 
     // ═══════════════════════════════════════════
     // AUDIO ENGINE (procedural, zero dependencies)
@@ -230,16 +242,24 @@
     class Audio {
       constructor() { this.ctx = null; }
       init() {
-        if (!this.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (A) this.ctx = new A(); }
-        if (this.ctx?.state === 'suspended') this.ctx.resume();
+        if (gameAudio.ctx) {
+          this.ctx = gameAudio.ctx;
+        } else {
+          gameAudio.initAudioContext();
+          this.ctx = gameAudio.ctx;
+        }
+      }
+      getDest() {
+        return gameAudio.sfxGain || (this.ctx ? this.ctx.destination : null);
       }
       play(freq, type, dur, vol = 0.25) {
         this.init(); if (!this.ctx) return;
+        const dest = this.getDest(); if (!dest) return;
         const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
         o.type = type; o.frequency.setValueAtTime(freq, t);
         o.frequency.exponentialRampToValueAtTime(freq * 0.4, t + dur);
         g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.01);
+        o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.01);
       }
       plop(p = 1) { this.play(320 * p, 'sine', 0.12, 0.3); }
       combo() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'triangle', 0.35, 0.2), i * 70)); }

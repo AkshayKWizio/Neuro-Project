@@ -5847,3 +5847,751 @@ button.topbar-connect-gloves:hover {
   display: inline-block !important;
   flex-shrink: 0 !important;
 }
+
+
+/* ==========================================================================
+   206 AI — MINIMAL LIGHT MODE 3D HAND TELEMETRY & CINEMA HUD
+   ========================================================================== */
+
+/* 1. HIDE ALL NOISY WATERMARKS & WATERMARK LABELS ACROSS ALL 3D VIEWS */
+.mesh-badge,
+.view-label,
+.rig-stream-status,
+.hand-viewport .mesh-badge,
+.hand-viewport .view-label,
+.hand-viewport .rig-stream-status,
+.floating-hand-hud .mesh-badge,
+.floating-hand-hud .view-label,
+.floating-hand-hud .rig-stream-status,
+.cinema-hand-card .mesh-badge,
+.cinema-hand-card .view-label,
+.cinema-hand-card .rig-stream-status,
+.cinema-hand-card .guide-badge,
+.cinema-hand-card .hand-badge {
+  display: none !important;
+}
+
+/* 2. CINEMA STAGE: 100% LIGHT MODE */
+.exercise-session-overlay,
+.cinema-stage-overlay {
+  background: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+.cinema-body-split {
+  background: #F8FAFC !important;
+}
+
+.cinema-right-column,
+.cinema-left-column {
+  background: #F8FAFC !important;
+  border-left: 1px solid #E2E8F0 !important;
+}
+
+.cinema-hand-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+.cinema-hand-card .hand-card-header,
+.hand-card-header {
+  background: #F8FAFC !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  padding: 10px 14px !important;
+}
+
+.cinema-hand-card .hand-card-title,
+.hand-card-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.cinema-hand-card .hand-card-title strong,
+.hand-card-title strong {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  letter-spacing: 0.02em !important;
+}
+
+.cinema-hand-card .hand-card-viewport {
+  background: radial-gradient(circle at center, #FFFFFF 40%, #F8FAFC 100%) !important;
+}
+
+.cinema-hand-card .hand-card-footer,
+.hand-card-footer {
+  background: #FFFFFF !important;
+  border-top: 1px solid #E2E8F0 !important;
+  padding: 8px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.cinema-hand-card .hud-metric,
+.hand-hud-footer .hud-metric,
+.hud-metric {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.cinema-hand-card .hud-metric span,
+.hand-hud-footer .hud-metric span,
+.hud-metric span {
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  color: #64748B !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+}
+
+.cinema-hand-card .hud-metric strong,
+.hand-hud-footer .hud-metric strong,
+.hud-metric strong {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+.hand-guidance-instruction {
+  background: #F8FAFC !important;
+  border-top: 1px solid #E2E8F0 !important;
+  color: #334155 !important;
+  font-size: 11px !important;
+  padding: 8px 12px !important;
+}
+
+/* 3. FLOATING 3D HAND HUD (PiP / GAME VIEW): 100% LIGHT MODE & MINIMAL */
+.floating-hand-hud {
+  position: absolute !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  width: 280px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+  z-index: 50 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.floating-hand-hud .hand-hud-header {
+  height: 38px !important;
+  padding: 0 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: #F8FAFC !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.floating-hand-hud .hand-hud-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+.floating-hand-hud .hand-hud-title strong {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  letter-spacing: 0.02em !important;
+}
+
+.floating-hand-hud .hand-hud-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.floating-hand-hud .hud-mode-toggle {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  padding: 3px 8px !important;
+  border-radius: 9999px !important;
+  background: #FFFFFF !important;
+  color: #0F6C73 !important;
+  border: 1px solid #CBD5E1 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.floating-hand-hud .hud-mode-toggle:hover {
+  background: #0F6C73 !important;
+  color: #FFFFFF !important;
+  border-color: #0F6C73 !important;
+}
+
+.floating-hand-hud .hud-min-btn,
+.floating-hand-hud .hud-close-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #64748B !important;
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.floating-hand-hud .hud-min-btn:hover,
+.floating-hand-hud .hud-close-btn:hover {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+.floating-hand-hud .hand-hud-viewport {
+  width: 100% !important;
+  height: 220px !important;
+  position: relative !important;
+  background: radial-gradient(circle at center, #FFFFFF 40%, #F8FAFC 100%) !important;
+  overflow: hidden !important;
+}
+
+.floating-hand-hud .hand-hud-footer {
+  padding: 8px 12px !important;
+  background: #F8FAFC !important;
+  border-top: 1px solid #E2E8F0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.floating-hand-hud.minimized {
+  width: auto !important;
+  min-width: 150px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
+}
+
+.floating-hand-hud.minimized .hand-hud-mini {
+  padding: 6px 14px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #0F172A !important;
+  font-family: 'Montserrat', sans-serif !important;
+  cursor: pointer !important;
+}
+
+/* 4. SOLID TEAL HIGH-CONTRAST TARE WRIST BUTTON */
+.live-tare-btn,
+.hud-tare-btn,
+button.live-tare-btn,
+button.hud-tare-btn,
+[data-slot="button"].hud-tare-btn {
+  background: #0F6C73 !important;
+  color: #FFFFFF !important;
+  border: 1px solid #0D5C62 !important;
+  border-radius: 6px !important;
+  padding: 0 10px !important;
+  height: 28px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  box-shadow: 0 1px 3px rgba(15, 108, 115, 0.25) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.live-tare-btn *,
+.hud-tare-btn *,
+button.live-tare-btn *,
+button.hud-tare-btn *,
+[data-slot="button"].hud-tare-btn * {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+.live-tare-btn:hover:not(:disabled),
+.hud-tare-btn:hover:not(:disabled),
+button.live-tare-btn:hover:not(:disabled),
+button.hud-tare-btn:hover:not(:disabled) {
+  background: #0B545A !important;
+  color: #FFFFFF !important;
+  border-color: #09454A !important;
+  box-shadow: 0 2px 6px rgba(15, 108, 115, 0.35) !important;
+}
+
+.live-tare-btn:disabled,
+.hud-tare-btn:disabled,
+button.live-tare-btn:disabled,
+button.hud-tare-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   GAME START / LOADING SCREEN & COUNTDOWN OVERLAY
+   AAA-Grade Game-Related Aesthetics with Curated Themes & Micro-Animations
+   ════════════════════════════════════════════════════════════════════ */
+
+.cinema-countdown-overlay,
+.game-startup-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 45 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  animation: fadeInStart 0.3s ease-out forwards;
+}
+
+@keyframes fadeInStart {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Theme Backgrounds */
+.game-startup-overlay.theme-balloon_blitz,
+.cinema-countdown-overlay.theme-balloon_blitz {
+  background: radial-gradient(circle at 50% 20%, #F0F9FF 0%, #E0F2FE 35%, #BAE6FD 75%, #F0FDF4 100%) !important;
+}
+
+.game-startup-overlay.theme-sky_glider,
+.cinema-countdown-overlay.theme-sky_glider {
+  background: radial-gradient(circle at 50% 20%, #F0FDFA 0%, #CCFBF1 35%, #99F6E4 75%, #FEF3C7 100%) !important;
+}
+
+.game-startup-overlay.theme-rolling_wonder,
+.cinema-countdown-overlay.theme-rolling_wonder {
+  background: radial-gradient(circle at 50% 20%, #FAF5FF 0%, #F3E8FF 35%, #E9D5FF 75%, #FEF9C3 100%) !important;
+}
+
+/* Floating animated game background particles */
+.startup-bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.particle-balloon {
+  position: absolute;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  opacity: 0.55;
+  filter: blur(0.5px);
+  animation: floatUpSlow 6s ease-in-out infinite alternate;
+}
+
+@keyframes floatUpSlow {
+  0% { transform: translateY(0) rotate(0deg) scale(1); }
+  50% { transform: translateY(-24px) rotate(4deg) scale(1.04); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+/* Central Game Start Card */
+.startup-card {
+  position: relative;
+  z-index: 10;
+  max-width: 620px;
+  width: 90%;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 28px !important;
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12), 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  padding: 34px 38px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  animation: cardPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardPopIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Game Icon / 3D Badge */
+.startup-badge-icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  font-size: 38px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  position: relative;
+  animation: badgePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.theme-balloon_blitz .startup-badge-icon {
+  background: linear-gradient(135deg, #FF6B8B 0%, #FF8E53 100%);
+  border: 3px solid #FFF0F5;
+  box-shadow: 0 12px 28px rgba(255, 107, 139, 0.35);
+}
+
+.theme-sky_glider .startup-badge-icon {
+  background: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%);
+  border: 3px solid #E0F2FE;
+  box-shadow: 0 12px 28px rgba(2, 132, 199, 0.35);
+}
+
+.theme-rolling_wonder .startup-badge-icon {
+  background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  border: 3px solid #F5F3FF;
+  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.35);
+}
+
+/* Titles */
+.startup-game-title {
+  font-family: 'Fredoka', 'Montserrat', -apple-system, sans-serif !important;
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.theme-balloon_blitz .startup-game-title {
+  background: linear-gradient(135deg, #E11D48 0%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-sky_glider .startup-game-title {
+  background: linear-gradient(135deg, #0284C7 0%, #0D9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-rolling_wonder .startup-game-title {
+  background: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.startup-game-sub {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #64748B !important;
+  margin: 0 0 16px 0 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Clinical Protocol Pill */
+.startup-target-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #F0FDF4 !important;
+  border: 1.5px solid #86EFAC !important;
+  color: #15803D !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  padding: 6px 16px !important;
+  border-radius: 9999px !important;
+  margin-bottom: 22px !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.08) !important;
+}
+
+.startup-target-chip .chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16A34A;
+  box-shadow: 0 0 8px #16A34A;
+}
+
+/* Step-by-Step Motion Guide Grid */
+.startup-steps-grid {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-bottom: 24px !important;
+}
+
+.startup-step-card {
+  flex: 1 !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  transition: transform 0.2s ease, border-color 0.2s ease !important;
+}
+
+.startup-step-badge {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  letter-spacing: 0.06em !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+.startup-step-action {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #1E293B !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.startup-arrow {
+  color: #0F6C73 !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  opacity: 0.7 !important;
+}
+
+/* Countdown / Loading Section */
+.startup-action-section {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #F1F5F9 !important;
+}
+
+/* Big Vibrant Countdown Box */
+.cinema-countdown-box {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.cinema-countdown-num {
+  font-family: 'Fredoka', 'Montserrat', Impact, sans-serif !important;
+  font-size: 64px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 30px rgba(15, 108, 115, 0.35) !important;
+  animation: countPulse 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) infinite !important;
+}
+
+@keyframes countPulse {
+  0% { transform: scale(0.85); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.theme-balloon_blitz .cinema-countdown-num {
+  background: linear-gradient(135deg, #E11D48, #FB7185) !important;
+  box-shadow: 0 10px 30px rgba(225, 29, 72, 0.4) !important;
+}
+
+.theme-sky_glider .cinema-countdown-num {
+  background: linear-gradient(135deg, #0284C7, #38BDF8) !important;
+  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.4) !important;
+}
+
+.theme-rolling_wonder .cinema-countdown-num {
+  background: linear-gradient(135deg, #7C3AED, #A855F7) !important;
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4) !important;
+}
+
+.cinema-countdown-sub {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  color: #0F172A !important;
+  text-transform: uppercase !important;
+}
+
+/* Loading Bar state when !gameLoaded */
+.startup-loading-bar-wrap {
+  width: 260px !important;
+  height: 8px !important;
+  background: #E2E8F0 !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  margin-top: 6px !important;
+}
+
+.startup-loading-bar-fill {
+  height: 100% !important;
+  width: 45% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #0F6C73, #2DD4BF) !important;
+  animation: loadingSlide 1.4s ease-in-out infinite !important;
+}
+
+@keyframes loadingSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(120%); }
+  100% { transform: translateX(250%); }
+}
+
+.startup-loading-text {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #64748B !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+/* Fast start skip button */
+.startup-skip-btn {
+  background: #F8FAFC !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 20px !important;
+  padding: 5px 16px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #0F6C73 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  margin-top: 4px !important;
+}
+
+.startup-skip-btn:hover {
+  background: #0F6C73 !important;
+  border-color: #0F6C73 !important;
+  color: #FFFFFF !important;
+}
+
+
+.cinema-rep-counter {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  font-size: 13px !important;
+  font-family: monospace !important;
+  font-weight: 800 !important;
+  color: #10B981 !important;
+}
+
+.cinema-score-counter {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px 9px !important;
+  border-radius: 6px !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #FBBF24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.outcome-badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  background: rgba(15, 108, 115, 0.12) !important;
+  color: #0F6C73 !important;
+  border: 1px solid rgba(15, 108, 115, 0.25) !important;
+}
+
+/* Production Print Styles for Clinical Reports Dossier */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .therapy-topbar,
+  .therapy-status,
+  .patient-list,
+  .section-heading div button,
+  .exercise-cards,
+  .dual-rig-panel,
+  .exercise-library,
+  button {
+    display: none !important;
+  }
+  .reports-workspace,
+  .report-layout,
+  .report-list,
+  .advanced-report-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .session-report-card {
+    page-break-inside: avoid !important;
+    border: 1px solid #CBD5E1 !important;
+    box-shadow: none !important;
+    margin-bottom: 12px !important;
+  }
+  .report-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    page-break-inside: avoid !important;
+  }
+  .report-insights {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+    page-break-inside: avoid !important;
+  }
+}

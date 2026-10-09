@@ -51,11 +51,27 @@ build/
 logs/
 processes.json
 *.bak
+*.bak*
+*.backup
+*.old
 *.tmp
 *.temp
 *.swp
 *.swo
 *~
+*.zip
+*.tar
+*.gz
+
+# Retired / Legacy Games
+**/games/captains-wheel/
+**/games/claw-crane/
+**/games/highway-racer/
+**/games/hill-climb/
+**/screenshots/captains_wheel*
+**/screenshots/claw_crane*
+**/screenshots/highway_racer*
+**/screenshots/hill_climb*
 
 # Environment Variables
 .env

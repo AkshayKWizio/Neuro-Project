@@ -119,12 +119,38 @@ processes.json
 # Temporary Files, Backups & Caches
 # ------------------------------------------------------------------------------
 *.bak
+*.bak*
+*.backup
+*.old
 *.tmp
 *.temp
 *.swp
 *.swo
 *~
 *.orig
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# ------------------------------------------------------------------------------
+# Retired / Legacy Games (Suite pruned to Balloon Blitz, Sky Glider, Rolling Wonder)
+# ------------------------------------------------------------------------------
+**/games/captains-wheel/
+**/games/claw-crane/
+**/games/highway-racer/
+**/games/hill-climb/
+**/screenshots/captains_wheel*
+**/screenshots/claw_crane*
+**/screenshots/highway_racer*
+**/screenshots/hill_climb*
+
+# ------------------------------------------------------------------------------
+# Developer Scratchpad & Agent Scripts
+# ------------------------------------------------------------------------------
+scratch/
+**/scratch/
 
 # ------------------------------------------------------------------------------
 # Unity & Native Drivers (XR Game)
@@ -133,12 +159,6 @@ processes.json
 **/XR Game_BurstDebugInformation_DoNotShip/
 *.dmp
 **/[Uu]nityCrashHandler*.dmp
-
-# ------------------------------------------------------------------------------
-# Developer Scratchpad & Agent Scripts
-# ------------------------------------------------------------------------------
-scratch/
-**/scratch/
 
 # ------------------------------------------------------------------------------
 # OS & Editor Specific Files

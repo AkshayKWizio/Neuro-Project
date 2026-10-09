@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Balloon Festival — Inflate & Fly Rehabilitation</title>
+  <title>Balloon Blitz - Wrist Open / Close Rehabilitation</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -317,18 +317,18 @@
       <div class="stat"><span class="stat-label">Perfect</span><span class="stat-val gold" id="v-perfect">0</span></div>
       <div class="stat"><span class="stat-label">Combo</span><span class="stat-val blue" id="v-combo">×1</span></div>
     </div>
-    <div class="level-pill">
-      <span>Level</span><span class="lvl-num" id="v-level">1</span>
-      <div class="level-bar"><div class="level-fill" id="level-fill" style="width:0%"></div></div>
+    <div class="level-pill" style="background:linear-gradient(135deg, #0F6C73, #1FB5A8);box-shadow:0 6px 20px rgba(15,108,115,0.3);">
+      <span>Session</span><span class="lvl-num" id="v-level">∞</span>
+      <span style="font-size:11px;font-weight:700;color:#ffffff;letter-spacing:0.05em;">ENDLESS</span>
     </div>
-    <div class="grip-pill">
-      <span class="grip-label">Hand</span>
+    <div class="grip-pill" id="grip-pill">
+      <span class="grip-label">Wrist State</span>
       <div class="grip-track"><div class="grip-bar" id="grip-bar"></div></div>
-      <span class="grip-status" id="grip-status">OPEN</span>
+      <span class="grip-status" id="grip-status" style="width:105px;text-align:right;color:#16A34A;">OPEN (True)</span>
     </div>
   </div>
 
-  <div class="size-indicator" id="size-indicator" style="display:none;">
+  <div class="size-indicator" id="size-indicator">
     <div class="gauge-header">
       <span class="gauge-title">Inflation Volume</span>
       <div class="gauge-readout">
@@ -353,20 +353,20 @@
 
   <div class="toast" id="toast"></div>
 
-  <div class="controls-hint">
+  <div class="controls-hint" style="padding:8px 24px;border-radius:999px;">
     <div class="hint-step">
-      <span class="motion-badge">Grasp</span>
-      <span class="hint-label">Pump Air</span>
+      <span class="motion-badge" style="background:#FEE2E2;color:#DC2626;font-weight:800;">WRIST CLOSE</span>
+      <span class="hint-label">False State (Pump Air)</span>
     </div>
-    <span class="hint-sep"></span>
+    <span class="hint-sep" style="color:#0F6C73;font-weight:bold;">➔</span>
     <div class="hint-step">
-      <span class="motion-badge alt">Extend</span>
-      <span class="hint-label">Release Balloon</span>
+      <span class="motion-badge alt" style="background:#DCFCE7;color:#16A34A;font-weight:800;">WRIST OPEN</span>
+      <span class="hint-label">True State (Release Balloon)</span>
     </div>
-    <span class="hint-sep"></span>
+    <span class="hint-sep" style="color:#0F6C73;font-weight:bold;">➔</span>
     <div class="hint-step">
-      <span class="motion-badge target">Target</span>
-      <span class="hint-label">Green Window</span>
+      <span class="motion-badge target" style="background:#FEF3C7;color:#D97706;font-weight:800;">1 CLINICAL REP</span>
+      <span class="hint-label">Close ➔ Open Cycle</span>
     </div>
   </div>
 
@@ -981,17 +981,17 @@
       if (elSizeText) elSizeText.className = 'gauge-status';
 
       if (activeBalloonSize < cfg.perfectZone[0]) {
-        elSizeText.innerHTML = '<span class="status-dot"></span><span>Close fist (grasp) to pump air</span>';
+        elSizeText.innerHTML = '<span class="status-dot"></span><span>WRIST CLOSE (False State): Pump air into target zone</span>';
       } else if (activeBalloonSize >= cfg.perfectZone[0] && activeBalloonSize <= cfg.perfectZone[1]) {
-        elSizeText.innerHTML = '<span class="status-dot"></span><span>Target reached — Open hand to release!</span>';
+        elSizeText.innerHTML = '<span class="status-dot" style="background:#10B981;"></span><span>TARGET REACHED: WRIST OPEN (True State) to release!</span>';
         if (elSizeFill) elSizeFill.classList.add('perfect');
         if (elSizeText) elSizeText.classList.add('perfect');
       } else if (activeBalloonSize < cfg.popAt) {
-        elSizeText.innerHTML = '<span class="status-dot"></span><span>Caution: High pressure — Open hand now!</span>';
+        elSizeText.innerHTML = '<span class="status-dot" style="background:#F59E0B;"></span><span>HIGH PRESSURE: Open hand (True State) to release!</span>';
         if (elSizeFill) elSizeFill.classList.add('warning');
         if (elSizeText) elSizeText.classList.add('warning');
       } else {
-        elSizeText.innerHTML = '<span class="status-dot"></span><span>Burst hazard — Open hand immediately!</span>';
+        elSizeText.innerHTML = '<span class="status-dot" style="background:#EF4444;"></span><span>BURST LIMIT: Open hand immediately!</span>';
         if (elSizeFill) elSizeFill.classList.add('danger');
         if (elSizeText) elSizeText.classList.add('danger');
       }
@@ -1105,19 +1105,34 @@
 
       updateHUD();
 
-      // Level complete check
-      if (reps >= cfg.target) {
-        gameState = 'complete';
-        document.getElementById('size-indicator').style.display = 'none';
-        sfx.fanfare();
-        showComplete();
-        return;
+      // Post telemetry to parent dashboard
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'NEURO_REP_EVENT',
+          exercise: 'hand_open_close',
+          movement: 'wrist_open_close',
+          reps: reps,
+          score: score,
+          quality: quality
+        }, '*');
+        window.parent.postMessage({
+          type: 'exercise_rep',
+          movement: 'wrist_open_close',
+          count: reps
+        }, '*');
       }
 
-      // Spawn next balloon
+      // Milestone celebration every 5 reps without stopping gameplay
+      if (reps % 5 === 0) {
+        sfx.fanfare();
+        spawnParticles(pos.x, pos.y + 3, pos.z, 50, [0xFFD54F, 0x10B981, 0x38BDF8], true);
+        toast(`MILESTONE: ${reps} REPETITIONS COMPLETED!`);
+      }
+
+      // Infinitely running: seamlessly spawn next balloon
       setTimeout(() => {
         if (gameState === 'playing') createActiveBalloon();
-      }, 600);
+      }, 450);
     }
 
     // ════════════════════════════════════════════════
@@ -1159,7 +1174,8 @@
       if (isGripping || gameState !== 'playing') return;
       isGripping = true;
       elGripBar.style.width = '100%';
-      elGripStatus.textContent = 'GRIP';
+      elGripStatus.textContent = 'CLOSE (False)';
+      elGripStatus.style.color = '#DC2626';
 
       doPump();
       // Continuous pumping while gripping
@@ -1171,7 +1187,8 @@
       if (!isGripping) return;
       isGripping = false;
       elGripBar.style.width = '0%';
-      elGripStatus.textContent = 'OPEN';
+      elGripStatus.textContent = 'OPEN (True)';
+      elGripStatus.style.color = '#16A34A';
       clearInterval(pumpTimer);
 
       releaseBalloon();
@@ -1183,6 +1200,16 @@
       if (e.data.type === 'neuro-game-action') {
         if (e.data.movement === 'wrist_close' || e.data.action === 'primary_action') onGrip();
         else if (e.data.movement === 'wrist_open' || e.data.action === 'secondary_action') onRelease();
+      } else if (e.data.type === 'NEURO_TELEMETRY') {
+        if (e.data.movement === 'wrist_close') onGrip();
+        else if (e.data.movement === 'wrist_open') onRelease();
+        
+        // Sensor flexion threshold fallback
+        const flex = e.data.hand?.sliders?.index_mcp ?? e.data.hand?.sliders?.INDEXBEND1;
+        if (typeof flex === 'number') {
+          if (flex > 0.55) onGrip();
+          else if (flex < 0.30) onRelease();
+        }
       }
     });
 

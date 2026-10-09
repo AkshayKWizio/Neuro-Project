@@ -1,9 +1,66 @@
+# ==============================================================================
+# Glove Dashboard - Git Ignore Rules
+# ==============================================================================
+
+# Dependencies & Build Outputs
 node_modules/
 .vinext/
+.next/
 dist/
+build/
+*.tsbuildinfo
 .wrangler/
+.vercel/
+
+# Python & Virtual Environments
 backend/.venv/
 backend/__pycache__/
-*.pyc
-.env
+__pycache__/
+*.py[cod]
+
+# Logs & Environment
 .logs/
+logs/
+*.log
+.env
+.env.*
+!.env.example
+
+# Temporary Files & Backups
+*.bak
+*.bak*
+*.backup
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.zip
+*.tar
+*.gz
+
+# Scratchpads & Test Scripts
+scratch/
+**/scratch/
+
+# Retired / Legacy Games (Suite restricted to Balloon Blitz, Sky Glider, Rolling Wonder)
+desktop_bundle/web/games/captains-wheel/
+desktop_bundle/web/games/claw-crane/
+desktop_bundle/web/games/highway-racer/
+desktop_bundle/web/games/hill-climb/
+desktop_bundle/web/screenshots/captains_wheel*
+desktop_bundle/web/screenshots/claw_crane*
+desktop_bundle/web/screenshots/highway_racer*
+desktop_bundle/web/screenshots/hill_climb*
+docs/screenshots/captains_wheel*
+docs/screenshots/claw_crane*
+docs/screenshots/highway_racer*
+docs/screenshots/hill_climb*
+public/games/captains-wheel/
+public/games/claw-crane/
+public/games/highway-racer/
+public/games/hill-climb/
+public/screenshots/captains_wheel*
+public/screenshots/claw_crane*
+public/screenshots/highway_racer*
+public/screenshots/hill_climb*

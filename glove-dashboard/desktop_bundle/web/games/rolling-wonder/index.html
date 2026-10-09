@@ -118,37 +118,74 @@
     }
 
     /* Right Action Pill */
+    /* Right Action Pill - Clinical Circumduction Tracker */
     .action-pill-container {
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(24px) saturate(1.8);
       border: 1.5px solid rgba(124, 58, 237, 0.25);
       border-radius: 60px;
-      padding: 10px 22px;
+      padding: 7px 22px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.1);
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
+      transition: all 0.2s ease;
     }
-    .action-icon {
-      font-size: 20px;
+    .action-wheel-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #7C3AED;
+      background: #F3E8FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+    }
+    .wheel-spoke {
+      position: absolute;
+      width: 2px;
+      height: 24px;
+      background: #7C3AED;
+      border-radius: 1px;
+    }
+    .wheel-spoke.sp2 { transform: rotate(45deg); }
+    .wheel-spoke.sp3 { transform: rotate(90deg); }
+    .wheel-spoke.sp4 { transform: rotate(135deg); }
+    .wheel-hub {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #7C3AED;
+      border: 1.5px solid #FFFFFF;
+      z-index: 2;
     }
     .action-label-box {
       display: flex;
       flex-direction: column;
+      gap: 2px;
+      min-width: 155px;
     }
     .action-badge-sub {
-      font-size: 9px;
+      font-size: 9.5px;
       font-weight: 700;
-      color: #94A3B8;
+      color: #64748B;
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
     .action-badge-text {
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 13.5px;
+      font-weight: 800;
       color: #7C3AED;
       letter-spacing: 0.03em;
+      transition: color 0.2s ease;
     }
+    .action-badge-text.step-right { color: #16A34A; }
+    .action-badge-text.step-left { color: #0284C7; }
+    .action-badge-text.step-complete { color: #7C3AED; }
 
     /* ─── Toast Banner ─── */
     .toast {
@@ -382,11 +419,18 @@
       </div>
     </div>
 
-    <!-- Right Action Status -->
-    <div class="action-pill-container">
+    <!-- Right Action Status (Clinical Circumduction State) -->
+    <div class="action-pill-container" id="circ-pill">
+      <div class="action-wheel-icon" id="circ-wheel-icon">
+        <div class="wheel-spoke"></div>
+        <div class="wheel-spoke sp2"></div>
+        <div class="wheel-spoke sp3"></div>
+        <div class="wheel-spoke sp4"></div>
+        <div class="wheel-hub"></div>
+      </div>
       <div class="action-label-box">
-        <span class="action-badge-sub">Glove Motion</span>
-        <span class="action-badge-text" id="hud-action-text">ROLLING CRUISE</span>
+        <span class="action-badge-sub" id="hud-action-sub">Step 1 / 2: Turn Right</span>
+        <span class="action-badge-text" id="hud-action-text">WAITING RIGHT ➔</span>
       </div>
     </div>
   </div>
@@ -397,20 +441,20 @@
   </div>
 
   <!-- Controls hint -->
-  <div class="controls-hint">
+  <div class="controls-hint" style="padding:8px 24px;border-radius:999px;">
     <div class="hint-step">
-      <span class="motion-badge">Wrist Tilt</span>
-      <span class="hint-label">Steer Left / Right</span>
+      <span class="motion-badge" style="background:#EDE9FE;color:#7C3AED;font-weight:800;">CLOCKWISE</span>
+      <span class="hint-label">True State (Turn Right)</span>
     </div>
-    <span class="hint-sep"></span>
+    <span class="hint-sep" style="color:#7C3AED;font-weight:bold;">➔</span>
     <div class="hint-step">
-      <span class="motion-badge alt">Extend</span>
-      <span class="hint-label">Leap Jump</span>
+      <span class="motion-badge alt" style="background:#E0F2FE;color:#0284C7;font-weight:800;">ANTICLOCKWISE</span>
+      <span class="hint-label">True State (Turn Left)</span>
     </div>
-    <span class="hint-sep"></span>
+    <span class="hint-sep" style="color:#7C3AED;font-weight:bold;">➔</span>
     <div class="hint-step">
-      <span class="motion-badge purple">360° Circle</span>
-      <span class="hint-label">Rainbow Turbo</span>
+      <span class="motion-badge purple" style="background:#FEF3C7;color:#D97706;font-weight:800;">1 CLINICAL REP</span>
+      <span class="hint-label">Turn Right ➔ Turn Left</span>
     </div>
   </div>
 
@@ -578,51 +622,56 @@
         id: 1,
         name: "Sunny Meadow",
         targetStars: 10,
+        targetReps: 6,
         speed: 15.0,
         obstacleRate: 0.12,
         bgHills: 0x86EFAC,
         trackColor: 0xA78BFA,
-        desc: "Steer Pip along gentle hills and collect delicious golden stars!"
+        desc: "Bilateral Wrist Circumduction: Turn Right (Clockwise) then Turn Left (Anticlockwise) for 1 Clinical Rep!"
       },
       {
         id: 2,
         name: "Candy Canyon",
         targetStars: 15,
+        targetReps: 8,
         speed: 17.5,
         obstacleRate: 0.22,
         bgHills: 0xFBCFE8,
         trackColor: 0x38BDF8,
-        desc: "Bouncy hurdles ahead! Open your hand to leap high in the air!"
+        desc: "Maintain rhythmic circumduction cycles! Complete Turn Right -> Turn Left reps across pink dunes!"
       },
       {
         id: 3,
         name: "Rainbow Skyway",
         targetStars: 20,
+        targetReps: 10,
         speed: 20.0,
         obstacleRate: 0.28,
         bgHills: 0xFEF08A,
         trackColor: 0x34D399,
-        desc: "Whirl your wrist in circles to trigger Turbo Rainbow Boost!"
+        desc: "Higher velocity carpal mobility! Alternate Clockwise and Anticlockwise rotations seamlessly!"
       },
       {
         id: 4,
         name: "Carnival Coaster",
         targetStars: 25,
+        targetReps: 12,
         speed: 22.0,
         obstacleRate: 0.35,
         bgHills: 0xDDD6FE,
         trackColor: 0xFBBF24,
-        desc: "Twisting pathways and rapid star rings! Demonstrate master mobility!"
+        desc: "Twisting tracks requiring dynamic bilateral carpal circumduction coordination!"
       },
       {
         id: 5,
         name: "Grand Champion Tour",
         targetStars: 30,
+        targetReps: 15,
         speed: 24.0,
         obstacleRate: 0.40,
         bgHills: 0xBAE6FD,
         trackColor: 0xF43F5E,
-        desc: "The ultimate victory lap! Collect all golden stars for championship glory!"
+        desc: "Championship carpal mobility! Master 15 alternating circumduction reps to achieve victory!"
       }
     ];
 
@@ -632,6 +681,14 @@
     let starsInLevel = 0;
     let totalStars = 0;
     let isGameOver = false;
+
+    // Clinical Wrist Circumduction State Tracking:
+    // Clockwise -> True state: Turn Right
+    // Anticlockwise -> True state: Turn Left
+    // Turn Right -> Turn Left = 1 Completed Clinical Rep!
+    let repSequenceStage = 'NEED_RIGHT'; // 'NEED_RIGHT' -> 'NEED_LEFT' -> Rep Completed!
+    let lastCircumAngle = null;
+    let wheelAngle = 0;
 
     // Movement state
     let targetX = 0;
@@ -1057,27 +1114,35 @@
       segments.push(seg);
     }
 
+    let trackItemStep = 0;
     function populateSegmentItems(seg) {
       const lvl = LEVELS[currentLevelIdx];
-      // Random Lane: Left (-1.6), Center (0), Right (1.6)
-      const lanes = [-1.6, 0, 1.6];
-      const starLane = lanes[Math.floor(Math.random() * lanes.length)];
+      // Guided Clinical Sequence for Complete Repetitions:
+      // Step 0: Items on Right Lane (+1.6) -> encourages Turn Right (Clockwise)
+      // Step 1: Items on Left Lane (-1.6) -> encourages Turn Left (Anticlockwise)
+      // Step 2: Center Rainbow Bonus Star (0)
+      // Step 3: Scenic Breather (no collision items)
+      const step = trackItemStep % 4;
+      trackItemStep++;
 
-      // Star or Gem
-      const isGem = Math.random() < 0.25;
-      const item = isGem ? createGemMesh() : createStarMesh();
-      item.position.set(starLane, 0.8, (Math.random() - 0.5) * 3);
-      seg.add(item);
-      activeCollectibles.push(item);
-
-      // Obstacle chance based on level
-      if (Math.random() < lvl.obstacleRate) {
-        const otherLanes = lanes.filter(l => l !== starLane);
-        const obsLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
-        const obs = createMushroomMesh();
-        obs.position.set(obsLane, 0, (Math.random() - 0.5) * 3);
-        seg.add(obs);
-        activeObstacles.push(obs);
+      if (step === 0) {
+        // Right Lane (+1.6) - Clockwise target
+        const item = createStarMesh();
+        item.position.set(1.6, 0.8, 0);
+        seg.add(item);
+        activeCollectibles.push(item);
+      } else if (step === 1) {
+        // Left Lane (-1.6) - Anticlockwise target
+        const item = createGemMesh();
+        item.position.set(-1.6, 0.8, 0);
+        seg.add(item);
+        activeCollectibles.push(item);
+      } else if (step === 2) {
+        // Center Bonus Star
+        const item = createStarMesh();
+        item.position.set(0, 0.8, 0);
+        seg.add(item);
+        activeCollectibles.push(item);
       }
     }
 
@@ -1156,22 +1221,102 @@
       document.getElementById('hud-lvl-fill').style.width = `${progress}%`;
     }
 
-    function updateActionBadge(text) {
-      document.getElementById('hud-action-text').innerText = text;
+    function updateActionBadge(text, subText = '', colorClass = '') {
+      const textEl = document.getElementById('hud-action-text');
+      const subEl = document.getElementById('hud-action-sub');
+      if (textEl) {
+        textEl.innerText = text;
+        textEl.className = 'action-badge-text ' + (colorClass || '');
+      }
+      if (subEl && subText) {
+        subEl.innerText = subText;
+      }
     }
 
     // ════════════════════════════════════════════════════════════════
-    // 8. ACTIONS: STEERING, JUMPING, TURBO
+    // 8. ACTIONS: CLINICAL CIRCUMDUCTION STEERING & JUMPING
+    // Wrist Circumduction:
+    // Clockwise -> True state: Turn Right
+    // Anticlockwise -> True state: Turn Left
+    // Turn Right -> Turn Left = 1 Completed Clinical Rep!
     // ════════════════════════════════════════════════════════════════
+    function handleCircumductionInput(dir, amount = 45) {
+      if (isGameOver) return;
+      const wheelEl = document.getElementById('circ-wheel-icon');
+
+      if (dir === 'RIGHT') {
+        // Clockwise motion = True state: Turn Right
+        updateSteering(amount);
+        wheelAngle = 35;
+        if (wheelEl) wheelEl.style.transform = `rotate(${wheelAngle}deg)`;
+
+        if (repSequenceStage === 'NEED_RIGHT') {
+          repSequenceStage = 'NEED_LEFT';
+          updateActionBadge('TURN RIGHT ✓', 'Step 2: Turn Left (Anticlockwise)', 'step-right');
+          showToast('STEP 1: TURN RIGHT ✓ (NOW TURN LEFT)');
+          audio.playStarChime();
+        } else {
+          updateActionBadge('TURN RIGHT', 'Waiting for Turn Left to complete Rep', 'step-right');
+        }
+      } else if (dir === 'LEFT') {
+        // Anticlockwise motion = True state: Turn Left
+        updateSteering(-amount);
+        wheelAngle = -35;
+        if (wheelEl) wheelEl.style.transform = `rotate(${wheelAngle}deg)`;
+
+        if (repSequenceStage === 'NEED_LEFT') {
+          // 1 FULL CLINICAL REPETITION: TURN RIGHT -> TURN LEFT!
+          reps += 1;
+          score += 200;
+          repSequenceStage = 'NEED_RIGHT';
+          updateHUD();
+          updateActionBadge('REP COMPLETE! ✓', 'Next: Turn Right (Clockwise)', 'step-complete');
+          showToast('CLINICAL REP COMPLETE! (RIGHT ➔ LEFT) +200');
+          audio.playGemChime();
+          spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0x10B981);
+
+          // Broadcast clinical telemetry to dashboard
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              type: 'exercise_rep',
+              movement: 'wrist_circumduction_rep',
+              direction_sequence: 'turn_right_turn_left',
+              count: reps
+            }, '*');
+          }
+
+          // Check level progression by reps
+          const lvl = LEVELS[currentLevelIdx];
+          if (reps >= (lvl.targetReps || 8) && !isGameOver) {
+            completeLevel();
+          }
+        } else {
+          updateActionBadge('TURN LEFT', 'Need: Turn Right first to start Rep', 'step-left');
+        }
+      }
+    }
+
+    function handleAngleInput(angleRad) {
+      if (lastCircumAngle !== null) {
+        let diff = angleRad - lastCircumAngle;
+        if (diff > Math.PI) diff -= Math.PI * 2;
+        if (diff < -Math.PI) diff += Math.PI * 2;
+
+        if (diff > 0.025) {
+          handleCircumductionInput('RIGHT', Math.min(55, Math.abs(diff) * 120));
+        } else if (diff < -0.025) {
+          handleCircumductionInput('LEFT', Math.min(55, Math.abs(diff) * 120));
+        }
+      }
+      lastCircumAngle = angleRad;
+    }
+
     function updateSteering(rollDeg) {
       const clamped = Math.max(-55, Math.min(55, rollDeg));
       targetX = (clamped / 55) * 2.1;
-      if (clamped < -15) {
-        updateActionBadge('STEERING LEFT');
-      } else if (clamped > 15) {
-        updateActionBadge('STEERING RIGHT');
-      } else if (!isJumping && !isTurbo) {
-        updateActionBadge('ROLLING CRUISE');
+      const wheelEl = document.getElementById('circ-wheel-icon');
+      if (wheelEl) {
+        wheelEl.style.transform = `rotate(${(clamped / 55) * 45}deg)`;
       }
     }
 
@@ -1180,10 +1325,8 @@
       isJumping = true;
       ballVy = 8.5; // Upward leap impulse
       audio.playJumpBoing();
-      reps += 1;
       score += 25;
       updateHUD();
-      updateActionBadge('HIGH LEAP');
       showToast('HIGH LEAP!');
     }
 
@@ -1194,10 +1337,8 @@
       ballSpeed = LEVELS[currentLevelIdx].speed * 1.6;
       shieldMesh.material.opacity = 0.6;
       audio.playTurboWhoosh();
-      reps += 1;
       score += 50;
       updateHUD();
-      updateActionBadge('TURBO BOOST');
       showToast('TURBO ROTATION BOOST!');
     }
 
@@ -1205,24 +1346,27 @@
     // 9. LEVEL PROGRESSION & COMPLETION
     // ════════════════════════════════════════════════════════════════
     function completeLevel() {
-      isGameOver = true;
       audio.playFanfare();
       spawnConfettiShower();
+      score += 400;
+      updateHUD();
 
-      const lvl = LEVELS[currentLevelIdx];
-      const isFinal = currentLevelIdx === LEVELS.length - 1;
+      // Endless running: seamlessly advance to next course theme without stopping Pip!
+      currentLevelIdx = (currentLevelIdx + 1) % LEVELS.length;
+      starsInLevel = 0;
+      const nextLvl = LEVELS[currentLevelIdx];
+      ballSpeed = nextLvl.speed;
 
-      document.getElementById('modal-title').innerText = `${lvl.name} Complete!`;
-      document.getElementById('modal-sub').innerText = isFinal
-        ? "Legendary achievement! Pip finished all 5 courses of the Rainbow Grand Prix!"
-        : `Spectacular agility! You collected all ${lvl.targetStars} stars and mastered this course!`;
+      // Update theme colors seamlessly
+      scene.background.set(nextLvl.bgHills);
+      scene.fog.color.set(nextLvl.bgHills);
+      segments.forEach((seg) => {
+        if (seg.userData.roadMesh) {
+          seg.userData.roadMesh.material.color.set(nextLvl.trackColor);
+        }
+      });
 
-      document.getElementById('modal-stars').innerText = totalStars;
-      document.getElementById('modal-reps').innerText = reps;
-      document.getElementById('modal-score').innerText = score.toLocaleString();
-
-      document.getElementById('btn-next-text').innerText = isFinal ? "Play Again" : "Next Course";
-      document.getElementById('overlay').classList.add('show');
+      showToast(`MILESTONE REACHED! Entering ${nextLvl.name}!`);
     }
 
     function nextLevel() {
@@ -1231,6 +1375,7 @@
       starsInLevel = 0;
       ballSpeed = LEVELS[currentLevelIdx].speed;
       isGameOver = false;
+      repSequenceStage = 'NEED_RIGHT';
 
       // Update theme colors
       const lvl = LEVELS[currentLevelIdx];
@@ -1245,7 +1390,7 @@
       });
 
       updateHUD();
-      updateActionBadge('ROLLING CRUISE');
+      updateActionBadge('WAITING RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)');
       showToast(`WELCOME TO ${lvl.name.toUpperCase()}!`);
     }
 
@@ -1259,15 +1404,17 @@
       const data = e.data;
       if (!data) return;
       if (data.type === 'neuro-game-action') {
-        if (data.movement === 'pronation' || data.action === 'move_left') {
-          updateSteering(-45);
-        } else if (data.movement === 'supination' || data.action === 'move_right') {
-          updateSteering(45);
+        if (data.movement === 'clockwise' || data.action === 'move_right' || data.movement === 'supination') {
+          handleCircumductionInput('RIGHT', 45);
+        } else if (data.movement === 'anticlockwise' || data.action === 'move_left' || data.movement === 'pronation') {
+          handleCircumductionInput('LEFT', 45);
         } else if (data.movement === 'wrist_open' || data.action === 'secondary_action' || data.action === 'primary_action') {
           performJump();
-        } else if (data.movement === 'clockwise' || data.movement === 'anticlockwise') {
-          performTurbo();
         }
+      } else if (typeof data.circumduction_angle === 'number') {
+        handleAngleInput(data.circumduction_angle);
+      } else if (typeof data.angle === 'number') {
+        handleAngleInput(data.angle);
       }
     });
 
@@ -1283,7 +1430,13 @@
             const sinr = 2 * (quat.w * quat.x + quat.y * quat.z);
             const cosr = 1 - 2 * (quat.x * quat.x + quat.y * quat.y);
             const rollDeg = Math.atan2(sinr, cosr) * (180 / Math.PI);
-            updateSteering(rollDeg);
+            if (rollDeg > 15) {
+              handleCircumductionInput('RIGHT', rollDeg);
+            } else if (rollDeg < -15) {
+              handleCircumductionInput('LEFT', Math.abs(rollDeg));
+            } else {
+              targetX = 0;
+            }
           }
           if (hand?.bend_sensors) {
             const avgFlex = hand.bend_sensors.reduce((a, b) => a + b, 0) / hand.bend_sensors.length;
@@ -1303,22 +1456,37 @@
     const keys = {};
     window.addEventListener('keydown', (e) => {
       keys[e.key] = true;
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') updateSteering(-45);
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') updateSteering(45);
-      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') performJump();
-      if (e.key === 'Shift' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') performTurbo();
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        handleCircumductionInput('RIGHT', 45);
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        handleCircumductionInput('LEFT', 45);
+      } else if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        performJump();
+      } else if (e.key === 'Shift') {
+        performTurbo();
+      }
     });
 
     window.addEventListener('keyup', (e) => {
       keys[e.key] = false;
       if (!keys['ArrowLeft'] && !keys['ArrowRight'] && !keys['a'] && !keys['d'] && !keys['A'] && !keys['D']) {
-        updateSteering(0);
+        targetX = 0;
+        const wheelEl = document.getElementById('circ-wheel-icon');
+        if (wheelEl) wheelEl.style.transform = 'rotate(0deg)';
+        if (!isJumping && !isTurbo) {
+          if (repSequenceStage === 'NEED_RIGHT') {
+            updateActionBadge('WAITING RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)');
+          } else {
+            updateActionBadge('WAITING LEFT ➔', 'Step 2 / 2: Turn Left (Anticlockwise)');
+          }
+        }
       }
     });
 
     window.addEventListener('mousemove', (e) => {
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
-      updateSteering(normX * 50);
+      if (normX > 0.25) handleCircumductionInput('RIGHT', normX * 45);
+      else if (normX < -0.25) handleCircumductionInput('LEFT', Math.abs(normX) * 45);
     });
 
     window.addEventListener('click', () => performJump());

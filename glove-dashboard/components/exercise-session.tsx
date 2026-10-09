@@ -26,8 +26,8 @@ const ACTIONS: Record<ExerciseMode, Record<string, { action: GameAction; key: st
     supination: { action: 'move_right', key: 'ArrowRight', label: 'MOVE RIGHT' },
   },
   circumduction: {
-    clockwise: { action: 'primary_action', key: 'ArrowUp', label: 'PRIMARY ACTION' },
-    anticlockwise: { action: 'secondary_action', key: 'ArrowDown', label: 'SECONDARY ACTION' },
+    clockwise: { action: 'move_right', key: 'ArrowRight', label: 'TURN RIGHT' },
+    anticlockwise: { action: 'move_left', key: 'ArrowLeft', label: 'TURN LEFT' },
   },
   hand_open_close: {
     wrist_close: { action: 'primary_action', key: 'Space', label: 'PRIMARY ACTION' },
@@ -113,14 +113,26 @@ function useGameActionBridge(mode: ExerciseMode, side: 'LEFT' | 'RIGHT', latest:
     if (!latest || !mapping) return null;
     let action = mapping.action;
     let key = mapping.key;
-    // Account for active glove side so pronation and supination map consistently
-    if (side === 'LEFT' && mode === 'pronation_supination') {
-      if (action === 'move_left') {
-        action = 'move_right';
-        key = 'ArrowRight';
-      } else if (action === 'move_right') {
-        action = 'move_left';
-        key = 'ArrowLeft';
+    // Account for active glove side so pronation and supination map consistently:
+    // LH Hand: Pronation to Supination -> Turn Left; Supination to Pronation -> Turn Right
+    // RH Hand: Opposite (Pronation to Supination -> Turn Right; Supination to Pronation -> Turn Left)
+    if (mode === 'pronation_supination') {
+      if (side === 'LEFT') {
+        if (latest.movement === 'supination') {
+          action = 'move_left';
+          key = 'ArrowLeft';
+        } else if (latest.movement === 'pronation') {
+          action = 'move_right';
+          key = 'ArrowRight';
+        }
+      } else {
+        if (latest.movement === 'supination') {
+          action = 'move_right';
+          key = 'ArrowRight';
+        } else if (latest.movement === 'pronation') {
+          action = 'move_left';
+          key = 'ArrowLeft';
+        }
       }
     }
     return {
@@ -149,7 +161,7 @@ function useGameActionBridge(mode: ExerciseMode, side: 'LEFT' | 'RIGHT', latest:
   return currentAction;
 }
 
-export type RehabGameId = 'gelato_tower' | 'balloon_blitz' | 'pizza_spin' | 'rolling_wonder' | 'fruit_picker' | 'balloon_pop';
+export type RehabGameId = 'balloon_blitz' | 'sky_glider' | 'rolling_wonder';
 
 export interface RehabGame {
   id: RehabGameId;
@@ -163,40 +175,31 @@ export interface RehabGame {
 
 export const REHAB_GAMES: RehabGame[] = [
   {
-    id: 'gelato_tower',
-    title: 'Gelato Tower',
-    subtitle: '3D Wobbly Scoops & Balance',
-    badge: 'ROTATION',
-    icon: 'rotate',
-    url: '/games/gelato-tower/index.html',
-    clinicalTarget: 'Pronation / Supination'
-  },
-  {
     id: 'balloon_blitz',
     title: 'Balloon Blitz',
     subtitle: '3D Inflate & Fly Festival',
-    badge: 'GRASP / EXTEND',
+    badge: 'WRIST OPEN / CLOSE',
     icon: 'target',
     url: '/games/balloon-blitz/index.html',
-    clinicalTarget: 'Hand Open / Close'
+    clinicalTarget: 'Wrist Open / Close'
   },
   {
-    id: 'pizza_spin',
-    title: 'Pizza Spin',
-    subtitle: '3D Italian Kitchen & Dough Whirl',
-    badge: '360° CIRCLE',
+    id: 'sky_glider',
+    title: 'Sky Glider',
+    subtitle: '3D Canyon Flight & Ring Navigation',
+    badge: 'PRONATION / SUPINATION',
     icon: 'rotate',
-    url: '/games/pizza-spin/index.html',
-    clinicalTarget: 'Wrist Circumduction'
+    url: '/games/sky-glider/index.html',
+    clinicalTarget: 'Pronation / Supination'
   },
   {
     id: 'rolling_wonder',
     title: 'Rolling Wonder',
     subtitle: '3D Rainbow Hamster Runner',
-    badge: 'FULL MOBILITY',
+    badge: 'WRIST CIRCUMDUCTION',
     icon: 'gauge',
     url: '/games/rolling-wonder/index.html',
-    clinicalTarget: 'Multi-Movement Agility'
+    clinicalTarget: 'Wrist Circumduction'
   }
 ];
 
@@ -223,10 +226,10 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
 
   // Default game based on clinical exercise
   const initialGame: RehabGameId = useMemo(() => {
-    if (mode === 'pronation_supination') return 'gelato_tower';
+    if (mode === 'pronation_supination') return 'sky_glider';
     if (mode === 'hand_open_close') return 'balloon_blitz';
-    if (mode === 'circumduction') return 'pizza_spin';
-    return 'gelato_tower';
+    if (mode === 'circumduction') return 'rolling_wonder';
+    return 'balloon_blitz';
   }, [mode]);
 
   const [selectedGame, setSelectedGame] = useState<RehabGameId>(initialGame);

@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sky Glider - Pronation / Supination Rehabilitation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      background: #0D47A1;
+    }
+    #game-canvas {
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    /* ─── Glassmorphism HUD ─── */
+    .hud {
+      position: absolute; top: 18px; left: 0; right: 0;
+      display: flex; justify-content: center; align-items: center;
+      gap: 14px; pointer-events: none; z-index: 10;
+    }
+    .hud-pill {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 12px 36px rgba(13, 71, 161, 0.18), 0 2px 8px rgba(0,0,0,0.04);
+      border-radius: 999px;
+      padding: 8px 24px;
+      display: flex; gap: 22px; align-items: center;
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-label {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: #64748B;
+    }
+    .stat-val {
+      font-size: 22px; font-weight: 800; color: #0F172A; line-height: 1.1;
+      font-feature-settings: "tnum"; font-variant-numeric: tabular-nums;
+    }
+    .stat-val.blue { color: #0284C7; }
+    .stat-val.gold { color: #D97706; }
+    .stat-val.pink { color: #DB2777; }
+
+    .level-pill {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 12px 36px rgba(13, 71, 161, 0.18);
+      border-radius: 999px;
+      padding: 8px 20px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 13px; font-weight: 700; color: #334155;
+    }
+    .lvl-num {
+      background: linear-gradient(135deg, #0284C7, #0369A1);
+      color: white; border-radius: 999px;
+      padding: 3px 10px; font-size: 12px; font-weight: 800;
+    }
+    .level-bar {
+      width: 80px; height: 8px; background: #E2E8F0;
+      border-radius: 999px; overflow: hidden;
+    }
+    .level-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #38BDF8, #0284C7);
+      border-radius: 999px; transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ─── Rotation / Bank Gauge ─── */
+    .gauge-pill {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 12px 36px rgba(13, 71, 161, 0.18);
+      border-radius: 999px;
+      padding: 8px 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .gauge-label {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: #64748B;
+    }
+    .gauge-track {
+      width: 100px; height: 8px; background: #E2E8F0;
+      border-radius: 999px; position: relative;
+    }
+    .gauge-center {
+      position: absolute; left: 50%; top: -2px; bottom: -2px;
+      width: 2px; background: #94A3B8; transform: translateX(-50%);
+    }
+    .gauge-needle {
+      position: absolute; top: -5px; width: 18px; height: 18px;
+      background: linear-gradient(135deg, #0284C7, #0369A1);
+      border: 2px solid white; border-radius: 50%;
+      box-shadow: 0 3px 8px rgba(2, 132, 199, 0.4);
+      transform: translateX(-50%);
+      transition: left 0.08s ease-out;
+    }
+    .gauge-deg {
+      font-size: 13px; font-weight: 800; color: #0284C7; min-width: 38px; text-align: right;
+      font-feature-settings: "tnum"; font-variant-numeric: tabular-nums;
+    }
+
+    /* ─── Toast Feedback ─── */
+    .toast {
+      position: absolute; top: 88px; left: 50%;
+      transform: translateX(-50%) translateY(-20px) scale(0.9);
+      background: linear-gradient(135deg, #E0F2FE, #FFFFFF);
+      border: 2px solid #38BDF8; border-radius: 60px;
+      padding: 10px 30px; color: #0369A1;
+      font-size: 15px; font-weight: 800; letter-spacing: 0.5px;
+      box-shadow: 0 16px 40px rgba(2, 132, 199, 0.25);
+      opacity: 0; pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 30;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ─── Clinical HUD Controls Bar ─── */
+    .controls-hint {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      padding: 8px 24px; border-radius: 9999px;
+      font-size: 12.5px; font-weight: 600; color: #334155;
+      box-shadow: 0 12px 32px rgba(13, 71, 161, 0.14);
+      display: flex; gap: 14px; align-items: center;
+      pointer-events: none; z-index: 20;
+    }
+    .hint-step { display: flex; align-items: center; gap: 7px; }
+    .motion-badge {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.6px; padding: 2px 8px; border-radius: 6px;
+      background: #E0F2FE; color: #0284C7;
+    }
+    .motion-badge.alt { background: #F3E8FF; color: #7E22CE; }
+    .motion-badge.target { background: #FEF3C7; color: #D97706; }
+    .hint-divider { width: 1px; height: 14px; background: #CBD5E1; }
+
+    /* ─── Level Modal ─── */
+    .modal-overlay {
+      position: absolute; inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.4s ease; z-index: 100;
+    }
+    .modal-overlay.show { display: none !important; }
+    .modal-card {
+      background: linear-gradient(145deg, #FFFFFF, #F0F9FF);
+      border-radius: 32px; padding: 44px; width: 90%; max-width: 460px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(2, 132, 199, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-overlay.show .modal-card { transform: scale(1) translateY(0); }
+    .modal-badge {
+      width: 72px; height: 72px; margin: 0 auto 16px;
+      border-radius: 50%; background: linear-gradient(135deg, #E0F2FE, #BAE6FD);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.2);
+    }
+    .modal-title { font-size: 26px; font-weight: 800; color: #0F172A; margin-bottom: 8px; }
+    .modal-sub { font-size: 14.5px; color: #475569; line-height: 1.6; margin-bottom: 24px; }
+    .modal-btn {
+      background: linear-gradient(135deg, #0284C7, #0369A1);
+      color: white; border: none; padding: 16px 38px;
+      border-radius: 999px; font-size: 15.5px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .modal-btn:hover { transform: scale(1.04); box-shadow: 0 12px 32px rgba(2, 132, 199, 0.45); }
+  </style>
+</head>
+<body>
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-pill">
+      <div class="stat"><span class="stat-label">Clinical Reps</span><span class="stat-val" id="val-reps" style="color:#16A34A;font-weight:800;">0</span></div>
+      <div class="stat"><span class="stat-label">Rings Cleared</span><span class="stat-val blue" id="val-rings">0</span></div>
+      <div class="stat"><span class="stat-label">Score</span><span class="stat-val gold" id="val-score">0</span></div>
+      <div class="stat"><span class="stat-label">Combo</span><span class="stat-val pink" id="val-combo">×1</span></div>
+    </div>
+    <div class="level-pill" id="hand-pill" style="cursor:pointer;" title="Click to toggle Left Hand / Right Hand">
+      <span>HAND:</span><span class="lvl-num" id="val-hand">LH (LEFT)</span>
+      <span style="font-size:11px;font-weight:700;color:#0369A1;" id="hand-rule-badge">Pro➔Sup: Left</span>
+    </div>
+    <div class="gauge-pill">
+      <span class="gauge-label">Bank</span>
+      <div class="gauge-track">
+        <div class="gauge-center"></div>
+        <div class="gauge-needle" id="gauge-needle" style="left:50%"></div>
+      </div>
+      <span class="gauge-deg" id="gauge-deg">0°</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Clinical Controls Guide -->
+  <div class="controls-hint" id="controls-hint" style="padding:8px 24px;border-radius:999px;">
+    <div class="hint-step">
+      <span class="motion-badge" id="hint-pro-badge" style="background:#E0F2FE;color:#0284C7;font-weight:800;">PRO ➔ SUP</span>
+      <span class="hint-label" id="hint-pro-label">LH Hand: Turn Left</span>
+    </div>
+    <span class="hint-divider">➔</span>
+    <div class="hint-step">
+      <span class="motion-badge alt" id="hint-sup-badge" style="background:#F3E8FF;color:#7E22CE;font-weight:800;">SUP ➔ PRO</span>
+      <span class="hint-label" id="hint-sup-label">LH Hand: Turn Right</span>
+    </div>
+    <span class="hint-divider">➔</span>
+    <div class="hint-step">
+      <span class="motion-badge target" style="background:#FEF3C7;color:#D97706;font-weight:800;">1 CLINICAL REP</span>
+      <span class="hint-label">Left Ring + Right Ring Cycle</span>
+    </div>
+  </div>
+
+  <!-- Stage Victory Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-card">
+      <div class="modal-badge">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+      </div>
+      <h2 class="modal-title" id="m-title">Flight Stage Cleared!</h2>
+      <p class="modal-sub" id="m-desc">Excellent rotational wing stability.</p>
+      <button class="modal-btn" id="m-btn">Next Canyon Course &rarr;</button>
+    </div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <script type="module">
+    import * as THREE from '../lib/three.module.min.js';
+
+    // ═══════════════════════════════════════════
+    // PROCEDURAL AUDIO ENGINE
+    // ═══════════════════════════════════════════
+    class AudioSynth {
+      constructor() { this.ctx = null; }
+      init() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
+        }
+        if (this.ctx?.state === 'suspended') this.ctx.resume();
+      }
+      play(freq, type, dur, vol = 0.25) {
+        this.init(); if (!this.ctx) return;
+        const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, t);
+        o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.4, 20), t + dur);
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(t); o.stop(t + dur + 0.01);
+      }
+      ringHit() {
+        this.init(); if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [659.25, 987.77, 1318.5].forEach((freq, idx) => {
+          const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(freq, now + idx * 0.03);
+          g.gain.setValueAtTime(0.2, now + idx * 0.03);
+          g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.03 + 0.3);
+          o.connect(g); g.connect(this.ctx.destination);
+          o.start(now + idx * 0.03); o.stop(now + idx * 0.03 + 0.35);
+        });
+      }
+      fanfare() {
+        this.init(); if (!this.ctx) return;
+        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((freq, i) => {
+          setTimeout(() => this.play(freq, 'sine', 0.4, 0.25), i * 70);
+        });
+      }
+      miss() { this.play(160, 'sawtooth', 0.2, 0.12); }
+    }
+    const sfx = new AudioSynth();
+    window.addEventListener('click', () => sfx.init(), { once: true });
+    window.addEventListener('keydown', () => sfx.init(), { once: true });
+
+    // ═══════════════════════════════════════════
+    // LEVEL PROGRESSION PROFILE
+    // ═══════════════════════════════════════════
+    const LEVELS = [
+      { name: "Emerald Canyon", targetRings: 8, ringSpeed: 22, ringSpacing: 28 },
+      { name: "Golden Ridge", targetRings: 12, ringSpeed: 26, ringSpacing: 25 },
+      { name: "Azure Heights", targetRings: 16, ringSpeed: 30, ringSpacing: 22 },
+      { name: "Sunset Horizon", targetRings: 20, ringSpeed: 34, ringSpacing: 20 },
+      { name: "Grand Apex Vista", targetRings: 25, ringSpeed: 38, ringSpacing: 18 }
+    ];
+
+    let currentLevel = 0;
+    let ringsCleared = 0;
+    let score = 0;
+    let combo = 1;
+    let stageRings = 0;
+
+    let currentTiltDeg = 0; // -45 to +45 deg
+    let targetX = 0;
+
+    // ═══════════════════════════════════════════
+    // THREE.JS RENDERER & SCENE SETUP
+    // ═══════════════════════════════════════════
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+
+    // Vibrant alpine sunset sky gradient
+    const skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 2; skyCanvas.height = 512;
+    const skyCtx = skyCanvas.getContext('2d');
+    const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
+    skyGrad.addColorStop(0, '#0D47A1');   // Deep cobalt twilight zenith
+    skyGrad.addColorStop(0.3, '#1976D2'); // Royal blue
+    skyGrad.addColorStop(0.55, '#42A5F5'); // Azure sky
+    skyGrad.addColorStop(0.75, '#90CAF9'); // Soft sky
+    skyGrad.addColorStop(0.9, '#FFCC80');  // Sunset peach
+    skyGrad.addColorStop(1, '#FFE082');    // Golden horizon glow
+    skyCtx.fillStyle = skyGrad;
+    skyCtx.fillRect(0, 0, 2, 512);
+    const skyTex = new THREE.CanvasTexture(skyCanvas);
+    skyTex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = skyTex;
+    scene.environment = skyTex;
+    scene.fog = new THREE.FogExp2(0xFFE0B2, 0.007);
+
+    const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 400);
+    camera.position.set(0, 4.2, 10.5);
+
+    // ═══════════════════════════════════════════
+    // LIGHTING SYSTEM
+    // ═══════════════════════════════════════════
+    const ambLight = new THREE.AmbientLight(0xFFF3E0, 0.65);
+    scene.add(ambLight);
+
+    const sun = new THREE.DirectionalLight(0xFFFFE0, 2.2);
+    sun.position.set(25, 45, 20);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 100;
+    sun.shadow.camera.left = -20; sun.shadow.camera.right = 20;
+    sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -10;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.02;
+    scene.add(sun);
+
+    const fillLight = new THREE.DirectionalLight(0x81D4FA, 0.7);
+    fillLight.position.set(-20, 15, -10);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xFFD54F, 0.5);
+    rimLight.position.set(0, 5, 20);
+    scene.add(rimLight);
+
+    // ═══════════════════════════════════════════
+    // ENVIRONMENT: CANYON, RIVER & MOUNTAINS
+    // ═══════════════════════════════════════════
+
+    // Canyon Floor / Valley
+    const valleyGeo = new THREE.PlaneGeometry(300, 600, 32, 32);
+    const valleyMat = new THREE.MeshStandardMaterial({
+      color: 0x4CAF50, roughness: 0.85, metalness: 0.05
+    });
+    const valley = new THREE.Mesh(valleyGeo, valleyMat);
+    valley.rotation.x = -Math.PI / 2;
+    valley.position.set(0, -6.5, -150);
+    valley.receiveShadow = true;
+    scene.add(valley);
+
+    // Sparkling Winding Alpine River down the valley center
+    const riverGeo = new THREE.PlaneGeometry(16, 600, 8, 32);
+    const riverMat = new THREE.MeshStandardMaterial({
+      color: 0x0284C7, roughness: 0.1, metalness: 0.4
+    });
+    const river = new THREE.Mesh(riverGeo, riverMat);
+    river.rotation.x = -Math.PI / 2;
+    river.position.set(0, -6.42, -150);
+    scene.add(river);
+
+    // Riverbank sand borders
+    const riverBankGeo = new THREE.PlaneGeometry(24, 600);
+    const riverBankMat = new THREE.MeshStandardMaterial({ color: 0xD7CCC8, roughness: 0.9 });
+    const riverBank = new THREE.Mesh(riverBankGeo, riverBankMat);
+    riverBank.rotation.x = -Math.PI / 2;
+    riverBank.position.set(0, -6.46, -150);
+    scene.add(riverBank);
+
+    // Majestic Canyon Mountain Ridges Left & Right
+    const mountainRockColors = [0x795548, 0x8D6E63, 0x6D4C41, 0xA1887F];
+    const snowCapMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.4 });
+
+    function makeMountainPeak(x, z, radius, height) {
+      const g = new THREE.Group();
+      // Main rock cone
+      const rockMat = new THREE.MeshStandardMaterial({
+        color: mountainRockColors[Math.floor(Math.random() * mountainRockColors.length)],
+        roughness: 0.85,
+        flatShading: true
+      });
+      const rock = new THREE.Mesh(new THREE.ConeGeometry(radius, height, 7), rockMat);
+      rock.position.y = height / 2;
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      g.add(rock);
+
+      // Snow-capped peak on top
+      const snowHeight = height * 0.32;
+      const snow = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.32, snowHeight, 7), snowCapMat);
+      snow.position.y = height - snowHeight / 2;
+      g.add(snow);
+
+      g.position.set(x, -6.5, z);
+      return g;
+    }
+
+    for (let i = -14; i <= 14; i++) {
+      // Left Ridge
+      const rL = 14 + Math.random() * 8;
+      const hL = 26 + Math.random() * 18;
+      const xL = -28 - Math.random() * 18;
+      scene.add(makeMountainPeak(xL, i * 28, rL, hL));
+
+      // Right Ridge
+      const rR = 14 + Math.random() * 8;
+      const hR = 26 + Math.random() * 18;
+      const xR = 28 + Math.random() * 18;
+      scene.add(makeMountainPeak(xR, i * 28, rR, hR));
+    }
+
+    // Stylized Alpine Pine Trees along the valley slopes
+    function makePineTree(x, z, scale = 1) {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 1.8 * scale, 6),
+        new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.9 })
+      );
+      trunk.position.y = 0.9 * scale;
+      trunk.castShadow = true;
+      g.add(trunk);
+
+      const greens = [0x2E7D32, 0x388E3C, 0x1B5E20];
+      for (let i = 0; i < 3; i++) {
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry((1.4 - i * 0.3) * scale, (2.0 - i * 0.3) * scale, 7),
+          new THREE.MeshStandardMaterial({ color: greens[i], roughness: 0.7, flatShading: true })
+        );
+        cone.position.y = (1.5 + i * 1.0) * scale;
+        cone.castShadow = true;
+        g.add(cone);
+      }
+      g.position.set(x, -6.5, z);
+      return g;
+    }
+
+    for (let i = -15; i <= 15; i++) {
+      // Left trees
+      scene.add(makePineTree(-14 - Math.random() * 10, i * 20 + Math.random() * 8, 1.0 + Math.random() * 0.6));
+      scene.add(makePineTree(-11 - Math.random() * 6, i * 20 + Math.random() * 8, 0.8 + Math.random() * 0.5));
+      // Right trees
+      scene.add(makePineTree(14 + Math.random() * 10, i * 20 + Math.random() * 8, 1.0 + Math.random() * 0.6));
+      scene.add(makePineTree(11 + Math.random() * 6, i * 20 + Math.random() * 8, 0.8 + Math.random() * 0.5));
+    }
+
+    // Floating Hot Air Balloons in the far sky
+    function makeHotAirBalloon(x, y, z, color1, color2) {
+      const g = new THREE.Group();
+      // Balloon envelope
+      const envGeo = new THREE.SphereGeometry(3.5, 16, 16);
+      envGeo.scale(1, 1.35, 1);
+      const envMat = new THREE.MeshStandardMaterial({ color: color1, roughness: 0.4 });
+      const env = new THREE.Mesh(envGeo, envMat);
+      g.add(env);
+
+      // Bottom skirt
+      const skirt = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.2, 0.8, 1.2, 12),
+        new THREE.MeshStandardMaterial({ color: color2, roughness: 0.5 })
+      );
+      skirt.position.y = -3.8;
+      g.add(skirt);
+
+      // Wicker basket
+      const basket = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 1.0, 1.2),
+        new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.9 })
+      );
+      basket.position.y = -5.4;
+      g.add(basket);
+
+      g.position.set(x, y, z);
+      return g;
+    }
+
+    const balloons = [
+      makeHotAirBalloon(-32, 28, -120, 0xE91E63, 0xFFEB3B),
+      makeHotAirBalloon(35, 34, -180, 0x0284C7, 0xFF9800),
+      makeHotAirBalloon(-22, 38, -240, 0x9C27B0, 0x4CAF50),
+      makeHotAirBalloon(25, 26, -90, 0xEF4444, 0xFFFFFF)
+    ];
+    balloons.forEach(b => scene.add(b));
+
+    // Volumetric Puffy Cumulus Clouds
+    function makeCloud(x, y, z, scale = 1) {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.5, metalness: 0 });
+      for (let i = 0; i < 5; i++) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry((1.8 + Math.random() * 1.2) * scale, 12, 10),
+          mat
+        );
+        puff.position.set(
+          (i * 1.5 - 3) * scale,
+          (Math.random() - 0.5) * 1.0 * scale,
+          (Math.random() - 0.5) * 1.2 * scale
+        );
+        puff.scale.y = 0.65;
+        g.add(puff);
+      }
+      g.position.set(x, y, z);
+      g.userData = { speed: 8 + Math.random() * 6 };
+      return g;
+    }
+
+    const clouds = [];
+    for (let i = 0; i < 16; i++) {
+      const c = makeCloud(
+        (Math.random() - 0.5) * 110,
+        14 + Math.random() * 16,
+        -Math.random() * 320,
+        1.2 + Math.random() * 0.8
+      );
+      scene.add(c);
+      clouds.push(c);
+    }
+
+    // ═══════════════════════════════════════════
+    // HERO AIRCRAFT: STYLIZED SPORT BIPLANE
+    // ═══════════════════════════════════════════
+    const planeGroup = new THREE.Group();
+
+    // Fuselage body (aerodynamic curved shell)
+    const fuseGeo = new THREE.CylinderGeometry(0.48, 0.22, 3.8, 16);
+    fuseGeo.rotateX(Math.PI / 2);
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0x0284C7, metalness: 0.35, roughness: 0.25
+    });
+    const fuselage = new THREE.Mesh(fuseGeo, bodyMat);
+    fuselage.castShadow = true;
+    fuselage.receiveShadow = true;
+    planeGroup.add(fuselage);
+
+    // Fuselage belly stripe (white lacquer)
+    const bellyGeo = new THREE.CylinderGeometry(0.49, 0.23, 1.8, 16, 1, false, 0, Math.PI);
+    bellyGeo.rotateX(Math.PI / 2);
+    bellyGeo.rotateZ(Math.PI);
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, metalness: 0.1, roughness: 0.3 });
+    const belly = new THREE.Mesh(bellyGeo, whiteMat);
+    planeGroup.add(belly);
+
+    // Engine Cowling (nose)
+    const noseGeo = new THREE.SphereGeometry(0.5, 16, 12);
+    noseGeo.scale(0.95, 0.95, 1.2);
+    const noseMat = new THREE.MeshStandardMaterial({ color: 0xF97316, metalness: 0.4, roughness: 0.2 });
+    const nose = new THREE.Mesh(noseGeo, noseMat);
+    nose.position.set(0, 0, -1.8);
+    planeGroup.add(nose);
+
+    // Main Top Wings (glossy cyan with orange tips)
+    const topWingGeo = new THREE.BoxGeometry(5.8, 0.1, 0.9);
+    const topWing = new THREE.Mesh(topWingGeo, bodyMat);
+    topWing.position.set(0, 0.55, -0.2);
+    topWing.castShadow = true;
+    planeGroup.add(topWing);
+
+    // Bottom Wings
+    const botWingGeo = new THREE.BoxGeometry(5.0, 0.08, 0.8);
+    const botWing = new THREE.Mesh(botWingGeo, bodyMat);
+    botWing.position.set(0, -0.2, -0.2);
+    botWing.castShadow = true;
+    planeGroup.add(botWing);
+
+    // Wing Struts (chrome metal)
+    const strutMat = new THREE.MeshStandardMaterial({ color: 0xE2E8F0, metalness: 0.8, roughness: 0.2 });
+    [-2.1, 2.1].forEach(x => {
+      const strutL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.75, 8), strutMat);
+      strutL.position.set(x, 0.17, -0.2);
+      planeGroup.add(strutL);
+    });
+
+    // Navigation Lights on Wingtips
+    const redLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xEF4444, emissiveIntensity: 1.0 })
+    );
+    redLight.position.set(-2.9, 0.55, -0.2);
+    planeGroup.add(redLight);
+
+    const greenLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x10B981, emissiveIntensity: 1.0 })
+    );
+    greenLight.position.set(2.9, 0.55, -0.2);
+    planeGroup.add(greenLight);
+
+    // Glass Canopy & Cockpit
+    const canopyGeo = new THREE.SphereGeometry(0.38, 16, 12);
+    canopyGeo.scale(0.8, 0.8, 1.8);
+    const canopyMat = new THREE.MeshStandardMaterial({
+      color: 0xBAE6FD, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.75
+    });
+    const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+    canopy.position.set(0, 0.45, -0.3);
+    planeGroup.add(canopy);
+
+    // Pilot inside
+    const pilotHead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.8 })
+    );
+    pilotHead.position.set(0, 0.38, -0.25);
+    planeGroup.add(pilotHead);
+
+    // Tail Fin & Rudder
+    const finGeo = new THREE.BoxGeometry(0.08, 1.1, 0.8);
+    const fin = new THREE.Mesh(finGeo, noseMat);
+    fin.position.set(0, 0.65, 1.6);
+    fin.castShadow = true;
+    planeGroup.add(fin);
+
+    // Horizontal Tail Stabilizer
+    const stabGeo = new THREE.BoxGeometry(2.0, 0.08, 0.5);
+    const stab = new THREE.Mesh(stabGeo, bodyMat);
+    stab.position.set(0, 0.2, 1.6);
+    planeGroup.add(stab);
+
+    // Propeller Hub & Blades
+    const propGroup = new THREE.Group();
+    propGroup.position.set(0, 0, -2.35);
+
+    const spinner = new THREE.Mesh(
+      new THREE.ConeGeometry(0.18, 0.35, 12),
+      new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.8, roughness: 0.2 })
+    );
+    spinner.rotation.x = -Math.PI / 2;
+    propGroup.add(spinner);
+
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.4 });
+    const blade1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.14, 0.04), bladeMat);
+    propGroup.add(blade1);
+
+    // Motion blur propeller translucent disc
+    const propDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(0.8, 16),
+      new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+    );
+    propGroup.add(propDisc);
+    planeGroup.add(propGroup);
+
+    // Wingtip Particle Trail Ribbons
+    const trailGeos = [new THREE.BufferGeometry(), new THREE.BufferGeometry()];
+    const trailPositions = [new Float32Array(60 * 3), new Float32Array(60 * 3)];
+    const trailMat = new THREE.LineBasicMaterial({ color: 0xBAE6FD, transparent: true, opacity: 0.6, linewidth: 2 });
+    const leftTrail = new THREE.Line(trailGeos[0], trailMat);
+    const rightTrail = new THREE.Line(trailGeos[1], trailMat);
+    scene.add(leftTrail); scene.add(rightTrail);
+
+    const leftTrailHistory = [];
+    const rightTrailHistory = [];
+
+    planeGroup.position.set(0, 1.2, 3);
+    scene.add(planeGroup);
+
+    // ═══════════════════════════════════════════
+    // INTERACTIVE CHRONO-RINGS & COLLECTIBLES
+    // ═══════════════════════════════════════════
+    const activeRings = [];
+    const laneX = [-4.8, 0, 4.8];
+
+    // Master Ring Geometry
+    const outerTorusGeo = new THREE.TorusGeometry(1.8, 0.16, 16, 36);
+    const innerTorusGeo = new THREE.TorusGeometry(1.45, 0.05, 12, 28);
+    const gemGeo = new THREE.OctahedronGeometry(0.42, 0);
+
+    const outerRingMat = new THREE.MeshStandardMaterial({
+      color: 0xF59E0B, metalness: 0.85, roughness: 0.2,
+      emissive: 0xD97706, emissiveIntensity: 0.35
+    });
+    const innerRingMat = new THREE.MeshStandardMaterial({
+      color: 0x38BDF8, emissive: 0x0284C7, emissiveIntensity: 0.8
+    });
+    const gemMat = new THREE.MeshStandardMaterial({
+      color: 0xFFD700, metalness: 0.9, roughness: 0.1,
+      emissive: 0xF59E0B, emissiveIntensity: 0.6
+    });
+
+    let ringSpawnIndex = 0;
+    function spawnRing(zPos) {
+      const g = new THREE.Group();
+
+      const outer = new THREE.Mesh(outerTorusGeo, outerRingMat.clone());
+      outer.castShadow = true;
+      g.add(outer);
+
+      const inner = new THREE.Mesh(innerTorusGeo, innerRingMat.clone());
+      g.add(inner);
+
+      const gem = new THREE.Mesh(gemGeo, gemMat.clone());
+      g.add(gem);
+
+      // Chevrons around ring
+      for (let i = 0; i < 4; i++) {
+        const chev = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 0.3, 0.3),
+          outerRingMat
+        );
+        const ang = (i * Math.PI) / 2;
+        chev.position.set(Math.cos(ang) * 1.8, Math.sin(ang) * 1.8, 0);
+        chev.rotation.z = ang;
+        g.add(chev);
+      }
+
+      // Rhythmic Alternating Lane Arrangement to Guide Full Repetitions:
+      // Ring A: Left Lane (-2.8) -> Ring B: Right Lane (+2.8)
+      const isLeft = (ringSpawnIndex % 2 === 0);
+      ringSpawnIndex++;
+      const chosenLane = isLeft ? -2.8 : 2.8;
+
+      g.position.set(chosenLane, 1.2, zPos);
+      g.userData = { cleared: false, isLeftLane: isLeft, gem, outer, inner, baseScale: 1, rotSpeed: 0.02 };
+      scene.add(g);
+      activeRings.push(g);
+    }
+
+    // Initial batch of rings
+    for (let i = 1; i <= 6; i++) {
+      spawnRing(-i * 28);
+    }
+
+    // ═══════════════════════════════════════════
+    // SPARKLE PARTICLE BURST SYSTEM
+    // ═══════════════════════════════════════════
+    const particles = [];
+    const sparkGeo = new THREE.SphereGeometry(0.12, 6, 6);
+    const sparkMat = new THREE.MeshStandardMaterial({
+      color: 0xFDE047, emissive: 0xF59E0B, emissiveIntensity: 1.2, roughness: 0.1
+    });
+
+    function spawnSparkBurst(x, y, z) {
+      for (let i = 0; i < 24; i++) {
+        const p = new THREE.Mesh(sparkGeo, sparkMat);
+        p.position.set(x, y, z);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        const spd = 4 + Math.random() * 8;
+        p.userData = {
+          vx: Math.sin(phi) * Math.cos(theta) * spd,
+          vy: Math.sin(phi) * Math.sin(theta) * spd,
+          vz: Math.cos(phi) * spd,
+          life: 0.6 + Math.random() * 0.4,
+          maxLife: 1.0
+        };
+        scene.add(p);
+        particles.push(p);
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // TELEMETRY & INPUT HANDLING
+    // ═══════════════════════════════════════════
+    let activeHand = 'LEFT'; // 'LEFT' (LH) or 'RIGHT' (RH)
+    let reps = 0;
+    let cycleRingsHit = 0;
+    let lastRingSide = null;
+
+    function setHand(hand) {
+      activeHand = hand.toUpperCase() === 'RIGHT' ? 'RIGHT' : 'LEFT';
+      const handBadge = document.getElementById('val-hand');
+      const ruleBadge = document.getElementById('hand-rule-badge');
+      const hintProLabel = document.getElementById('hint-pro-label');
+      const hintSupLabel = document.getElementById('hint-sup-label');
+
+      if (activeHand === 'LEFT') {
+        if (handBadge) handBadge.textContent = 'LH (LEFT)';
+        if (ruleBadge) ruleBadge.textContent = 'Pro➔Sup: Left';
+        if (hintProLabel) hintProLabel.textContent = 'LH Hand: Turn Left';
+        if (hintSupLabel) hintSupLabel.textContent = 'LH Hand: Turn Right';
+      } else {
+        if (handBadge) handBadge.textContent = 'RH (RIGHT)';
+        if (ruleBadge) ruleBadge.textContent = 'Pro➔Sup: Right';
+        if (hintProLabel) hintProLabel.textContent = 'RH Hand: Turn Right';
+        if (hintSupLabel) hintSupLabel.textContent = 'RH Hand: Turn Left';
+      }
+    }
+
+    // Toggle hand when clicking HUD pill
+    document.getElementById('hand-pill')?.addEventListener('click', () => {
+      setHand(activeHand === 'LEFT' ? 'RIGHT' : 'LEFT');
+      showToast(`Switched to ${activeHand} Hand mode`);
+    });
+
+    function updateTilt(deg) {
+      currentTiltDeg = Math.max(-45, Math.min(45, deg));
+
+      const needle = document.getElementById('gauge-needle');
+      const degText = document.getElementById('gauge-deg');
+      if (needle) {
+        const pct = ((currentTiltDeg + 45) / 90) * 100;
+        needle.style.left = pct + '%';
+      }
+      if (degText) {
+        degText.textContent = (currentTiltDeg >= 0 ? '+' : '') + Math.round(currentTiltDeg) + '°';
+      }
+
+      // Hand-specific Clinical Steering Rule:
+      // LH Hand: Pronation to Supination (tilt > 0) -> Turn Left (targetX < 0)
+      // LH Hand: Supination to Pronation (tilt < 0) -> Turn Right (targetX > 0)
+      // RH Hand: Opposite (Pro to Sup -> Turn Right; Sup to Pro -> Turn Left)
+      if (activeHand === 'LEFT') {
+        targetX = -(currentTiltDeg / 45) * 5.2;
+      } else {
+        targetX = (currentTiltDeg / 45) * 5.2;
+      }
+    }
+
+    // Web Telemetry Bridge Listener
+    window.addEventListener('message', (event) => {
+      if (!event.data) return;
+      const d = event.data;
+
+      // Update active hand side from parent if provided
+      if (d.side === 'LEFT' || d.side === 'RIGHT') {
+        if (d.side !== activeHand) setHand(d.side);
+      }
+
+      if (d.type === 'neuro-game-action') {
+        if (d.action === 'move_left') {
+          updateTilt(activeHand === 'LEFT' ? 35 : -35);
+        } else if (d.action === 'move_right') {
+          updateTilt(activeHand === 'LEFT' ? -35 : 35);
+        } else if (d.movement === 'supination') {
+          updateTilt(activeHand === 'LEFT' ? 35 : 35);
+        } else if (d.movement === 'pronation') {
+          updateTilt(activeHand === 'LEFT' ? -35 : -35);
+        }
+      } else if (d.type === 'NEURO_TELEMETRY') {
+        if (d.movement === 'supination') {
+          updateTilt(35);
+        } else if (d.movement === 'pronation') {
+          updateTilt(-35);
+        } else if (typeof d.hand?.orientation?.orientation?.x === 'number') {
+          // Live roll angle
+          const rollAngle = d.hand.orientation.orientation.x * 90;
+          updateTilt(rollAngle);
+        }
+      } else if (typeof d.roll === 'number') {
+        updateTilt(d.roll);
+      } else if (d.pronation_supination && typeof d.pronation_supination.projected_rotation === 'number') {
+        updateTilt(d.pronation_supination.projected_rotation);
+      } else if (d.exercise === 'pronation_supination' && typeof d.value === 'number') {
+        updateTilt(d.value);
+      }
+    });
+
+    // Keyboard Fallback for Manual Testing
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+      sfx.init();
+    });
+    window.addEventListener('keyup', (e) => {
+      keys[e.code] = false;
+    });
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    // ═══════════════════════════════════════════
+    // ANIMATION & GAME LOOP
+    // ═══════════════════════════════════════════
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const delta = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Keyboard steering fallback (Left key turns left, Right key turns right)
+      if (keys['ArrowLeft'] || keys['KeyA']) {
+        const delta = activeHand === 'LEFT' ? 2.2 : -2.2;
+        updateTilt(currentTiltDeg + delta);
+      } else if (keys['ArrowRight'] || keys['KeyD']) {
+        const delta = activeHand === 'LEFT' ? -2.2 : 2.2;
+        updateTilt(currentTiltDeg + delta);
+      } else if (!window.hasParentBridge) {
+        // Subtle spring back to center when idle
+        updateTilt(currentTiltDeg * 0.95);
+      }
+
+      // Propeller spin
+      propGroup.rotation.z += 0.55;
+
+      // Smooth aircraft lateral interpolation
+      planeGroup.position.x += (targetX - planeGroup.position.x) * 0.09;
+
+      // Forearm banking roll
+      const targetRoll = (-currentTiltDeg * Math.PI) / 180;
+      planeGroup.rotation.z += (targetRoll - planeGroup.rotation.z) * 0.12;
+      // Slight aerodynamic yaw and pitch
+      planeGroup.rotation.y = (-currentTiltDeg * Math.PI) / 380;
+      planeGroup.rotation.x = -0.04 + Math.sin(now * 0.003) * 0.02;
+
+      // Camera dynamic chase banking
+      camera.position.x += (planeGroup.position.x * 0.6 - camera.position.x) * 0.06;
+      camera.rotation.z = -planeGroup.rotation.z * 0.15;
+
+      // Hot air balloons gentle float bobbing
+      balloons.forEach((b, idx) => {
+        b.position.y += Math.sin(now * 0.001 + idx) * 0.02;
+      });
+
+      // Clouds drift toward camera
+      clouds.forEach(c => {
+        c.position.z += c.userData.speed * delta;
+        if (c.position.z > 25) {
+          c.position.z = -300;
+          c.position.x = (Math.random() - 0.5) * 110;
+        }
+      });
+
+      // Update wingtip contrail ribbon trails
+      const leftTipWorld = new THREE.Vector3(-2.8, 0.55, -0.2).applyMatrix4(planeGroup.matrixWorld);
+      const rightTipWorld = new THREE.Vector3(2.8, 0.55, -0.2).applyMatrix4(planeGroup.matrixWorld);
+
+      leftTrailHistory.unshift(leftTipWorld);
+      rightTrailHistory.unshift(rightTipWorld);
+      if (leftTrailHistory.length > 20) leftTrailHistory.pop();
+      if (rightTrailHistory.length > 20) rightTrailHistory.pop();
+
+      const lArr = trailPositions[0];
+      const rArr = trailPositions[1];
+      for (let i = 0; i < leftTrailHistory.length; i++) {
+        lArr[i * 3] = leftTrailHistory[i].x;
+        lArr[i * 3 + 1] = leftTrailHistory[i].y;
+        lArr[i * 3 + 2] = leftTrailHistory[i].z;
+        rArr[i * 3] = rightTrailHistory[i].x;
+        rArr[i * 3 + 1] = rightTrailHistory[i].y;
+        rArr[i * 3 + 2] = rightTrailHistory[i].z;
+      }
+      trailGeos[0].setAttribute('position', new THREE.BufferAttribute(lArr.subarray(0, leftTrailHistory.length * 3), 3));
+      trailGeos[1].setAttribute('position', new THREE.BufferAttribute(rArr.subarray(0, rightTrailHistory.length * 3), 3));
+
+      // Rings flight progression & collision
+      const cfg = LEVELS[currentLevel];
+      const flightSpeed = cfg.ringSpeed;
+
+      for (let i = activeRings.length - 1; i >= 0; i--) {
+        const ring = activeRings[i];
+        ring.position.z += flightSpeed * delta;
+        ring.userData.gem.rotation.y += 0.04;
+        ring.userData.gem.rotation.x += 0.02;
+        ring.userData.inner.rotation.z -= 0.03;
+
+        // Collision detection with glider
+        const distZ = Math.abs(ring.position.z - planeGroup.position.z);
+        const distX = Math.abs(ring.position.x - planeGroup.position.x);
+
+        if (!ring.userData.cleared && distZ < 1.3 && distX < 1.9) {
+          ring.userData.cleared = true;
+          ring.userData.outer.material.emissive.setHex(0x38BDF8);
+          ring.userData.outer.material.emissiveIntensity = 2.0;
+          ring.userData.gem.scale.set(1.8, 1.8, 1.8);
+
+          spawnSparkBurst(ring.position.x, ring.position.y, ring.position.z);
+          sfx.ringHit();
+
+          ringsCleared++;
+          score += 150 * combo;
+          combo = Math.min(combo + 1, 5);
+
+          // Clinical Repetition Tracking:
+          // Left Ring + Right Ring cleared = 1 Complete Pronation / Supination Repetition!
+          const currentSide = ring.userData.isLeftLane ? 'LEFT' : 'RIGHT';
+          if (lastRingSide !== null && lastRingSide !== currentSide) {
+            reps++;
+            score += 200;
+            document.getElementById('val-reps').textContent = reps;
+            showToast(`REP COMPLETED! (${reps}) Full Pro/Sup Cycle +350`);
+            sfx.fanfare();
+
+            // Post telemetry to parent
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                type: 'NEURO_REP_EVENT',
+                exercise: 'pronation_supination',
+                movement: 'pronation_supination_cycle',
+                reps: reps,
+                score: score,
+                side: activeHand
+              }, '*');
+              window.parent.postMessage({
+                type: 'exercise_rep',
+                movement: 'pronation_supination',
+                count: reps
+              }, '*');
+            }
+          } else {
+            showToast("RING CLEARED! Steer to next ring");
+          }
+          lastRingSide = currentSide;
+
+          document.getElementById('val-rings').textContent = ringsCleared;
+          document.getElementById('val-score').textContent = score;
+          document.getElementById('val-combo').textContent = '×' + combo;
+
+          // Endless running: seamlessly continue without level modal popup!
+        }
+
+        // Passed behind camera
+        if (ring.position.z > 14) {
+          if (!ring.userData.cleared) {
+            combo = 1;
+            document.getElementById('val-combo').textContent = '×1';
+            sfx.miss();
+          }
+          scene.remove(ring);
+          activeRings.splice(i, 1);
+
+          // Spawn next ring ahead
+          const furthestZ = activeRings.reduce((min, r) => Math.min(min, r.position.z), 0);
+          spawnRing(furthestZ - cfg.ringSpacing);
+        }
+      }
+
+      // Update particle sparkles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.position.x += p.userData.vx * delta;
+        p.position.y += p.userData.vy * delta;
+        p.position.z += p.userData.vz * delta;
+        p.userData.life -= delta;
+        const scale = p.userData.life / p.userData.maxLife;
+        p.scale.set(scale, scale, scale);
+        if (p.userData.life <= 0) {
+          scene.remove(p);
+          particles.splice(i, 1);
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // ═══════════════════════════════════════════
+    // LEVEL WIN & TRANSITION MODAL
+    // ═══════════════════════════════════════════
+    function triggerLevelWin() {
+      sfx.fanfare();
+      const modal = document.getElementById('modal');
+      const mTitle = document.getElementById('m-title');
+      const mDesc = document.getElementById('m-desc');
+      const mBtn = document.getElementById('m-btn');
+
+      if (currentLevel < LEVELS.length - 1) {
+        mTitle.textContent = "Course " + (currentLevel + 1) + " Cleared!";
+        mDesc.textContent = "Spectacular forearm rotational banking! Ready for " + LEVELS[currentLevel + 1].name + "?";
+        mBtn.textContent = "Start Next Course →";
+      } else {
+        mTitle.textContent = "Master Aviator Certified!";
+        mDesc.textContent = "You completed all 5 canyon courses with exceptional wrist mobility and precision!";
+        mBtn.textContent = "Fly Again ↺";
+      }
+      modal.classList.add('show');
+    }
+
+    document.getElementById('m-btn').addEventListener('click', () => {
+      document.getElementById('modal').classList.remove('show');
+      if (currentLevel < LEVELS.length - 1) {
+        currentLevel++;
+      } else {
+        currentLevel = 0;
+        score = 0;
+        ringsCleared = 0;
+      }
+      stageRings = 0;
+      document.getElementById('lvl-num').textContent = currentLevel + 1;
+      document.getElementById('lvl-fill').style.width = '0%';
+      document.getElementById('val-rings').textContent = ringsCleared;
+      document.getElementById('val-score').textContent = score;
+
+      activeRings.forEach(r => scene.remove(r));
+      activeRings.length = 0;
+      for (let i = 1; i <= 6; i++) {
+        spawnRing(-i * LEVELS[currentLevel].ringSpacing);
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

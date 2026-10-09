@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "session_id": "e21aa003b6f0e42367b53317",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "hand_open_close",
+  "hand": "right",
+  "started_at": "2026-10-09T11:52:21.210072Z",
+  "ended_at": "2026-10-09T11:52:51.210072Z",
+  "duration_seconds": 30.0,
+  "outcome": "interrupted",
+  "score": 0,
+  "glove_serial": "StretchSense S9001 (Calibrated)",
+  "calibration": null,
+  "counts": {
+    "hand_open_close": 1
+  },
+  "total_repetitions": 1,
+  "events": [],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "idle",
+      "angular_velocity": 0.0,
+      "projected_rotation": 0.0,
+      "direction_consistency": 0.0,
+      "palm_dot_change": 0.0
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.0,
+      "loop_strength": 0.0,
+      "average_velocity": 0.0,
+      "signed_area": 0.0
+    },
+    "hand_open_close": {
+      "state": "unknown",
+      "raw_flexion": 0.0,
+      "smoothed_flexion": 0.0,
+      "mcp_sum": 0.0,
+      "mcp_count": 0,
+      "mcp_values": {},
+      "confidence": 0.0,
+      "open_threshold": 0.25,
+      "close_threshold": 0.4,
+      "minimum_travel": 0.3,
+      "reference": null,
+      "travel": 0.0,
+      "velocity": 0.0,
+      "direction_consistency": 0.0,
+      "motion": "waiting",
+      "window_seconds": 1.0,
+      "channels": "MCP quaternion X, four fingers (thumb excluded)"
+    }
+  }
+}

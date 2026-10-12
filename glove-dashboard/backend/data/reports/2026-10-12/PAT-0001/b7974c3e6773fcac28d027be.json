@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "session_id": "b7974c3e6773fcac28d027be",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "pronation_supination",
+  "hand": "left",
+  "started_at": "2026-10-12T07:11:46.645060Z",
+  "ended_at": "2026-10-12T07:12:38.819164Z",
+  "duration_seconds": 51.0,
+  "outcome": "completed",
+  "score": 2200,
+  "glove_serial": "A3LC60039",
+  "calibration": {
+    "header": {
+      "time": 0,
+      "profile_id": 0,
+      "handedness": 1,
+      "serial": "A3LC60039",
+      "glove_type": "Reality Glove"
+    },
+    "label": "Basic",
+    "status": 4,
+    "progress": 100.0
+  },
+  "counts": {
+    "pronation": 7,
+    "supination": 8,
+    "clockwise": 0,
+    "anticlockwise": 0,
+    "wrist_open": 0,
+    "wrist_close": 0
+  },
+  "total_repetitions": 15,
+  "events": [
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789156082,
+      "event_id": 28
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789152528,
+      "event_id": 27
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789149289,
+      "event_id": 26
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789146315,
+      "event_id": 25
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789143241,
+      "event_id": 24
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789140171,
+      "event_id": 23
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789137341,
+      "event_id": 22
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789134325,
+      "event_id": 21
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789131386,
+      "event_id": 20
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789128696,
+      "event_id": 19
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789122516,
+      "event_id": 18
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789119480,
+      "event_id": 17
+    }
+  ],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "idle",
+      "angular_velocity": 10.98,
+      "projected_rotation": 6.06,
+      "direction_consistency": 0.876,
+      "palm_dot_change": -1.8235
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.0,
+      "loop_strength": 0.0,
+      "average_velocity": 0.0,
+      "signed_area": 0.0
+    },
+    "hand_open_close": {
+      "state": "unknown",
+      "raw_flexion": 0.0,
+      "smoothed_flexion": 0.0,
+      "mcp_sum": 0.0,
+      "mcp_count": 0,
+      "mcp_values": {},
+      "confidence": 0.0,
+      "open_threshold": 0.25,
+      "close_threshold": 0.4,
+      "minimum_travel": 0.3,
+      "reference": null,
+      "travel": 0.0,
+      "velocity": 0.0,
+      "direction_consistency": 0.0,
+      "motion": "waiting",
+      "window_seconds": 1.0,
+      "channels": "MCP quaternion X, four fingers (thumb excluded)"
+    }
+  }
+}

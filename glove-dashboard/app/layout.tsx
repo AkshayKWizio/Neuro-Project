@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { readNeuroConfig } from '../../neuro-config';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import './redesign.css';
@@ -8,7 +9,7 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3000'),
+  metadataBase: new URL(readNeuroConfig().frontendUrl),
   title: 'Neuro — Glove Based Rehabilitation',
   description: 'Local real-time glove rehabilitation and exercise tracking.',
   openGraph: { title: 'Neuro', description: 'Glove based rehabilitation', images: ['/og.png'] },

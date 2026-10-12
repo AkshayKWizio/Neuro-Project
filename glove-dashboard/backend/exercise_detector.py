@@ -42,6 +42,12 @@ def _normalize_quaternion(value: Quaternion) -> Quaternion:
     return (0.0, 0.0, 0.0, 1.0) if magnitude < 1e-6 else tuple(component / magnitude for component in value)  # type: ignore[return-value]
 
 
+def sdk_to_unity_orientation(value: Quaternion) -> Quaternion:
+    """Match StretchSenseOSCReceiver.OnOrientation, for detector input only."""
+    x, y, z, w = value
+    return -y, -z, x, w
+
+
 def _quaternion_inverse(value: Quaternion) -> Quaternion:
     norm = sum(component * component for component in value)
     if norm < 1e-6:
@@ -91,7 +97,7 @@ class RotationSample:
 
 
 class WristPronationSupinationDetector:
-    """Exact active quaternion-delta path from WristPronationSupinationDetector."""
+    """Unity-ported delta detector with guarded inputs and signed-axis fallback."""
 
     window_seconds = 1.0
     velocity_ema_alpha = 0.2
@@ -118,6 +124,20 @@ class WristPronationSupinationDetector:
         self.palm_dot_change = 0.0
 
     def add_orientation_sample(self, orientation: Quaternion, timestamp: float) -> None:
+        if not math.isfinite(timestamp) or not all(math.isfinite(v) for v in orientation):
+            return
+        if sum(v * v for v in orientation) < 1e-12:
+            return
+        orientation = _normalize_quaternion(orientation)
+        if self.previous_orientation is not None:
+            gap = timestamp - self.previous_timestamp
+            if gap <= 0:
+                return
+            if gap > 1.5:
+                self._clear_and_reset_state()
+            elif sum(a * b for a, b in zip(self.previous_orientation, orientation)) < 0:
+                # q and -q are the same pose; avoid a false delta sign flip.
+                orientation = tuple(-v for v in orientation)
         if self.previous_orientation is None:
             self.previous_orientation = orientation
             self.previous_timestamp = timestamp
@@ -145,6 +165,12 @@ class WristPronationSupinationDetector:
         for sample in self.buffer:
             net_rotation = _add(net_rotation, sample.signed_rotation_degrees)
         dominant_axis = _normalize_vector(net_rotation)
+        # A net-derived axis points in the movement direction, so projecting
+        # onto it always produces a positive net. Fix its hemisphere to retain
+        # the sign for the source's fallback when palm-dot change is ambiguous.
+        axis_index = max(range(3), key=lambda index: abs(dominant_axis[index]))
+        if dominant_axis[axis_index] < 0:
+            dominant_axis = _scale(dominant_axis, -1.0)
 
         positive_sum = 0.0
         negative_sum = 0.0
@@ -470,6 +496,8 @@ class HandExerciseState:
         self.events: deque[dict[str, object]] = deque(maxlen=12)
         self.counts = {"pronation": 0, "supination": 0, "clockwise": 0, "anticlockwise": 0, "wrist_open": 0, "wrist_close": 0}
         self.latest: dict[str, object] | None = None
+        self.event_sequence = 0
+        self.last_event_ms = 0
         self.pronation_supination = WristPronationSupinationDetector(self._record)
         self.circumduction = WristCircumductionProbabilistic(self._record)
         self.hand_open_close = HandOpenCloseDetector(self._record)
@@ -491,7 +519,9 @@ class HandExerciseState:
     def _record(self, movement: str, timestamp: float) -> None:
         if movement == "none":
             return
-        event = {"movement": movement, "timestamp_ms": round(time.time() * 1000)}
+        self.event_sequence += 1
+        self.last_event_ms = max(round(time.time() * 1000), self.last_event_ms + 1)
+        event = {"movement": movement, "timestamp_ms": self.last_event_ms, "event_id": self.event_sequence}
         self.latest = event
         self.events.appendleft(event)
         self.counts[movement] += 1

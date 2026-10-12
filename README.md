@@ -1,11 +1,19 @@
 # Neuro Glove Rehabilitation Project (Cleaned Distribution)
 
+**New teammate / new computer:** start with [Team local setup and path guide](doc/TEAM_LOCAL_SETUP.md).
+It includes the exact config to edit, first-run steps, troubleshooting and instructions for Codex.
+
+For the current Windows source app, edit only `neuro.local.json`, then double-click
+`Run-Neuro.cmd`. See [local configuration](doc/LOCAL_CONFIG.md) and
+[latest recovery notes](doc/UPDATED_CODE_RECOVERY.md). The local config is Git-ignored;
+the tracked template supplies defaults on a fresh checkout.
+
 This folder is a streamlined, self-contained distribution of the **Neuro** glove rehabilitation platform. All redundant SDK duplicates, legacy packages, and temporary build caches have been removed.
 
 ## Directory Structure
 
 - `Run-Neuro.cmd` — Double-click to launch the application locally in standalone desktop window mode.
-- `Run-Neuro.sh` — Single-click launcher for macOS.
+- `Run-Neuro.sh` — Legacy macOS helper; not the current Windows/XR Game launch flow.
 - `Create-Desktop-Shortcut.ps1` — Creates a 1-click "Neuro Rehabilitation" shortcut on your Windows Desktop.
 - `Setup-Neuro.ps1` — First-time setup script (creates virtual environment and installs dependencies).
 - `Stop-Neuro.cmd` — Gracefully stops the local backend and XR Game processes.

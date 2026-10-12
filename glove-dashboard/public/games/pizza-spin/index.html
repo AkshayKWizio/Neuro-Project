@@ -832,7 +832,7 @@
     // WebSocket glove
     function connectGlove() {
       try {
-        const ws = new WebSocket('ws://127.0.0.1:8765/ws');
+        const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`);
         ws.onmessage = (e) => {
           try {
             const p = JSON.parse(e.data);

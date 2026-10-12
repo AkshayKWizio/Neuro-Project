@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "session_id": "4d9ee08323c67639e484f42a",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "circumduction",
+  "hand": "left",
+  "started_at": "2026-10-12T06:40:09.110320Z",
+  "ended_at": "2026-10-12T06:40:43.253682Z",
+  "duration_seconds": 33.0,
+  "outcome": "completed",
+  "score": 3150,
+  "glove_serial": "A3LC60039",
+  "calibration": {
+    "header": {
+      "time": 0,
+      "profile_id": 0,
+      "handedness": 1,
+      "serial": "A3LC60039",
+      "glove_type": "Reality Glove"
+    },
+    "label": "Basic",
+    "status": 4,
+    "progress": 100.0
+  },
+  "counts": {
+    "pronation": 0,
+    "supination": 0,
+    "clockwise": 7,
+    "anticlockwise": 2,
+    "wrist_open": 0,
+    "wrist_close": 0
+  },
+  "total_repetitions": 9,
+  "events": [
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787241398
+    },
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787238150
+    },
+    {
+      "movement": "anticlockwise",
+      "timestamp_ms": 1791787234876
+    },
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787232406
+    },
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787230237
+    },
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787226180
+    },
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787223384
+    },
+    {
+      "movement": "anticlockwise",
+      "timestamp_ms": 1791787220415
+    },
+    {
+      "movement": "clockwise",
+      "timestamp_ms": 1791787216455
+    }
+  ],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "idle",
+      "angular_velocity": 0.0,
+      "projected_rotation": 0.0,
+      "direction_consistency": 0.0,
+      "palm_dot_change": 0.0
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.145,
+      "loop_strength": 0.145,
+      "average_velocity": 52.67,
+      "signed_area": 0.242
+    },
+    "hand_open_close": {
+      "state": "unknown",
+      "raw_flexion": 0.0,
+      "smoothed_flexion": 0.0,
+      "mcp_sum": 0.0,
+      "mcp_count": 0,
+      "mcp_values": {},
+      "confidence": 0.0,
+      "open_threshold": 0.25,
+      "close_threshold": 0.4,
+      "minimum_travel": 0.3,
+      "reference": null,
+      "travel": 0.0,
+      "velocity": 0.0,
+      "direction_consistency": 0.0,
+      "motion": "waiting",
+      "window_seconds": 1.0,
+      "channels": "MCP quaternion X, four fingers (thumb excluded)"
+    }
+  }
+}

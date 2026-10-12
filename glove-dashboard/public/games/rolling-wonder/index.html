@@ -485,6 +485,7 @@
   </div>
 
   <script type="module">
+    import { bindGloveControls } from '../glove-controls.js';
     import * as THREE from '../lib/three.module.min.js';
     import { setupGameAudio } from '../lib/rehab-audio.js';
 
@@ -1420,28 +1421,15 @@
     // ════════════════════════════════════════════════════════════════
     // 10. GLOVE TELEMETRY & INPUT BRIDGES
     // ════════════════════════════════════════════════════════════════
-    // 1. Parent postMessage listener ('neuro-game-action')
-    window.addEventListener('message', (e) => {
-      const data = e.data;
-      if (!data) return;
-      if (data.type === 'neuro-game-action') {
-        if (data.movement === 'clockwise' || data.action === 'move_right' || data.movement === 'supination') {
-          handleCircumductionInput('RIGHT', 45);
-        } else if (data.movement === 'anticlockwise' || data.action === 'move_left' || data.movement === 'pronation') {
-          handleCircumductionInput('LEFT', 45);
-        } else if (data.movement === 'wrist_open' || data.action === 'secondary_action' || data.action === 'primary_action') {
-          performJump();
-        }
-      } else if (typeof data.circumduction_angle === 'number') {
-        handleAngleInput(data.circumduction_angle);
-      } else if (typeof data.angle === 'number') {
-        handleAngleInput(data.angle);
-      }
+    // Confirmed selected-glove circumduction events control the team's game.
+    bindGloveControls('rolling_wonder', {
+      right: () => { if (isGameOver) return false; handleCircumductionInput('RIGHT', 45); return true; },
+      left: () => { if (isGameOver) return false; handleCircumductionInput('LEFT', 45); return true; },
     });
 
     // 2. Direct WebSocket Glove Telemetry Fallback
     function connectGloveTelemetry() {
-      const ws = new WebSocket('ws://127.0.0.1:8765/ws');
+      const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`);
       ws.onmessage = (event) => {
         try {
           const packet = JSON.parse(event.data);
@@ -1471,7 +1459,7 @@
       };
       ws.onclose = () => setTimeout(connectGloveTelemetry, 2500);
     }
-    connectGloveTelemetry();
+    if (window.parent === window) connectGloveTelemetry();
 
     // 3. Keyboard & Mouse Fallback
     const keys = {};
@@ -1505,12 +1493,13 @@
     });
 
     window.addEventListener('mousemove', (e) => {
+      if (window.parent !== window) return;
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
       if (normX > 0.25) handleCircumductionInput('RIGHT', normX * 45);
       else if (normX < -0.25) handleCircumductionInput('LEFT', Math.abs(normX) * 45);
     });
 
-    window.addEventListener('click', () => performJump());
+    window.addEventListener('click', () => { if (window.parent === window) performJump(); });
 
     // Signal parent readiness
     if (window.parent && window.parent !== window) {

@@ -968,6 +968,20 @@ dialog.cinema-stage-overlay {
   background: #f8fafc !important;
 }
 
+.cinema-detector-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 230px;
+  color: #164b43;
+  background: #edf9f3;
+  border: 1px solid #b7dfce;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.cinema-detector-feedback small { font-size: 11px; }
+
 .cinema-stage-container {
   position: relative !important;
   flex: 1 !important;

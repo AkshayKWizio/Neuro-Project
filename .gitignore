@@ -1,6 +1,13 @@
 # ==============================================================================
 # Neuro Glove Rehabilitation Platform - Git Ignore Rules
 # ==============================================================================
+/neuro.local.json
+
+# Application libraries are source/assets, not Python virtualenv directories.
+!glove-dashboard/lib/
+!glove-dashboard/lib/**
+!glove-dashboard/public/games/lib/
+!glove-dashboard/public/games/lib/**
 
 # ------------------------------------------------------------------------------
 # Dependencies & Package Managers
@@ -197,3 +204,9 @@ $RECYCLE.BIN/
 .agents/
 .local/
 .qa/
+
+# Keep the app's source libraries and local vendor game assets trackable.
+!glove-dashboard/lib/
+!glove-dashboard/lib/**
+!glove-dashboard/public/games/lib/
+!glove-dashboard/public/games/lib/**

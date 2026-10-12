@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "session_id": "c2aac0a998fca6253b53bc43",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "hand_open_close",
+  "hand": "left",
+  "started_at": "2026-10-12T06:33:42.737508Z",
+  "ended_at": "2026-10-12T06:34:03.033517Z",
+  "duration_seconds": 18.0,
+  "outcome": "completed",
+  "score": 1280,
+  "glove_serial": "A3LC60039",
+  "calibration": {
+    "header": {
+      "time": 0,
+      "profile_id": 0,
+      "handedness": 1,
+      "serial": "A3LC60039",
+      "glove_type": "Reality Glove"
+    },
+    "label": "Basic",
+    "status": 4,
+    "progress": 100.0
+  },
+  "counts": {
+    "pronation": 0,
+    "supination": 0,
+    "clockwise": 0,
+    "anticlockwise": 0,
+    "wrist_open": 4,
+    "wrist_close": 4
+  },
+  "total_repetitions": 8,
+  "events": [
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791786839312
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791786837938
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791786836599
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791786835117
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791786833895
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791786832550
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791786831150
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791786829378
+    }
+  ],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "idle",
+      "angular_velocity": 0.0,
+      "projected_rotation": 0.0,
+      "direction_consistency": 0.0,
+      "palm_dot_change": 0.0
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.0,
+      "loop_strength": 0.0,
+      "average_velocity": 0.0,
+      "signed_area": 0.0
+    },
+    "hand_open_close": {
+      "state": "open",
+      "raw_flexion": 0.0288,
+      "smoothed_flexion": 0.0287,
+      "mcp_sum": 0.1152,
+      "mcp_count": 4,
+      "mcp_values": {
+        "index_mcp": 0.09876342862844467,
+        "middle_mcp": 0.016389939934015274,
+        "ring_mcp": -0.0,
+        "pinky_mcp": -0.0
+      },
+      "confidence": 0.04,
+      "open_threshold": 0.25,
+      "close_threshold": 0.4,
+      "minimum_travel": 0.3,
+      "reference": 0.0139,
+      "travel": 0.0147,
+      "velocity": 0.002,
+      "direction_consistency": 0.808,
+      "motion": "closing",
+      "window_seconds": 1.0,
+      "channels": "MCP quaternion X, four fingers (thumb excluded)"
+    }
+  }
+}

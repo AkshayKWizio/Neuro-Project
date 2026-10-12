@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Game integration test</title>
+<style>body{margin:0;overflow:hidden;font:14px system-ui;background:#f8fafc}nav{height:44px;display:flex;align-items:center;gap:8px;padding:0 12px}button,select{padding:5px}main{position:relative;height:calc(100vh - 44px)}iframe{display:block;width:100%;height:100%;border:0}.rig{position:absolute;right:24px;bottom:24px;width:280px;height:310px;background:#fff;border:1px solid #cbd5e1;border-radius:16px;display:grid;place-content:center;text-align:center;pointer-events:none}.rig small{display:block;color:#64748b}</style></head><body>
+<nav><button id="sky">Sky Glider</button><button id="archery">Balloon Archery</button><select id="side"><option value="LEFT">LH</option><option value="RIGHT">RH</option></select><button id="pronation">Pronation</button><button id="supination">Supination</button><button id="close">Close</button><button id="open">Open</button><output id="ack">Waiting for game</output></nav>
+<main><iframe id="game" src="/games/sky-glider/index.html"></iframe><div class="rig">Reserved live hand-rig area<small>Layout test placeholder · no sensor data</small></div></main>
+<script type="module">
+// Deliberately sends the same direction mapping as the parent app, for manual QA.
+function rotationAction(side,movement){if(!['pronation','supination'].includes(movement))return null;return {action: (movement==='pronation')===(side==='LEFT')?'move_right':'move_left'};}
+const frame=document.getElementById('game'), side=document.getElementById('side'), ack=document.getElementById('ack');
+let exercise='pronation_supination', sequence=0;
+const send=data=>frame.contentWindow.postMessage(data,location.origin);
+function configure(){send({type:'neuro-game-config',exercise,side:side.value});}
+window.addEventListener('message',event=>{
+ if(event.source!==frame.contentWindow || event.origin!==location.origin)return;
+ if(event.data.type==='night-relay-ready'){ack.textContent='Game ready';configure();}
+ if(event.data.type==='neuro-game-action-ack')ack.textContent=event.data.movement+(event.data.applied?' applied':' ignored');
+});
+side.onchange=configure;
+document.getElementById('sky').onclick=()=>{exercise='pronation_supination';frame.src='/games/sky-glider/index.html';};
+document.getElementById('archery').onclick=()=>{exercise='hand_open_close';frame.src='/games/balloon-blitz/index.html';};
+for(const [id,movement] of [['pronation','pronation'],['supination','supination'],['close','wrist_close'],['open','wrist_open']]){
+ document.getElementById(id).onclick=()=>{
+  const action=exercise==='pronation_supination'?rotationAction(side.value,movement)?.action:movement==='wrist_close'?'primary_action':'secondary_action';
+  send({type:'neuro-game-action',exercise,side:side.value,movement,action,timestamp_ms:Date.now()+ ++sequence,event_id:sequence});
+ };
+}
+</script></body></html>

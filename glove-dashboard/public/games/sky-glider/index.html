@@ -180,23 +180,34 @@
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     .modal-btn:hover { transform: scale(1.04); box-shadow: 0 12px 32px rgba(2, 132, 199, 0.45); }
+    .hud {top:16px;right:24px;left:auto;width:280px;justify-content:flex-start;flex-direction:column;align-items:stretch;gap:8px;}
+    .hud-pill {padding:10px 14px;}
+    .gauge-deg {width:auto;min-width:95px;font-size:12px;}
+    .controls-hint {left:18px;bottom:18px;transform:none;max-width:calc(100vw - 350px);white-space:normal;flex-wrap:wrap;}
+    .next-lane {position:absolute;top:18px;left:18px;padding:10px 16px;background:#fffffff0;border-radius:14px;color:#0f6c73;font-weight:700;z-index:20;}
+    .toast {left:18px;top:70px;transform:translateY(-10px);max-width:300px;font-size:14px;padding:12px 16px;}
+    .toast.show {transform:translateY(0);}
+    .missile-hit::after {content:'';position:fixed;inset:0;box-shadow:inset 0 0 65px #f8717180;pointer-events:none;z-index:19;}
+    @media(prefers-reduced-motion:reduce){.missile-hit canvas{transform:none!important}}
+    @media(max-width:700px){.hud{max-width:calc(100vw - 36px)}.hud-pill{padding:6px 10px}.next-lane{top:110px;font-size:12px}.toast{top:154px}.controls-hint{max-width:45vw;font-size:11px}}
   </style>
 </head>
 <body>
   <!-- HUD -->
+  <div class="next-lane" id="next-lane">NEXT RING · RIGHT</div>
   <div class="hud">
     <div class="hud-pill">
-      <div class="stat"><span class="stat-label">Clinical Reps</span><span class="stat-val" id="val-reps" style="color:#16A34A;font-weight:800;">0</span></div>
+      <div class="stat"><span class="stat-label">Ring Pairs</span><span class="stat-val" id="val-reps" style="color:#16A34A;font-weight:800;">0</span></div>
       <div class="stat"><span class="stat-label">Rings Cleared</span><span class="stat-val blue" id="val-rings">0</span></div>
       <div class="stat"><span class="stat-label">Score</span><span class="stat-val gold" id="val-score">0</span></div>
-      <div class="stat"><span class="stat-label">Combo</span><span class="stat-val pink" id="val-combo">×1</span></div>
+      <div class="stat"><span class="stat-label">Hits</span><span class="stat-val pink" id="val-combo">×1</span></div>
     </div>
     <div class="level-pill" id="hand-pill" style="cursor:pointer;" title="Click to toggle Left Hand / Right Hand">
       <span>HAND:</span><span class="lvl-num" id="val-hand">LH (LEFT)</span>
       <span style="font-size:11px;font-weight:700;color:#0369A1;" id="hand-rule-badge">Pro➔Sup: Left</span>
     </div>
     <div class="gauge-pill">
-      <span class="gauge-label">Bank</span>
+      <span class="gauge-label">Pose</span>
       <div class="gauge-track">
         <div class="gauge-center"></div>
         <div class="gauge-needle" id="gauge-needle" style="left:50%"></div>
@@ -220,8 +231,8 @@
     </div>
     <span class="hint-divider">➔</span>
     <div class="hint-step">
-      <span class="motion-badge target" style="background:#FEF3C7;color:#D97706;font-weight:800;">1 CLINICAL REP</span>
-      <span class="hint-label">Left Ring + Right Ring Cycle</span>
+      <span class="motion-badge target" style="background:#FEF3C7;color:#D97706;font-weight:800;">OBJECTIVE</span>
+      <span class="hint-label">Collect rings · Avoid missiles</span>
     </div>
   </div>
 
@@ -243,6 +254,8 @@
   <canvas id="game-canvas"></canvas>
 
   <script type="module">
+    import { bindGloveControls } from '../glove-controls.js';
+    import { FlightRound } from '../gameplay-rules.js';
     import * as THREE from '../lib/three.module.min.js';
     import { setupGameAudio } from '../lib/rehab-audio.js';
 
@@ -733,7 +746,9 @@
       emissive: 0xF59E0B, emissiveIntensity: 0.6
     });
 
-    let ringSpawnIndex = 0;
+    const flight = new FlightRound();
+    const missiles = [];
+    let shakeUntil = 0;
     function spawnRing(zPos) {
       const g = new THREE.Group();
 
@@ -759,10 +774,8 @@
         g.add(chev);
       }
 
-      // Strictly 2 Lanes: Left Lane (-3.2) and Right Lane (+3.2)
-      // Alternates strictly Left -> Right -> Left -> Right to guide 1 full clinical rep per pair
-      const isLeft = (ringSpawnIndex % 2 === 0);
-      ringSpawnIndex++;
+      // Only a collected target advances the zig-zag. A miss retries this lane.
+      const isLeft = flight.ringLane === -1;
       const chosenLane = isLeft ? LANE_LEFT_X : LANE_RIGHT_X;
 
       g.position.set(chosenLane, FLIGHT_ALTITUDE, zPos);
@@ -771,9 +784,27 @@
       activeRings.push(g);
     }
 
-    // Initial batch of rings: spaced ahead to provide clear runway sightline
-    for (let i = 1; i <= 6; i++) {
-      spawnRing(-20 - i * 28);
+    function spawnMissile(zPos, lane) {
+      const missile = new THREE.Group();
+      const material = new THREE.MeshStandardMaterial({color:0xe74a44,roughness:0.55});
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,1.8,12),material);
+      body.rotation.x = Math.PI / 2; missile.add(body);
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(0.24,0.7,12),material);
+      nose.rotation.x = Math.PI / 2; nose.position.z = 1.15; missile.add(nose);
+      const fins = new THREE.Mesh(new THREE.BoxGeometry(1,0.12,0.65),
+        new THREE.MeshStandardMaterial({color:0x25334a}));
+      fins.position.z = -0.65; missile.add(fins);
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.22,0.8,8),
+        new THREE.MeshBasicMaterial({color:0xffbd59}));
+      flame.rotation.x = -Math.PI/2; flame.position.z = -1.2; missile.add(flame);
+      // After collection, threaten that same lane: rotate back to dodge and collect.
+      missile.position.set(lane * LANE_RIGHT_X, FLIGHT_ALTITUDE,zPos);
+      missile.userData.hit = false;
+      scene.add(missile); missiles.push(missile);
+    }
+    function nextTarget() {
+      spawnRing(-82); // about six seconds; missiles sit between successive rings
+      document.getElementById('next-lane').textContent = flight.ringLane === -1 ? 'NEXT RING · LEFT' : 'NEXT RING · RIGHT';
     }
 
     // ═══════════════════════════════════════════
@@ -807,113 +838,63 @@
     // ═══════════════════════════════════════════
     // TELEMETRY & INPUT HANDLING
     // ═══════════════════════════════════════════
-    let activeHand = 'LEFT'; // 'LEFT' (LH) or 'RIGHT' (RH)
-    let reps = 0;
-    let cycleRingsHit = 0;
-    let lastRingSide = null;
-
+    let activeHand = 'LEFT';
     function setHand(hand) {
-      activeHand = hand.toUpperCase() === 'RIGHT' ? 'RIGHT' : 'LEFT';
-      const handBadge = document.getElementById('val-hand');
-      const ruleBadge = document.getElementById('hand-rule-badge');
-      const hintProLabel = document.getElementById('hint-pro-label');
-      const hintSupLabel = document.getElementById('hint-sup-label');
-
-      if (activeHand === 'LEFT') {
-        if (handBadge) handBadge.textContent = 'LH (LEFT)';
-        if (ruleBadge) ruleBadge.textContent = 'Pro➔Sup: Left';
-        if (hintProLabel) hintProLabel.textContent = 'LH Hand: Turn Left';
-        if (hintSupLabel) hintSupLabel.textContent = 'LH Hand: Turn Right';
-      } else {
-        if (handBadge) handBadge.textContent = 'RH (RIGHT)';
-        if (ruleBadge) ruleBadge.textContent = 'Pro➔Sup: Right';
-        if (hintProLabel) hintProLabel.textContent = 'RH Hand: Turn Right';
-        if (hintSupLabel) hintSupLabel.textContent = 'RH Hand: Turn Left';
-      }
+      activeHand = hand === 'RIGHT' ? 'RIGHT' : 'LEFT';
+      flight.configure(activeHand);
+      targetX = flight.lane * LANE_RIGHT_X;
+      planeGroup.position.x = targetX;
+      currentTiltDeg = 0;
+      activeRings.forEach(r => scene.remove(r)); activeRings.length = 0;
+      missiles.forEach(m => scene.remove(m)); missiles.length = 0;
+      score = 0; ringsCleared = 0;
+      document.getElementById('val-hand').textContent = activeHand === 'LEFT' ? 'LH (LEFT)' : 'RH (RIGHT)';
+      document.getElementById('hand-rule-badge').textContent = activeHand === 'LEFT' ? 'Pro➔Sup: Left' : 'Pro➔Sup: Right';
+      document.getElementById('hint-pro-label').textContent = activeHand === 'LEFT' ? 'Move Left' : 'Move Right';
+      document.getElementById('hint-sup-label').textContent = activeHand === 'LEFT' ? 'Move Right' : 'Move Left';
+      updateFlightHUD();
+      nextTarget();
     }
-
+    function updateFlightHUD() {
+      document.getElementById('val-score').textContent = flight.score;
+      document.getElementById('val-rings').textContent = flight.rings;
+      document.getElementById('val-reps').textContent = Math.floor(flight.rings / 2);
+      document.getElementById('val-combo').textContent = flight.hits;
+      document.getElementById('gauge-deg').textContent = flight.pose.toUpperCase();
+      document.getElementById('gauge-needle').style.left = flight.lane === -1 ? '0%' : '100%';
+      if (window.parent !== window) window.parent.postMessage({
+        type:'neuro-game-score',exercise:'pronation_supination',score:flight.score,
+      }, window.location.origin);
+    }
+    setHand(activeHand);
     // Toggle hand when clicking HUD pill
     document.getElementById('hand-pill')?.addEventListener('click', () => {
+      if (window.parent !== window) return; // Parent owns the selected glove.
       setHand(activeHand === 'LEFT' ? 'RIGHT' : 'LEFT');
       showToast(`Switched to ${activeHand} Hand mode`);
     });
 
-    function updateTilt(deg) {
-      currentTiltDeg = Math.max(-45, Math.min(45, deg));
-
-      const needle = document.getElementById('gauge-needle');
-      const degText = document.getElementById('gauge-deg');
-      if (needle) {
-        const pct = ((currentTiltDeg + 45) / 90) * 100;
-        needle.style.left = pct + '%';
-      }
-      if (degText) {
-        degText.textContent = (currentTiltDeg >= 0 ? '+' : '') + Math.round(currentTiltDeg) + '°';
-      }
-
-      if (window.gameAudio) {
-        window.gameAudio.updateFlight(currentTiltDeg / 45, 1);
-      }
-
-      // Hand-specific Clinical Steering Rule:
-      // LH Hand: Pronation to Supination (tilt > 0) -> Turn Left (targetX = LANE_LEFT_X)
-      // LH Hand: Supination to Pronation (tilt < 0) -> Turn Right (targetX = LANE_RIGHT_X)
-      // RH Hand: Opposite (Pro to Sup -> Turn Right; Sup to Pro -> Turn Left)
-      const tiltRatio = Math.max(-1, Math.min(1, currentTiltDeg / 35));
-      if (activeHand === 'LEFT') {
-        targetX = -tiltRatio * LANE_RIGHT_X;
-      } else {
-        targetX = tiltRatio * LANE_RIGHT_X;
-      }
+    function moveToPose(movement) {
+      if (!flight.move(movement)) return false;
+      targetX = flight.lane * LANE_RIGHT_X;
+      currentTiltDeg = (targetX - planeGroup.position.x) * -5;
+      updateFlightHUD();
+      return true;
     }
-
-    // Web Telemetry Bridge Listener
-    window.addEventListener('message', (event) => {
-      if (!event.data) return;
-      const d = event.data;
-
-      // Update active hand side from parent if provided
-      if (d.side === 'LEFT' || d.side === 'RIGHT') {
-        if (d.side !== activeHand) setHand(d.side);
-      }
-
-      if (d.type === 'neuro-game-action') {
-        if (d.action === 'move_left') {
-          updateTilt(activeHand === 'LEFT' ? 35 : -35);
-        } else if (d.action === 'move_right') {
-          updateTilt(activeHand === 'LEFT' ? -35 : 35);
-        } else if (d.movement === 'supination') {
-          updateTilt(activeHand === 'LEFT' ? 35 : 35);
-        } else if (d.movement === 'pronation') {
-          updateTilt(activeHand === 'LEFT' ? -35 : -35);
-        }
-      } else if (d.type === 'NEURO_TELEMETRY') {
-        if (d.movement === 'supination') {
-          updateTilt(35);
-        } else if (d.movement === 'pronation') {
-          updateTilt(-35);
-        } else if (typeof d.hand?.orientation?.orientation?.x === 'number') {
-          // Live roll angle
-          const rollAngle = d.hand.orientation.orientation.x * 90;
-          updateTilt(rollAngle);
-        }
-      } else if (typeof d.roll === 'number') {
-        updateTilt(d.roll);
-      } else if (d.pronation_supination && typeof d.pronation_supination.projected_rotation === 'number') {
-        updateTilt(d.pronation_supination.projected_rotation);
-      } else if (d.exercise === 'pronation_supination' && typeof d.value === 'number') {
-        updateTilt(d.value);
-      }
+    bindGloveControls('sky_glider', {
+      configure: data => setHand(data.side),
+      left: data => { if (data.side !== activeHand) setHand(data.side); return moveToPose(data.movement); },
+      right: data => { if (data.side !== activeHand) setHand(data.side); return moveToPose(data.movement); },
     });
 
     // Keyboard Fallback for Manual Testing
-    const keys = {};
-    window.addEventListener('keydown', (e) => {
-      keys[e.code] = true;
-      sfx.init();
-    });
-    window.addEventListener('keyup', (e) => {
-      keys[e.code] = false;
+    window.addEventListener('keydown', e => {
+      if (window.parent !== window || e.repeat) return;
+      if (!['ArrowLeft','ArrowRight','KeyA','KeyD'].includes(e.code)) return;
+      e.preventDefault(); sfx.init();
+      const lane = ['ArrowLeft','KeyA'].includes(e.code) ? -1 : 1;
+      const movement = lane === (activeHand === 'LEFT' ? -1 : 1) ? 'supination' : 'pronation';
+      moveToPose(movement);
     });
 
     function showToast(text) {
@@ -933,23 +914,12 @@
       const delta = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      // Keyboard steering fallback (Left key turns left, Right key turns right)
-      if (keys['ArrowLeft'] || keys['KeyA']) {
-        const delta = activeHand === 'LEFT' ? 2.2 : -2.2;
-        updateTilt(currentTiltDeg + delta);
-      } else if (keys['ArrowRight'] || keys['KeyD']) {
-        const delta = activeHand === 'LEFT' ? -2.2 : 2.2;
-        updateTilt(currentTiltDeg + delta);
-      } else if (!window.hasParentBridge) {
-        // Subtle spring back to center when idle
-        updateTilt(currentTiltDeg * 0.95);
-      }
-
       // Propeller spin
       propGroup.rotation.z += 0.55;
 
       // Smooth aircraft lateral interpolation
-      planeGroup.position.x += (targetX - planeGroup.position.x) * 0.09;
+      planeGroup.position.x += (targetX - planeGroup.position.x) * (1 - Math.exp(-6 * delta));
+      currentTiltDeg *= Math.exp(-5 * delta);
 
       // Forearm banking roll
       const targetRoll = (-currentTiltDeg * Math.PI) / 180;
@@ -959,11 +929,11 @@
       planeGroup.rotation.x = -0.04 + Math.sin(now * 0.003) * 0.02;
 
       // Camera dynamic chase banking with proper flight altitude framing
-      const camTargetX = planeGroup.position.x * 0.45;
+      const camTargetX = 0;
       camera.position.x += (camTargetX - camera.position.x) * 0.08;
       camera.position.y = 5.8;
       camera.position.z = 11.0;
-      camera.lookAt(planeGroup.position.x * 0.25, 2.0, -8);
+      camera.lookAt(0, 2.0, -8);
       camera.rotation.z = -planeGroup.rotation.z * 0.12;
 
       // Hot air balloons gentle float bobbing
@@ -1002,87 +972,49 @@
       trailGeos[0].setAttribute('position', new THREE.BufferAttribute(lArr.subarray(0, leftTrailHistory.length * 3), 3));
       trailGeos[1].setAttribute('position', new THREE.BufferAttribute(rArr.subarray(0, rightTrailHistory.length * 3), 3));
 
-      // Rings flight progression & collision
-      const cfg = LEVELS[currentLevel];
-      const flightSpeed = cfg.ringSpeed;
-
+      // Endless two-lane course. Target collection, not elapsed time, advances the route.
+      const flightSpeed = 14;
       for (let i = activeRings.length - 1; i >= 0; i--) {
         const ring = activeRings[i];
         ring.position.z += flightSpeed * delta;
-        ring.userData.gem.rotation.y += 0.04;
-        ring.userData.gem.rotation.x += 0.02;
-        ring.userData.inner.rotation.z -= 0.03;
-
-        // Collision detection with glider
-        const distZ = Math.abs(ring.position.z - planeGroup.position.z);
-        const distX = Math.abs(ring.position.x - planeGroup.position.x);
-
-        if (!ring.userData.cleared && distZ < 1.5 && distX < 2.5) {
+        ring.userData.gem.rotation.y += delta;
+        ring.userData.inner.rotation.z -= delta;
+        const dz = Math.abs(ring.position.z - planeGroup.position.z);
+        const dx = Math.abs(ring.position.x - planeGroup.position.x);
+        if (!ring.userData.cleared && dz < 1.5 && dx < 1.3 &&
+            flight.collect(ring.userData.isLeftLane ? -1 : 1)) {
           ring.userData.cleared = true;
-          ring.userData.outer.material.emissive.setHex(0x38BDF8);
-          ring.userData.outer.material.emissiveIntensity = 2.0;
-          ring.userData.gem.scale.set(1.8, 1.8, 1.8);
-
           spawnSparkBurst(ring.position.x, ring.position.y, ring.position.z);
-          sfx.ringHit();
-
-          ringsCleared++;
-          score += 150 * combo;
-          combo = Math.min(combo + 1, 5);
-
-          // Clinical Repetition Tracking:
-          // Left Ring + Right Ring cleared = 1 Complete Pronation / Supination Repetition!
-          const currentSide = ring.userData.isLeftLane ? 'LEFT' : 'RIGHT';
-          if (lastRingSide !== null && lastRingSide !== currentSide) {
-            reps++;
-            score += 200;
-            document.getElementById('val-reps').textContent = reps;
-            showToast(`REP COMPLETED! (${reps}) Full Pro/Sup Cycle +350`);
-            sfx.fanfare();
-
-            // Post telemetry to parent
-            if (window.parent && window.parent !== window) {
-              window.parent.postMessage({
-                type: 'NEURO_REP_EVENT',
-                exercise: 'pronation_supination',
-                movement: 'pronation_supination_cycle',
-                reps: reps,
-                score: score,
-                side: activeHand
-              }, '*');
-              window.parent.postMessage({
-                type: 'exercise_rep',
-                movement: 'pronation_supination',
-                count: reps
-              }, '*');
-            }
-          } else {
-            showToast("RING CLEARED! Steer to next ring");
-          }
-          lastRingSide = currentSide;
-
-          document.getElementById('val-rings').textContent = ringsCleared;
-          document.getElementById('val-score').textContent = score;
-          document.getElementById('val-combo').textContent = '×' + combo;
-
-          // Endless running: seamlessly continue without level modal popup!
+          sfx.ringHit(); showToast('RING +150 · Rotate back for the next target');
+          updateFlightHUD();
+          spawnMissile(-40, ring.userData.isLeftLane ? -1 : 1);
+          nextTarget();
         }
-
-        // Passed behind camera
         if (ring.position.z > 14) {
-          if (!ring.userData.cleared) {
-            combo = 1;
-            document.getElementById('val-combo').textContent = '×1';
-            sfx.miss();
-          }
-          scene.remove(ring);
-          activeRings.splice(i, 1);
-
-          // Spawn next ring ahead
-          const furthestZ = activeRings.reduce((min, r) => Math.min(min, r.position.z), 0);
-          spawnRing(furthestZ - cfg.ringSpacing);
+          if (!ring.userData.cleared) { sfx.miss(); showToast('Missed ring · Retry the same target'); }
+          scene.remove(ring); activeRings.splice(i,1);
+          // A collected ring already scheduled its successor and intervening missile.
+          // A miss retries the same pose target without inventing another transition.
+          if (!ring.userData.cleared) nextTarget();
         }
       }
+      for (let i = missiles.length - 1; i >= 0; i--) {
+        const missile = missiles[i];
+        missile.position.z += flightSpeed * delta;
+        if (!missile.userData.hit &&
+            Math.abs(missile.position.z-planeGroup.position.z) < 1.5 &&
+            Math.abs(missile.position.x-planeGroup.position.x) < 1.2) {
+          missile.userData.hit = true;
+          if (flight.missile(now / 1000)) {
+            shakeUntil = now + 420; sfx.miss();
+            showToast('MISSILE HIT · −50 · Keep flying'); updateFlightHUD();
+          }
+        }
+        if (missile.position.z > 16) { scene.remove(missile); missiles.splice(i,1); }
+      }
+      const shaking = now < shakeUntil;
+      renderer.domElement.style.transform = shaking ? 'translate(' + (Math.sin(now*.08)*4) + 'px,' + (Math.cos(now*.06)*3) + 'px)' : '';
+      document.body.classList.toggle('missile-hit',shaking);
 
       // Update particle sparkles
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -1106,52 +1038,20 @@
     // ═══════════════════════════════════════════
     // LEVEL WIN & TRANSITION MODAL
     // ═══════════════════════════════════════════
-    function triggerLevelWin() {
-      sfx.fanfare();
-      const modal = document.getElementById('modal');
-      const mTitle = document.getElementById('m-title');
-      const mDesc = document.getElementById('m-desc');
-      const mBtn = document.getElementById('m-btn');
-
-      if (currentLevel < LEVELS.length - 1) {
-        mTitle.textContent = "Course " + (currentLevel + 1) + " Cleared!";
-        mDesc.textContent = "Spectacular forearm rotational banking! Ready for " + LEVELS[currentLevel + 1].name + "?";
-        mBtn.textContent = "Start Next Course →";
-      } else {
-        mTitle.textContent = "Master Aviator Certified!";
-        mDesc.textContent = "You completed all 5 canyon courses with exceptional wrist mobility and precision!";
-        mBtn.textContent = "Fly Again ↺";
-      }
-      modal.classList.add('show');
-    }
-
-    document.getElementById('m-btn').addEventListener('click', () => {
-      document.getElementById('modal').classList.remove('show');
-      if (currentLevel < LEVELS.length - 1) {
-        currentLevel++;
-      } else {
-        currentLevel = 0;
-        score = 0;
-        ringsCleared = 0;
-      }
-      stageRings = 0;
-      document.getElementById('lvl-num').textContent = currentLevel + 1;
-      document.getElementById('lvl-fill').style.width = '0%';
-      document.getElementById('val-rings').textContent = ringsCleared;
-      document.getElementById('val-score').textContent = score;
-
-      activeRings.forEach(r => scene.remove(r));
-      activeRings.length = 0;
-      for (let i = 1; i <= 6; i++) {
-        spawnRing(-i * LEVELS[currentLevel].ringSpacing);
-      }
-    });
-
-    window.addEventListener('resize', () => {
+    function resizeGame() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+      const reserve = window.parent !== window && window.innerWidth > 700 ? 308 : 0;
+      // Widen the lens on shorter/narrower play areas so neither wing enters the rig.
+      camera.fov = Math.max(46, 2 * Math.atan(window.innerHeight * 6.5 / ((window.innerWidth - reserve) * 9)) * 180 / Math.PI);
+      camera.setViewOffset(window.innerWidth,window.innerHeight,reserve / 2,0,window.innerWidth,window.innerHeight);
+    }
+    window.addEventListener('resize',resizeGame);
+    resizeGame();
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'night-relay-ready' }, window.location.origin);
+    }
   </script>
 </body>
 </html>

@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "session_id": "c2032c0caf7befc20e05c6a8",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "pronation_supination",
+  "hand": "left",
+  "started_at": "2026-10-12T07:10:36.268198Z",
+  "ended_at": "2026-10-12T07:11:03.559496Z",
+  "duration_seconds": 25.0,
+  "outcome": "completed",
+  "score": 0,
+  "glove_serial": "A3LC60039",
+  "calibration": {
+    "header": {
+      "time": 0,
+      "profile_id": 0,
+      "handedness": 1,
+      "serial": "A3LC60039",
+      "glove_type": "Reality Glove"
+    },
+    "label": "Basic",
+    "status": 4,
+    "progress": 100.0
+  },
+  "counts": {
+    "pronation": 3,
+    "supination": 2,
+    "clockwise": 0,
+    "anticlockwise": 0,
+    "wrist_open": 0,
+    "wrist_close": 0
+  },
+  "total_repetitions": 5,
+  "events": [
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789052843,
+      "event_id": 5
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789049881,
+      "event_id": 4
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789047182,
+      "event_id": 3
+    },
+    {
+      "movement": "supination",
+      "timestamp_ms": 1791789044396,
+      "event_id": 2
+    },
+    {
+      "movement": "pronation",
+      "timestamp_ms": 1791789040371,
+      "event_id": 1
+    }
+  ],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "moving",
+      "angular_velocity": 88.87,
+      "projected_rotation": 36.9,
+      "direction_consistency": 1.0,
+      "palm_dot_change": 1.3139
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.0,
+      "loop_strength": 0.0,
+      "average_velocity": 0.0,
+      "signed_area": 0.0
+    },
+    "hand_open_close": {
+      "state": "unknown",
+      "raw_flexion": 0.0,
+      "smoothed_flexion": 0.0,
+      "mcp_sum": 0.0,
+      "mcp_count": 0,
+      "mcp_values": {},
+      "confidence": 0.0,
+      "open_threshold": 0.25,
+      "close_threshold": 0.4,
+      "minimum_travel": 0.3,
+      "reference": null,
+      "travel": 0.0,
+      "velocity": 0.0,
+      "direction_consistency": 0.0,
+      "motion": "waiting",
+      "window_seconds": 1.0,
+      "channels": "MCP quaternion X, four fingers (thumb excluded)"
+    }
+  }
+}

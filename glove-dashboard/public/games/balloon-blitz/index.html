@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Balloon Blitz - Wrist Open / Close Rehabilitation</title>
+  <title>Balloon Archery - Wrist Open / Close Rehabilitation</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -402,75 +402,23 @@
       transition: transform 0.15s ease;
     }
     .modal-btn:hover { transform: scale(1.05); }
+    /* Keep gameplay objects out of the existing bottom-right hand-rig overlay. */
+    .hud {left:auto;right:24px;top:16px;width:280px;flex-wrap:wrap;gap:8px;}
+    .hud-pill {font-size:14px;gap:8px;padding:12px 16px;line-height:1.8;display:block;}
+    .archery-status {position:absolute;right:24px;top:128px;left:auto;width:248px;padding:12px 16px;border-radius:14px;background:#fffef3e8;color:#65421f;font-size:14px;z-index:20;pointer-events:none;}
+    .controls-hint {left:18px;bottom:18px;transform:none;max-width:calc(100vw - 350px);white-space:normal;flex-wrap:wrap;font-size:13px;}
+    .toast {left:18px;top:140px;transform:translateY(-10px);max-width:280px;padding:10px 18px;font-size:14px;}
+    .toast.show {transform:translateY(0);}
+    @media(max-width:700px){.hud{max-width:calc(100vw - 36px)}.archery-status{top:92px;font-size:12px;max-width:240px}.controls-hint{max-width:45vw;font-size:11px}.hud-pill{font-size:12px}}
   </style>
 </head>
 <body>
   <div class="hud">
-    <div class="hud-pill">
-      <div class="stat"><span class="stat-label">Balloons</span><span class="stat-val green" id="v-reps">0</span></div>
-      <div class="stat"><span class="stat-label">Score</span><span class="stat-val" id="v-score">0</span></div>
-      <div class="stat"><span class="stat-label">Perfect</span><span class="stat-val gold" id="v-perfect">0</span></div>
-      <div class="stat"><span class="stat-label">Combo</span><span class="stat-val blue" id="v-combo">×1</span></div>
-    </div>
-    <div class="level-pill" style="background:linear-gradient(135deg, #0F6C73, #1FB5A8);box-shadow:0 6px 20px rgba(15,108,115,0.3);">
-      <span>Session</span><span class="lvl-num" id="v-level">∞</span>
-      <span style="font-size:11px;font-weight:700;color:#ffffff;letter-spacing:0.05em;">ENDLESS</span>
-    </div>
-    <div class="grip-pill" id="grip-pill">
-      <span class="grip-label">Wrist State</span>
-      <div class="grip-track"><div class="grip-bar" id="grip-bar"></div></div>
-      <span class="grip-status" id="grip-status" style="width:105px;text-align:right;color:#16A34A;">OPEN (True)</span>
-    </div>
+    <div class="hud-pill"><strong>Balloon Archery</strong> &nbsp; Score <b id="v-score">0</b> · Hits <b id="v-hits">0</b> · Shots <b id="v-shots">0</b> · Accuracy <b id="v-accuracy">0%</b></div>
   </div>
-
-  <div class="size-indicator" id="size-indicator">
-    <div class="indicator-lead">
-      <span class="indicator-icon">🎈</span>
-      <div class="indicator-metric">
-        <span class="indicator-label">Volume</span>
-        <div class="indicator-val-wrap">
-          <span class="indicator-val" id="size-pct-val">0</span><span class="indicator-unit">%</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="size-track-wrap">
-      <div class="size-track">
-        <div class="size-fill" id="size-fill"></div>
-        <div class="size-target-zone" id="target-zone" title="Target Release Window"></div>
-        <div class="size-danger-zone" id="danger-zone" title="Burst Threshold"></div>
-      </div>
-      <div class="track-markers">
-        <span>0%</span>
-        <span class="target-tag">Target</span>
-        <span class="burst-tag">Burst</span>
-      </div>
-    </div>
-
-    <div class="gauge-status" id="size-text">
-      <span class="status-dot"></span><span>Pump (Close Fist)</span>
-    </div>
-  </div>
-
+  <div class="archery-status" id="shot-status">READY · Close your hand when the balloon crosses the gold sight</div>
   <div class="toast" id="toast"></div>
-
-  <div class="controls-hint" style="padding:8px 24px;border-radius:999px;">
-    <div class="hint-step">
-      <span class="motion-badge" style="background:#FEE2E2;color:#DC2626;font-weight:800;">WRIST CLOSE</span>
-      <span class="hint-label">False State (Pump Air)</span>
-    </div>
-    <span class="hint-sep" style="color:#0F6C73;font-weight:bold;">➔</span>
-    <div class="hint-step">
-      <span class="motion-badge alt" style="background:#DCFCE7;color:#16A34A;font-weight:800;">WRIST OPEN</span>
-      <span class="hint-label">True State (Release Balloon)</span>
-    </div>
-    <span class="hint-sep" style="color:#0F6C73;font-weight:bold;">➔</span>
-    <div class="hint-step">
-      <span class="motion-badge target" style="background:#FEF3C7;color:#D97706;font-weight:800;">1 CLINICAL REP</span>
-      <span class="hint-label">Close ➔ Open Cycle</span>
-    </div>
-  </div>
-
+  <div class="controls-hint">CLOSE → Shoot one arrow &nbsp; · &nbsp; OPEN → Reload</div>
   <div class="overlay" id="overlay">
     <div class="modal">
       <div class="modal-badge"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C2185B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
@@ -484,6 +432,9 @@
   <canvas id="game-canvas"></canvas>
 
   <script type="module">
+    import { bindGloveControls } from '../glove-controls.js';
+    import { ArcheryRound } from '../gameplay-rules.js';
+    import { createFestivalBow, createFestivalArrow, createFestivalShield, shieldImpactPose } from '../festival-archery-assets.js';
     import * as THREE from '../lib/three.module.min.js';
     import { setupGameAudio } from '../lib/rehab-audio.js';
 
@@ -492,7 +443,7 @@
     // ════════════════════════════════════════════════
     const gameAudio = setupGameAudio({
       theme: 'festival',
-      title: 'Balloon Blitz',
+      title: 'Balloon Archery',
       accentColor: '#E91E63',
       hudContainer: '.hud'
     });
@@ -917,8 +868,8 @@
       activeBalloon = g;
 
       // Show size indicator
-      document.getElementById('size-indicator').style.display = 'flex';
-      updateSizeIndicator();
+
+
     }
 
     // ════════════════════════════════════════════════
@@ -1037,401 +988,160 @@
     // ════════════════════════════════════════════════
     // GAME STATE
     // ════════════════════════════════════════════════
-    let level = 1, reps = 0, score = 0, perfectCount = 0, combo = 1;
-    let gameState = 'playing';
-    let isGripping = false;
-    let pumpTimer = null;
-
-    const LEVELS = [
-      { target: 4,  pumpRate: 0.09, deflateRate: 0.008, perfectZone: [0.38, 0.62], popAt: 0.88, title: 'Warm Up' },
-      { target: 6,  pumpRate: 0.08, deflateRate: 0.012, perfectZone: [0.40, 0.60], popAt: 0.85, title: 'Festival Fun' },
-      { target: 8,  pumpRate: 0.07, deflateRate: 0.015, perfectZone: [0.42, 0.58], popAt: 0.82, title: 'Balloon Artist' },
-      { target: 10, pumpRate: 0.065, deflateRate: 0.018, perfectZone: [0.43, 0.57], popAt: 0.80, title: 'Sky Master' },
-      { target: 12, pumpRate: 0.06, deflateRate: 0.02,  perfectZone: [0.45, 0.55], popAt: 0.78, title: 'Legendary Inflator' },
-    ];
-    function getLvl() { return LEVELS[Math.min(level - 1, LEVELS.length - 1)]; }
-
-    // ════════════════════════════════════════════════
-    // HUD
-    // ════════════════════════════════════════════════
-    const elReps = document.getElementById('v-reps');
-    const elScore = document.getElementById('v-score');
-    const elPerfect = document.getElementById('v-perfect');
-    const elCombo = document.getElementById('v-combo');
-    const elLevel = document.getElementById('v-level');
-    const elLevelFill = document.getElementById('level-fill');
+    const round = new ArcheryRound();
+    const arrows = [];
+    let flightClock = 0;
+    let respawnAt = 0;
+    const status = document.getElementById('shot-status');
     const elToast = document.getElementById('toast');
-    const elGripBar = document.getElementById('grip-bar');
-    const elGripStatus = document.getElementById('grip-status');
-    const elSizeFill = document.getElementById('size-fill');
-    const elSizeText = document.getElementById('size-text');
-    const elTargetZone = document.getElementById('target-zone');
-    const elSizePctVal = document.getElementById('size-pct-val');
-
-    let toastTimer = null;
-    function toast(txt) {
-      elToast.textContent = txt; elToast.classList.add('show');
+    let toastTimer;
+    function toast(text) {
+      elToast.textContent = text; elToast.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => elToast.classList.remove('show'), 2000);
+      toastTimer = setTimeout(() => elToast.classList.remove('show'), 1200);
     }
-
     function updateHUD() {
-      if (elReps) elReps.textContent = reps;
-      if (elScore) elScore.textContent = score.toLocaleString();
-      if (elPerfect) elPerfect.textContent = perfectCount;
-      if (elCombo) elCombo.textContent = `×${combo}`;
-      if (elLevel) elLevel.textContent = '1';
-      const cfg = getLvl();
-      if (elLevelFill) elLevelFill.style.width = `${Math.min(100, (reps / cfg.target) * 100)}%`;
+      document.getElementById('v-score').textContent = round.score;
+      document.getElementById('v-hits').textContent = round.hits;
+      document.getElementById('v-shots').textContent = round.shots;
+      document.getElementById('v-accuracy').textContent = (round.shots ? Math.round(round.hits / round.shots * 100) : 0) + '%';
+      if (window.parent !== window) window.parent.postMessage({
+        type: 'neuro-game-score', exercise: 'hand_open_close', score: round.score,
+      }, window.location.origin);
     }
-
-    function updateSizeIndicator() {
-      const pct = Math.min(100, Math.round(activeBalloonSize * 100));
-      if (elSizePctVal) elSizePctVal.textContent = pct;
-      if (elSizeFill) elSizeFill.style.width = `${pct}%`;
-
-      const cfg = getLvl();
-      elTargetZone.style.left = `${cfg.perfectZone[0] * 100}%`;
-      elTargetZone.style.width = `${(cfg.perfectZone[1] - cfg.perfectZone[0]) * 100}%`;
-
-      const elDangerZone = document.getElementById('danger-zone');
-      if (elDangerZone) {
-        elDangerZone.style.left = `${cfg.popAt * 100}%`;
-        elDangerZone.style.width = `${(1 - cfg.popAt) * 100}%`;
-      }
-
-      const elIndicator = document.getElementById('size-indicator');
-      if (elSizeFill) elSizeFill.className = 'size-fill';
-      if (elSizeText) elSizeText.className = 'gauge-status';
-      if (elIndicator) elIndicator.className = 'size-indicator';
-
-      if (activeBalloonSize < cfg.perfectZone[0]) {
-        elSizeText.innerHTML = '<span class="status-dot"></span><span>Pump Air (Close Fist)</span>';
-      } else if (activeBalloonSize >= cfg.perfectZone[0] && activeBalloonSize <= cfg.perfectZone[1]) {
-        elSizeText.innerHTML = '<span class="status-dot" style="background:#10B981;"></span><span>TARGET READY: Release Hand!</span>';
-        if (elSizeFill) elSizeFill.classList.add('perfect');
-        if (elSizeText) elSizeText.classList.add('perfect');
-        if (elIndicator) elIndicator.classList.add('perfect');
-      } else if (activeBalloonSize < cfg.popAt) {
-        elSizeText.innerHTML = '<span class="status-dot" style="background:#F59E0B;"></span><span>HIGH PRESSURE: Release!</span>';
-        if (elSizeFill) elSizeFill.classList.add('warning');
-        if (elSizeText) elSizeText.classList.add('warning');
-        if (elIndicator) elIndicator.classList.add('warning');
-      } else {
-        elSizeText.innerHTML = '<span class="status-dot" style="background:#EF4444;"></span><span>BURST LIMIT: Release Now!</span>';
-        if (elSizeFill) elSizeFill.classList.add('danger');
-        if (elSizeText) elSizeText.classList.add('danger');
-        if (elIndicator) elIndicator.classList.add('danger');
-      }
+    // Reuse the festival set; replace its pump with an actual bow and arrow.
+    booth.visible = false;
+    const bowAsset = createFestivalBow();
+    scene.add(bowAsset.root);
+    const drawBow = bowAsset.draw;
+    const nockArrow = bowAsset.nock;
+    const gold = new THREE.MeshStandardMaterial({color:0xffc857,roughness:0.5});
+    const sight = new THREE.Mesh(new THREE.TorusGeometry(0.35,0.035,8,32),gold);
+    sight.position.set(0,3.3,0);scene.add(sight);
+    // Arrows share the same reusable meshes/materials; no flat image in gameplay.
+    const arrowTemplate = createFestivalArrow();
+    function makeArrow() {
+      const arrow = arrowTemplate.clone(true);
+      arrow.userData.age = 0;scene.add(arrow);return arrow;
     }
-
-    // ════════════════════════════════════════════════
-    // PUMP ACTION
-    // ════════════════════════════════════════════════
-    function doPump() {
-      if (!activeBalloon || gameState !== 'playing') return;
-      const cfg = getLvl();
-      activeBalloonSize += cfg.pumpRate;
-      activePumpCount++;
-
-      // Sound gets higher pitched as balloon gets bigger
-      sfx.pump(1 + activeBalloonSize * 0.8);
-
-      // Animate pump handle
-      pumpHandle.position.y = 1.45;
-      setTimeout(() => { if (pumpHandle) pumpHandle.position.y = 1.65; }, 100);
-
-      // Squash-stretch on balloon
-      if (activeBalloon) {
-        activeBalloon.scale.set(
-          activeBalloonSize * 1.15,
-          activeBalloonSize * 0.85,
-          activeBalloonSize * 1.15
-        );
-      }
-
-      // Check for pop
-      if (activeBalloonSize >= cfg.popAt + 0.05) {
-        popCurrentBalloon();
-        return;
-      }
-
-      updateSizeIndicator();
+    const loadedArrow = makeArrow();
+    nockArrow(loadedArrow,0);
+    const shieldAsset = createFestivalShield();
+    const shield = shieldAsset.root;
+    scene.add(shield);
+    let shieldImpactAt = -10;
+    const embeddedArrows = [];
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function impactShield(arrow) {
+      shieldImpactAt = flightClock;
+      // Seat the point in the front surface; keep the shaft/fletching visible.
+      const direction = new THREE.Vector3(0,0,-1).applyQuaternion(arrow.quaternion);
+      const point = new THREE.Vector3(0,3.15,1.25);
+      arrow.position.copy(point).addScaledVector(direction,-1.06);
+      shield.updateWorldMatrix(true,false);
+      shield.attach(arrow);
+      arrow.userData.impactAt=flightClock;
+      embeddedArrows.push(arrow);
+      spawnParticles(0,3.15,1.3,14,[0xf7e6c7,0xea8475,0x18797b]);
+      sfx.tone(120,'triangle',0.14,0.12);
     }
-
-    function popCurrentBalloon() {
-      if (!activeBalloon) return;
-      sfx.pop();
-
-      const pos = activeBalloon.position.clone();
-      spawnPopFragments(pos.x, pos.y, pos.z, activeBalloonColor);
-      spawnParticles(pos.x, pos.y, pos.z, 20);
-
-      scene.remove(activeBalloon);
-      activeBalloon = null;
-
-      combo = 1;
-      score = Math.max(0, score - 50);
-      toast('POP! -50 points');
-      updateHUD();
-
-      // Spawn new balloon after delay
-      setTimeout(() => {
-        if (gameState === 'playing') createActiveBalloon();
-      }, 800);
-    }
-
-    function releaseBalloon() {
-      if (!activeBalloon || gameState !== 'playing') return;
-      const cfg = getLvl();
-
-      // Check if balloon is big enough
-      if (activeBalloonSize < 0.15) {
-        toast('Too small! Continue pumping');
-        return;
-      }
-
-      const pos = activeBalloon.position.clone();
-      const size = activeBalloonSize;
-
-      // Determine quality
-      let quality = 'ok';
-      let points = 50;
-      if (size >= cfg.perfectZone[0] && size <= cfg.perfectZone[1]) {
-        quality = 'perfect';
-        points = 200 * combo;
-        perfectCount++;
-        combo++;
-        sfx.perfect();
-        toast(`PERFECT INFLATION! +${points} ×${combo}`);
-        spawnParticles(pos.x, pos.y + 1, pos.z, 40, [0xFFD54F, 0xFFEB3B, 0xFFF176], true);
-      } else if (size >= cfg.perfectZone[0] * 0.7 && size < cfg.perfectZone[0]) {
-        quality = 'good';
-        points = 100 * combo;
-        sfx.release();
-        toast(`Good Release! +${points}`);
-        spawnParticles(pos.x, pos.y + 1, pos.z, 20);
-      } else if (size > cfg.perfectZone[1] && size < cfg.popAt) {
-        quality = 'big';
-        points = 80 * combo;
-        sfx.release();
-        toast(`Slightly Over-inflated! +${points}`);
-        spawnParticles(pos.x, pos.y + 1, pos.z, 20);
-      } else {
-        sfx.release();
-        toast(`Balloon Released! +${points}`);
-        spawnParticles(pos.x, pos.y + 1, pos.z, 15);
-      }
-
-      score += points;
-      reps++;
-
-      // Create the released balloon that floats away
-      scene.remove(activeBalloon);
-      activeBalloon = null;
-      createReleasedBalloon(activeBalloonColor, size * 0.9, pos.x + (Math.random() - 0.5) * 2, pos.y, pos.z - 1);
-
-      updateHUD();
-
-      // Post telemetry to parent dashboard
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({
-          type: 'NEURO_REP_EVENT',
-          exercise: 'hand_open_close',
-          movement: 'wrist_open_close',
-          reps: reps,
-          score: score,
-          quality: quality
-        }, '*');
-        window.parent.postMessage({
-          type: 'exercise_rep',
-          movement: 'wrist_open_close',
-          count: reps
-        }, '*');
-      }
-
-      // Milestone celebration every 5 reps without stopping gameplay
-      if (reps % 5 === 0) {
-        sfx.fanfare();
-        spawnParticles(pos.x, pos.y + 3, pos.z, 50, [0xFFD54F, 0x10B981, 0x38BDF8], true);
-        toast(`MILESTONE: ${reps} REPETITIONS COMPLETED!`);
-      }
-
-      // Infinitely running: seamlessly spawn next balloon
-      setTimeout(() => {
-        if (gameState === 'playing') createActiveBalloon();
-      }, 450);
-    }
-
-    // ════════════════════════════════════════════════
-    // LEVEL COMPLETE
-    // ════════════════════════════════════════════════
-    function showComplete() {
-      const cfg = getLvl();
-      document.getElementById('m-title').textContent = cfg.title + ' Complete';
-      const mStars = document.getElementById('m-stars');
-      if (mStars) {
-        const rating = perfectCount >= Math.floor(cfg.target * 0.7) ? 'EXCELLENT (3/3 STARS)' :
-                       perfectCount >= Math.floor(cfg.target * 0.4) ? 'GREAT (2/3 STARS)' : 'GOOD (1/3 STARS)';
-        mStars.textContent = rating;
-      }
-      document.getElementById('m-sub').textContent =
-        `Level ${level} — ${reps} balloons released, ${perfectCount} perfect, ×${combo} max combo.\nScore: ${score.toLocaleString()}`;
-      document.getElementById('m-btn').textContent = level >= 5 ? 'Grand Festival Complete' : `Level ${level + 1} →`;
-      document.getElementById('overlay').classList.add('active');
-
-      for (let i = 0; i < 6; i++) {
-        setTimeout(() => spawnParticles(
-          (Math.random() - 0.5) * 6, 4 + Math.random() * 3, (Math.random() - 0.5) * 3, 35, null, true
-        ), i * 250);
-      }
-    }
-
-    document.getElementById('m-btn').addEventListener('click', () => {
-      document.getElementById('overlay').classList.remove('active');
-      combo = 1; level++; reps = 0; perfectCount = 0;
-      gameState = 'playing';
-      createActiveBalloon();
-      updateHUD();
-    });
-
-    // ════════════════════════════════════════════════
-    // INPUT — Grip = Pump, Release = Tie off
-    // ════════════════════════════════════════════════
     function onGrip() {
-      if (isGripping || gameState !== 'playing') return;
-      isGripping = true;
-      elGripBar.style.width = '100%';
-      elGripStatus.textContent = 'CLOSE (False)';
-      elGripStatus.style.color = '#DC2626';
-
-      doPump();
-      // Continuous pumping while gripping
-      clearInterval(pumpTimer);
-      pumpTimer = setInterval(doPump, 280);
+      if (!activeBalloon || arrows.length || !round.close()) return false;
+      arrows.push(makeArrow());
+      loadedArrow.visible=false;
+      sfx.pump(1);
+      status.textContent = 'DRAW & RELEASE · Open your hand to reload';
+      updateHUD(); return true;
     }
-
     function onRelease() {
-      if (!isGripping) return;
-      isGripping = false;
-      elGripBar.style.width = '0%';
-      elGripStatus.textContent = 'OPEN (True)';
-      elGripStatus.style.color = '#16A34A';
-      clearInterval(pumpTimer);
-
-      releaseBalloon();
+      round.open();
+      status.textContent = 'READY · Close when the balloon crosses the gold sight';
+      return true;
     }
-
-    // Parent window messages (neuro glove)
-    window.addEventListener('message', e => {
-      if (!e.data) return;
-      if (e.data.type === 'neuro-game-action') {
-        if (e.data.movement === 'wrist_close' || e.data.action === 'primary_action') onGrip();
-        else if (e.data.movement === 'wrist_open' || e.data.action === 'secondary_action') onRelease();
-      } else if (e.data.type === 'NEURO_TELEMETRY') {
-        if (e.data.movement === 'wrist_close') onGrip();
-        else if (e.data.movement === 'wrist_open') onRelease();
-        
-        // Sensor flexion threshold fallback
-        const flex = e.data.hand?.sliders?.index_mcp ?? e.data.hand?.sliders?.INDEXBEND1;
-        if (typeof flex === 'number') {
-          if (flex > 0.55) onGrip();
-          else if (flex < 0.30) onRelease();
-        }
-      }
-    });
-
-    // WebSocket glove telemetry
-    function connectGlove() {
-      try {
-        const ws = new WebSocket('ws://127.0.0.1:8765/ws');
-        ws.onmessage = (e) => {
-          try {
-            const p = JSON.parse(e.data);
-            const h = p.hands?.right || p.hands?.left;
-            if (h?.bend_sensors) {
-              const avg = h.bend_sensors.reduce((a, b) => a + b, 0) / h.bend_sensors.length;
-              if (avg > 0.6) onGrip(); else if (avg < 0.3) onRelease();
-            }
-          } catch {}
-        };
-        ws.onclose = () => setTimeout(connectGlove, 3000);
-        ws.onerror = () => {};
-      } catch {}
+    bindGloveControls('balloon_blitz', {grip: onGrip, release: onRelease});
+    // Manual controls only on the standalone preview, never alongside glove events.
+    if (window.parent === window) {
+      window.addEventListener('keydown', e => {
+        if (e.code === 'Space' && !e.repeat) { e.preventDefault(); onGrip(); }
+      });
+      window.addEventListener('keyup', e => { if (e.code === 'Space') onRelease(); });
+      window.addEventListener('pointerdown', onGrip);
+      window.addEventListener('pointerup', onRelease);
     }
-    connectGlove();
-
-    // Keyboard + Mouse
-    window.addEventListener('keydown', e => {
-      if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); onGrip(); }
-    });
-    window.addEventListener('keyup', e => {
-      if (e.code === 'Space' || e.key === ' ') onRelease();
-    });
-    window.addEventListener('mousedown', e => { e.preventDefault(); onGrip(); });
-    window.addEventListener('mouseup', () => onRelease());
-
-    // Ready signal
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'night-relay-ready' }, '*');
-    }
-
-    // ════════════════════════════════════════════════
-    // START FIRST BALLOON
-    // ════════════════════════════════════════════════
     createActiveBalloon();
+    activeBalloon.scale.setScalar(0.7);
     updateHUD();
-
-    // ════════════════════════════════════════════════
-    // GAME LOOP
-    // ════════════════════════════════════════════════
+    if (window.parent !== window) window.parent.postMessage({type:'night-relay-ready'}, window.location.origin);
     let lastTime = performance.now();
     function animate(time) {
       requestAnimationFrame(animate);
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
-
-      // Active balloon animation
+      flightClock += dt;
+      shield.position.x = Math.cos(flightClock*0.38)*4.3;
+      const impactAge = flightClock - shieldImpactAt;
+      const impact = shieldImpactPose(impactAge,reducedMotion.matches);
+      shield.rotation.y = Math.sin(flightClock*0.38)*0.12+impact.recoil;
+      shield.rotation.z = impact.twist;
+      shield.scale.setScalar(impact.scale);
+      shieldAsset.faceMaterial.emissive.setHex(0xffd5ad);
+      shieldAsset.faceMaterial.emissiveIntensity = Math.max(0,1-impactAge/0.28)*0.4;
+      for(let i=embeddedArrows.length-1;i>=0;i--) {
+        const arrow=embeddedArrows[i], age=flightClock-arrow.userData.impactAt;
+        if(age>0.9) arrow.scale.setScalar(Math.max(0,1-(age-0.9)/0.25));
+        if(age>1.15) {shield.remove(arrow);embeddedArrows.splice(i,1);}
+      }
+      loadedArrow.visible = round.armed && arrows.length===0;
+      if(!arrows.length) drawBow(0);
+      if (!activeBalloon && flightClock >= respawnAt) {
+        createActiveBalloon();
+        activeBalloon.scale.setScalar(0.7);
+      }
       if (activeBalloon) {
-        const cfg = getLvl();
-
-        // Slow deflation when not pumping (balloon loses air!)
-        if (!isGripping && activeBalloonSize > 0.05) {
-          activeBalloonSize -= cfg.deflateRate * dt;
-          activeBalloonSize = Math.max(0.05, activeBalloonSize);
-          updateSizeIndicator();
+        activeBalloon.position.set(Math.sin(flightClock * 0.7) * 3.1, 3.3, 0);
+        activeBalloon.rotation.z = Math.sin(flightClock) * 0.08;
+        const inSight = Math.abs(activeBalloon.position.x) < 0.72 && Math.abs(shield.position.x)>0.65;
+        sight.material.color.setHex(inSight ? 0x10b981 : 0xffc857);
+      }
+      for (let i = arrows.length - 1; i >= 0; i--) {
+        const arrow = arrows[i];
+        arrow.userData.age += dt;
+        const age = arrow.userData.age;
+        if(age<0.28) {
+          const draw=Math.sin(Math.min(1,age/0.24)*Math.PI/2);
+          drawBow(draw);nockArrow(arrow,draw);
+          continue;
         }
-
-        // Smooth scale
-        const targetScale = activeBalloonSize;
-        const currentScale = activeBalloon.scale.x;
-        const smoothed = currentScale + (targetScale - currentScale) * dt * 10;
-        activeBalloon.scale.setScalar(smoothed);
-
-        // Gentle bobbing
-        activeBalloon.position.y = 2 + Math.sin(time * 0.002) * 0.1 * activeBalloonSize;
-        activeBalloon.rotation.z = Math.sin(time * 0.0015) * 0.05;
-
-        // Wobble after pump (squash & stretch recovery)
-        const s = activeBalloon.scale;
-        const diff = s.y / s.x;
-        if (Math.abs(diff - 1) > 0.01) {
-          s.y += (s.x - s.y) * dt * 12;
+        drawBow(Math.max(0,1-(age-0.28)/0.12));
+        const progress = Math.min(1,(age-0.28)/0.36);
+        if(!arrow.userData.releasePosition) {
+          nockArrow(arrow,1);arrow.userData.releasePosition=arrow.position.clone();
         }
-
-        // Color shift toward danger when over-inflated
-        if (activeBalloonSize > cfg.popAt * 0.9) {
-          const body = activeBalloon.userData.body;
-          if (body) {
-            const danger = (activeBalloonSize - cfg.popAt * 0.9) / (cfg.popAt * 0.15);
-            body.material.emissiveIntensity = 0.06 + danger * 0.3;
-            // Wobble more as getting close to pop
-            activeBalloon.rotation.z = Math.sin(time * (0.003 + danger * 0.01)) * (0.05 + danger * 0.1);
+        arrow.position.copy(arrow.userData.releasePosition).lerp(new THREE.Vector3(0,3.3,0),progress);
+        if(!arrow.userData.shieldChecked && progress>=0.56) {
+          arrow.userData.shieldChecked=true;
+          if(Math.abs(shield.position.x)<0.65) {
+            round.resolve(false);
+            impactShield(arrow);
+            toast('SHIELD BLOCK · Wait for a clear shot');
+            arrows.splice(i,1);updateHUD();continue;
           }
         }
+        if (progress >= 1) {
+          const hit = !!activeBalloon && Math.abs(activeBalloon.position.x) <= 0.72;
+          round.resolve(hit);
+          if (hit) {
+            const p = activeBalloon.position;
+            spawnPopFragments(p.x, p.y, p.z, activeBalloonColor);
+            spawnParticles(p.x, p.y, p.z, 30);
+            scene.remove(activeBalloon); activeBalloon = null;
+            respawnAt = flightClock + 0.45;
+            sfx.pop(); toast('BULLSEYE · +100');
+          } else { toast('Miss · Open and try again'); }
+          scene.remove(arrow); arrows.splice(i,1); updateHUD();
+        }
       }
-
-      // Released balloons float upward
+    // Released balloons float upward
       for (let i = releasedBalloons.length - 1; i >= 0; i--) {
         const b = releasedBalloons[i];
         b.position.y += b.userData.floatSpeed * dt;
@@ -1479,8 +1189,8 @@
       });
 
       // Gentle camera sway
-      camera.position.x = Math.sin(time * 0.0003) * 0.25;
-      camera.position.y = 3.5 + Math.sin(time * 0.0005) * 0.12;
+      camera.position.x = 0;
+      camera.position.y = 3.5;
       camera.lookAt(0, 3, 0);
 
       renderer.render(scene, camera);
@@ -1488,11 +1198,15 @@
 
     requestAnimationFrame(animate);
 
-    window.addEventListener('resize', () => {
+    function resizeGame() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+      const reserve = window.parent !== window && window.innerWidth > 700 ? 308 : 0;
+      camera.setViewOffset(window.innerWidth, window.innerHeight, reserve / 2, 0, window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener('resize', resizeGame);
+    resizeGame();
   </script>
 </body>
 </html>

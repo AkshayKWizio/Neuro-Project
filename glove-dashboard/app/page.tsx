@@ -887,7 +887,7 @@ function ExerciseWorkspace({ telemetry, selectedHand, setSelectedHand, selectExe
   const selectedHandConnected = Boolean(telemetry?.meta.hand_connected?.[selectedHand.toLowerCase() as 'left' | 'right']);
   return <div className="therapy-workspace">
     <DualHandPanel telemetry={telemetry} selectedHand={selectedHand} onSelect={setSelectedHand} bridgeOnline={bridgeOnline} onCommand={sendCommand} pending={pendingCommand} message={commandStatus} />
-    <section className="exercise-library"><div className="section-heading"><div><span className="eyebrow">EXERCISE LIBRARY</span><h2>Prescribed Neuro-Rehabilitation Protocols</h2><p>Selecting an exercise activates only that detector for the chosen glove.</p></div><div className="exercise-heading-actions"><span className="selected-hand-label">TARGET · {selectedHand}</span>{selected !== 'none' && <Button onClick={finishExercise}><Check />Finish & save</Button>}</div></div>
+    <section className="exercise-library"><div className="section-heading"><div><span className="eyebrow">EXERCISE LIBRARY</span><h2>Prescribed Neuro-Rehabilitation Protocols</h2><p>Selecting an exercise activates only that detector for the chosen glove.</p></div><div className="exercise-heading-actions"><span className="selected-hand-label">TARGET · {selectedHand}</span>{selected !== 'none' && <Button onClick={() => finishExercise()}><Check />Finish & save</Button>}</div></div>
       <div className="exercise-cards">{(Object.keys(exerciseConfig) as ActiveExercise[]).map((mode, index) => {
         const config = exerciseConfig[mode];
         const Icon = config.icon;
@@ -915,10 +915,14 @@ function ExerciseWorkspace({ telemetry, selectedHand, setSelectedHand, selectExe
       })}</div>
     </section>
     {selected === 'none' ? <div className="exercise-placeholder"><Rotate3D /><strong>Select an exercise above</strong><span>Your live hands remain visible while the exercise guidance, camera feedback and gameplay area appear here.</span></div> : <ExerciseSession
+      key={`${selectedHand}:${selected}`}
+      live={bridgeOnline && selectedHandConnected}
       mode={selected}
       side={selectedHand}
       hand={telemetry?.hands[selectedHand.toLowerCase() as 'left' | 'right']}
       latest={exercise?.latest}
+      events={exercise?.events ?? []}
+      detectorCounts={exercise?.counts ?? {}}
       guidance={<GuidancePanel mode={selected} side={selectedHand} />}
       tracker={<ExerciseGame mode={selected} exercise={exercise} live={Boolean(telemetry?.meta.connected)} side={selectedHand} />}
       details={<DetectorDetails mode={selected} exercise={exercise} />}

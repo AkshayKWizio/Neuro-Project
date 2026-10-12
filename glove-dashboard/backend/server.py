@@ -26,45 +26,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from backend.exercise_detector import ExerciseEngine
+from backend.exercise_detector import ExerciseEngine, sdk_to_unity_orientation
 from backend.auth_reports import LocalClinicalStore
 
+from backend.local_config import CONFIG
 SOURCE_ROOT = Path(__file__).parents[1]
 BUNDLE_ROOT = Path(getattr(sys, "_MEIPASS", SOURCE_ROOT))
-SDK_ROOT = Path(__file__).parent / "vendor" / "reality_sdk"
-HAND_MODEL_ROOT = (
-    BUNDLE_ROOT / "hand_models"
-    if (BUNDLE_ROOT / "hand_models").is_dir()
-    else Path(__file__).parents[2] / "StretchSense SDK 0.7.0 (UPM)" / "com.stretchsense.sdk" / "Runtime" / "Prefabs" / "Hands" / "StretchSense" / "Models" / "RealityGlove"
-)
-HAND_TEXTURE_ROOT = (
-    BUNDLE_ROOT / "hand_textures"
-    if (BUNDLE_ROOT / "hand_textures").is_dir()
-    else Path(__file__).parents[2] / "StretchSense SDK 0.7.0 (UPM)" / "com.stretchsense.sdk" / "Runtime" / "Prefabs" / "Hands" / "StretchSense" / "Textures" / "RealityGlove"
-)
-WEB_ROOT = (
-    BUNDLE_ROOT / "web"
-    if (BUNDLE_ROOT / "web").is_dir()
-    else SOURCE_ROOT / "desktop_bundle" / "web"
-)
-LICENSE_FILE = (
-    BUNDLE_ROOT / "backend" / "license_keys.json"
-    if (BUNDLE_ROOT / "backend" / "license_keys.json").is_file()
-    else Path(__file__).parent / "license_keys.json"
-)
-DATA_ROOT = Path(__file__).parent / "data"
-XR_GAME_CONFIG_FILES = (
-    Path(sys.executable).resolve().parent / "xr_game.json",
-    SOURCE_ROOT / "xr_game.json",
-    BUNDLE_ROOT / "xr_game.json",
-)
+SDK_ROOT = CONFIG.path('sdk')
+HAND_MODEL_ROOT = CONFIG.path('hand_models')
+HAND_TEXTURE_ROOT = CONFIG.path('hand_textures')
+WEB_ROOT = CONFIG.path('web_bundle')
+LICENSE_FILE = CONFIG.path('license_file')
+DATA_ROOT = CONFIG.path('data')
+GAME_LIBRARY_ROOT = CONFIG.path('game_library')
 sys.path.insert(0, str(SDK_ROOT))
 
-from core.config import HANDEDNESS, OSC_RECEIVE_PORT, OSC_SEND_PORT, REALITY_SDK_PYTHON_VERSION  # noqa: E402
+from core.config import HANDEDNESS, REALITY_SDK_PYTHON_VERSION  # noqa: E402
 from core.core_data_classes import Joint, Vector3, Quat, KinematicPacket, PacketHeader  # noqa: E402
 from core.osc_receiver import OSCReceiver  # noqa: E402
 from core.osc_sender import OSCSender  # noqa: E402
 from core.shared_state import SharedState  # noqa: E402
+
+OSC_RECEIVE_PORT = CONFIG.network['osc_receive_port']
+OSC_SEND_PORT = CONFIG.network['osc_send_port']
 
 
 class ExerciseOSCReceiver(OSCReceiver):
@@ -100,7 +84,7 @@ class ExerciseOSCReceiver(OSCReceiver):
         self._mark_hand_active(args)
         self.exercises.add_orientation(
             int(args[2]),
-            (float(args[8]), float(args[9]), float(args[10]), float(args[11])),
+            sdk_to_unity_orientation((float(args[8]), float(args[9]), float(args[10]), float(args[11]))),
             time.monotonic(),
         )
 
@@ -194,32 +178,11 @@ class XRGameLauncher:
 
     @staticmethod
     def _configured_path() -> Path | None:
-        environment_path = os.environ.get("NEURO_XR_GAME_PATH", "").strip()
-        if environment_path:
-            return Path(environment_path).expanduser().resolve()
-
-        for config_file in XR_GAME_CONFIG_FILES:
-            if not config_file.is_file():
-                continue
-            try:
-                configured = str(json.loads(config_file.read_text(encoding="utf-8")).get("executable", "")).strip()
-            except (OSError, json.JSONDecodeError):
-                continue
-            if configured:
-                candidate = Path(configured).expanduser()
-                return (config_file.parent / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
-        return None
+        return CONFIG.path('xr_game')
 
     @staticmethod
     def _default_paths() -> tuple[Path, ...]:
-        executable_dir = Path(sys.executable).resolve().parent
-        relative = Path("XR Game 0.4.2-BETA") / "XR Game 0.4.2-BETA" / "XR Game.exe"
-        return (
-            Path(__file__).parents[2] / relative,
-            SOURCE_ROOT.parent / relative,
-            executable_dir / relative,
-            executable_dir / "XR Game" / "XR Game.exe",
-        )
+        return (CONFIG.path('xr_game'),)
 
     def executable(self) -> Path | None:
         configured = self._configured_path()
@@ -339,7 +302,7 @@ class XRGameLauncher:
                 self._last_running_check = time.monotonic()
                 return {
                     "status": "not_found",
-                    "message": "XR Game was not found. Set its path in xr_game.json.",
+                    "message": "XR Game was not found. Set paths.xr_game in neuro.local.json.",
                 }
             try:
                 startup_info = None
@@ -466,10 +429,10 @@ class TelemetryBridge:
         self.receiver = ExerciseOSCReceiver(
             self.state,
             self.exercises,
-            input_ip="127.0.0.1",
+            input_ip=CONFIG.network['osc_receive_host'],
             input_port=OSC_RECEIVE_PORT,
         )
-        self.sender = OSCSender(output_ip="127.0.0.1", output_port=OSC_SEND_PORT)
+        self.sender = OSCSender(output_ip=CONFIG.network['osc_send_host'], output_port=OSC_SEND_PORT)
         self.receiver_task: asyncio.Task | None = None
         self.started_at = time.monotonic()
         self.last_packet_at: float | None = None
@@ -568,8 +531,8 @@ class TelemetryBridge:
             "meta": {
                 "sdk_version": REALITY_SDK_PYTHON_VERSION,
                 "osc_version": 1,
-                "receive": f"127.0.0.1:{OSC_RECEIVE_PORT}",
-                "send": f"127.0.0.1:{OSC_SEND_PORT}",
+                "receive": f"{CONFIG.network['osc_receive_host']}:{OSC_RECEIVE_PORT}",
+                "send": f"{CONFIG.network['osc_send_host']}:{OSC_SEND_PORT}",
                 "packet_count": counter,
                 "packet_rate": round(packet_rate, 1),
                 "last_packet": str(last_key),
@@ -644,7 +607,11 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Glove Telemetry Bridge", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:3000", "http://localhost:3000", "http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_origins=[
+        f"http://{host}:{port}"
+        for host in (CONFIG.network['host'], 'localhost')
+        for port in (CONFIG.network['frontend_port'], CONFIG.network['backend_port'])
+    ],
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -931,6 +898,18 @@ def basic_calibration_animation(side: Literal["left", "right"]) -> FileResponse:
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Basic calibration animation not found")
     return FileResponse(path, media_type="application/json")
+
+
+@app.get("/api/game-library/{asset_path:path}")
+def game_library(asset_path: str) -> FileResponse:
+    path = (GAME_LIBRARY_ROOT / asset_path).resolve()
+    try:
+        path.relative_to(GAME_LIBRARY_ROOT.resolve())
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Game library asset not found")
+    if not path.is_file() or path.suffix not in ('.js', '.txt', '.md'):
+        raise HTTPException(status_code=404, detail="Game library asset not found")
+    return FileResponse(path)
 
 
 @app.post("/api/command")

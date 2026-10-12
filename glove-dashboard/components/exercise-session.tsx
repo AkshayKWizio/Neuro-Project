@@ -5,9 +5,11 @@ import type { ReactNode } from 'react';
 import { Camera, CameraOff, Check, ChevronDown, ChevronUp, Gamepad2, Hand, RefreshCw, Rotate3D, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiveHandRig } from '@/components/live-hand-rig';
+import { rotationAction } from '@/lib/rotation-controls';
+import { GameEventQueue, detectorEventKey, exerciseRepetitions } from '@/lib/game-event-delivery';
 
 type ExerciseMode = 'pronation_supination' | 'circumduction' | 'hand_open_close';
-type ExerciseEvent = { movement: string; timestamp_ms: number };
+type ExerciseEvent = { movement: string; timestamp_ms: number; event_id?: number };
 
 export type GameAction = 'move_left' | 'move_right' | 'primary_action' | 'secondary_action';
 
@@ -17,6 +19,7 @@ export type GameActionDetail = {
   movement: string;
   side: 'LEFT' | 'RIGHT';
   timestamp_ms: number;
+  event_id?: number;
   keyboard_key: string;
 };
 
@@ -113,27 +116,12 @@ function useGameActionBridge(mode: ExerciseMode, side: 'LEFT' | 'RIGHT', latest:
     if (!latest || !mapping) return null;
     let action = mapping.action;
     let key = mapping.key;
-    // Account for active glove side so pronation and supination map consistently:
-    // LH Hand: Pronation to Supination -> Turn Left; Supination to Pronation -> Turn Right
-    // RH Hand: Opposite (Pronation to Supination -> Turn Right; Supination to Pronation -> Turn Left)
+    // Map the detected destination pose using the requested hand-specific rule.
     if (mode === 'pronation_supination') {
-      if (side === 'LEFT') {
-        if (latest.movement === 'supination') {
-          action = 'move_left';
-          key = 'ArrowLeft';
-        } else if (latest.movement === 'pronation') {
-          action = 'move_right';
-          key = 'ArrowRight';
-        }
-      } else {
-        if (latest.movement === 'supination') {
-          action = 'move_right';
-          key = 'ArrowRight';
-        } else if (latest.movement === 'pronation') {
-          action = 'move_left';
-          key = 'ArrowLeft';
-        }
-      }
+      const rotation = rotationAction(side, latest.movement);
+      if (!rotation) return null;
+      action = rotation.action;
+      key = rotation.key;
     }
     return {
       action,
@@ -141,6 +129,7 @@ function useGameActionBridge(mode: ExerciseMode, side: 'LEFT' | 'RIGHT', latest:
       movement: latest.movement,
       side,
       timestamp_ms: latest.timestamp_ms,
+      event_id: latest.event_id,
       keyboard_key: key,
     };
   }, [latest, mode, side]);
@@ -176,8 +165,8 @@ export interface RehabGame {
 export const REHAB_GAMES: RehabGame[] = [
   {
     id: 'balloon_blitz',
-    title: 'Balloon Blitz',
-    subtitle: '3D Inflate & Fly Festival',
+    title: 'Balloon Archery',
+    subtitle: 'Balloon Archery · Aim & Shoot',
     badge: 'WRIST OPEN / CLOSE',
     icon: 'target',
     url: '/games/balloon-blitz/index.html',
@@ -186,7 +175,7 @@ export const REHAB_GAMES: RehabGame[] = [
   {
     id: 'sky_glider',
     title: 'Sky Glider',
-    subtitle: '3D Canyon Flight & Ring Navigation',
+    subtitle: 'Two-Lane Canyon Flight · Rings & Missiles',
     badge: 'PRONATION / SUPINATION',
     icon: 'rotate',
     url: '/games/sky-glider/index.html',
@@ -212,10 +201,13 @@ export interface SessionSummary {
   counts: Record<string, number>;
 }
 
-export function ExerciseSession({ mode, side, latest, guidance, tracker, details, onFinish, onTare, tarePending, tareDisabled, tareStatus, hand }: {
+export function ExerciseSession({ mode, side, latest, events, detectorCounts, live, guidance, tracker, details, onFinish, onTare, tarePending, tareDisabled, tareStatus, hand }: {
   mode: ExerciseMode;
   side: 'LEFT' | 'RIGHT';
   latest: ExerciseEvent | null | undefined;
+  events: ExerciseEvent[];
+  detectorCounts: Record<string, number>;
+  live: boolean;
   guidance: ReactNode;
   tracker: ReactNode;
   details: ReactNode;
@@ -228,14 +220,18 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
 }) {
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [gameReady, setGameReady] = useState(false);
+  const [gameLoadFailed, setGameLoadFailed] = useState(false);
+  const [gameAttempt, setGameAttempt] = useState(0);
   const [countDown, setCountDown] = useState(3);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [showHandHud, setShowHandHud] = useState(true);
   const [handHudMinimized, setHandHudMinimized] = useState(false);
   const [handHudMode, setHandHudMode] = useState<'live' | 'guide'>('live');
-  const [sessionReps, setSessionReps] = useState(0);
+  const sessionReps = exerciseRepetitions(mode, detectorCounts);
   const [sessionScore, setSessionScore] = useState(0);
-  const [sessionCounts, setSessionCounts] = useState<Record<string, number>>({});
+  const sessionCounts = detectorCounts;
+  const movementCount = Object.values(detectorCounts).reduce((sum, count) => sum + count, 0);
+  const [gameDelivery, setGameDelivery] = useState('Waiting for movement');
 
   // Default game based on clinical exercise
   const initialGame: RehabGameId = useMemo(() => {
@@ -249,19 +245,27 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
   useEffect(() => {
     setSelectedGame(initialGame);
     setGameReady(false);
-    setSessionReps(0);
     setSessionScore(0);
-    setSessionCounts({});
     setSecondsElapsed(0);
   }, [initialGame]);
   const currentGame = useMemo(() => REHAB_GAMES.find(g => g.id === selectedGame) || REHAB_GAMES[0], [selectedGame]);
+  const availableGames = REHAB_GAMES.filter(game => game.id === initialGame);
 
   const gameFrameRef = useRef<HTMLIFrameElement>(null);
   const bridgedAction = useGameActionBridge(mode, side, latest);
   const lastAction = bridgedAction?.exercise === mode && bridgedAction.side === side ? bridgedAction : null;
   const mapping = lastAction ? ACTIONS[mode][lastAction.movement] : null;
   const actionLabel = lastAction?.action === 'move_left' ? 'MOVE LEFT' : lastAction?.action === 'move_right' ? 'MOVE RIGHT' : mapping?.label;
-  const postedTimestampRef = useRef(bridgedAction?.timestamp_ms ?? 0);
+  const queueRef = useRef<GameEventQueue | null>(null);
+  if (queueRef.current === null) queueRef.current = new GameEventQueue(events);
+  const sentEventRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!gameReady) return;
+    gameFrameRef.current?.contentWindow?.postMessage(
+      { type: 'neuro-game-config', exercise: mode, side }, window.location.origin,
+    );
+  }, [gameReady, mode, side]);
 
   useEffect(() => {
     const timer = setInterval(() => setSecondsElapsed((s) => s + 1), 1000);
@@ -270,6 +274,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
 
   useEffect(() => {
     setCountDown(3);
+    if (!gameReady) return;
     const cTimer = setInterval(() => {
       setCountDown((c) => {
         if (c <= 1) {
@@ -280,7 +285,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
       });
     }, 1000);
     return () => clearInterval(cTimer);
-  }, [selectedGame]);
+  }, [selectedGame, gameReady, gameAttempt]);
 
   const formatDuration = (totalSeconds: number) => {
     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -300,47 +305,40 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
       const data = event.data as any;
       if (!data) return;
       if (data.type === 'night-relay-ready') setGameReady(true);
-      if (data.type === 'NEURO_REP_EVENT') {
-        const r = typeof data.reps === 'number' ? data.reps : 0;
+      if (data.type === 'neuro-game-action-ack' && data.exercise === mode && data.side === side &&
+          detectorEventKey(data) === sentEventRef.current) {
+        setGameDelivery(data.applied ? 'Game action applied' : 'No change · already in pose / waiting');
+      }
+      if (data.type === 'NEURO_REP_EVENT' || data.type === 'neuro-game-score') {
         const s = typeof data.score === 'number' ? data.score : 0;
-        const m = typeof data.movement === 'string' ? data.movement : mode;
-        setSessionReps((prev) => Math.max(prev, r));
-        setSessionScore((prev) => Math.max(prev, s));
-        setSessionCounts((prev) => ({
-          ...prev,
-          [m]: (prev[m] || 0) + 1,
-        }));
-      } else if (data.type === 'exercise_rep') {
-        const c = typeof data.count === 'number' ? data.count : 0;
-        const m = typeof data.movement === 'string' ? data.movement : mode;
-        setSessionReps((prev) => Math.max(prev, c));
-        setSessionCounts((prev) => ({
-          ...prev,
-          [m]: (prev[m] || 0) + 1,
-        }));
+        setSessionScore((prev) => data.type === 'neuro-game-score' ? Math.max(0, s) : Math.max(prev, s));
       }
     };
     window.addEventListener('message', onGameMessage);
     return () => window.removeEventListener('message', onGameMessage);
-  }, [mode]);
+  }, [mode, side]);
 
   useEffect(() => {
-    if (!latest?.movement) return;
-    setSessionCounts((prev) => ({
-      ...prev,
-      [latest.movement]: (prev[latest.movement] || 0) + 1,
-    }));
-    setSessionReps((prev) => prev + 1);
-  }, [latest]);
+    const queue = queueRef.current!;
+    const added = queue.observe(events.length ? events : latest ? [latest] : []);
+    if (added) setGameDelivery('Detected · queued for game');
+    queue.flush(live && gameReady && countDown === 0 && Boolean(gameFrameRef.current?.contentWindow), event => {
+      const mapping = mode === 'pronation_supination' ? rotationAction(side, event.movement) : ACTIONS[mode][event.movement];
+      if (!mapping) return;
+      sentEventRef.current = detectorEventKey(event);
+      gameFrameRef.current!.contentWindow!.postMessage({
+        type: 'neuro-game-action', ...event, action: mapping.action,
+        keyboard_key: mapping.key, exercise: mode, side,
+      }, window.location.origin);
+      setGameDelivery('Game action sent · waiting for confirmation');
+    });
+  }, [events, latest, live, gameReady, countDown, mode, side]);
 
   useEffect(() => {
-    if (!bridgedAction || bridgedAction.timestamp_ms <= postedTimestampRef.current) return;
-    postedTimestampRef.current = bridgedAction.timestamp_ms;
-    gameFrameRef.current?.contentWindow?.postMessage(
-      { type: 'neuro-game-action', action: bridgedAction.action, movement: bridgedAction.movement, side: bridgedAction.side },
-      window.location.origin,
-    );
-  }, [bridgedAction]);
+    if (gameReady) { setGameLoadFailed(false); return; }
+    const timer = window.setTimeout(() => setGameLoadFailed(true), 20000);
+    return () => window.clearTimeout(timer);
+  }, [gameReady, selectedGame, gameAttempt]);
 
   const [showClinicDrawer, setShowClinicDrawer] = useState(false);
 
@@ -355,7 +353,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
       </div>
 
       <div className="cinema-game-tabs">
-        {REHAB_GAMES.map((game) => (
+        {availableGames.map((game) => (
           <button
             key={game.id}
             type="button"
@@ -363,6 +361,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
             onClick={() => {
               setSelectedGame(game.id);
               setGameReady(false);
+              setGameLoadFailed(false);
             }}
             title={game.subtitle}
           >
@@ -379,6 +378,10 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
         </span>
         <span className="cinema-rep-counter" title="Completed Clinical Repetitions">
           <strong>{sessionReps}</strong> REPS
+        </span>
+        <span className="cinema-detector-feedback" aria-live="polite">
+          <strong>{movementCount} MOVES · {latest?.movement.replaceAll('_', ' ').toUpperCase() ?? 'WAITING'}</strong>
+          <small>{gameDelivery}</small>
         </span>
         {sessionScore > 0 && (
           <span className="cinema-score-counter" title="Game Score">
@@ -411,7 +414,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
               reps: sessionReps,
               score: sessionScore,
               duration_seconds: secondsElapsed,
-              counts: Object.keys(sessionCounts).length > 0 ? sessionCounts : { [mode]: Math.max(1, sessionReps) },
+              counts: { ...sessionCounts },
             };
             onFinish(summary);
           }}
@@ -425,12 +428,12 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
       <div className="cinema-stage-container">
         <iframe
           ref={gameFrameRef}
-          key={selectedGame}
+          key={`${selectedGame}:${gameAttempt}`}
           src={currentGame.url}
           className="cinema-iframe"
           title={`${currentGame.title} glove-controlled rehabilitation game`}
           allow="autoplay; fullscreen"
-          onLoad={() => setGameReady(true)}
+          onError={() => setGameLoadFailed(true)}
         />
 
         {(!gameReady || countDown > 0) && (
@@ -452,7 +455,7 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                   ? '3D Canyon Flight & Ring Navigation · Rotational Biofeedback'
                   : selectedGame === 'rolling_wonder'
                     ? '3D Rainbow Meadow Runner · 360° Circumduction Biofeedback'
-                    : '3D Inflate & Fly Festival · Hand Grasp & Extension Biofeedback'}
+                    : 'Balloon Archery · Aim & Shoot · Hand Grasp & Extension Biofeedback'}
               </p>
               <div className="startup-target-chip">
                 <span className="chip-dot" />
@@ -470,12 +473,12 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                   <>
                     <div className="startup-step-card">
                       <span className="startup-step-badge" style={{ background: '#E0F2FE', color: '#0284C7' }}>PRONATION</span>
-                      <span className="startup-step-action">Palm Down (Turn Left)</span>
+                      <span className="startup-step-action">Palm Down ({rotationAction(side, 'pronation')?.label})</span>
                     </div>
                     <span className="startup-arrow">⇄</span>
                     <div className="startup-step-card">
                       <span className="startup-step-badge" style={{ background: '#DCFCE7', color: '#16A34A' }}>SUPINATION</span>
-                      <span className="startup-step-action">Palm Up (Turn Right)</span>
+                      <span className="startup-step-action">Palm Up ({rotationAction(side, 'supination')?.label})</span>
                     </div>
                     <span className="startup-arrow">➔</span>
                     <div className="startup-step-card">
@@ -504,12 +507,12 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
                   <>
                     <div className="startup-step-card">
                       <span className="startup-step-badge" style={{ background: '#FEE2E2', color: '#DC2626' }}>WRIST CLOSE</span>
-                      <span className="startup-step-action">Fist Grasp (Pump Air)</span>
+                      <span className="startup-step-action">Close Hand (Shoot Arrow)</span>
                     </div>
                     <span className="startup-arrow">➔</span>
                     <div className="startup-step-card">
                       <span className="startup-step-badge" style={{ background: '#DCFCE7', color: '#16A34A' }}>WRIST OPEN</span>
-                      <span className="startup-step-action">Extend Hand (Launch)</span>
+                      <span className="startup-step-action">Open Hand (Reload)</span>
                     </div>
                     <span className="startup-arrow">➔</span>
                     <div className="startup-step-card">
@@ -523,9 +526,13 @@ export function ExerciseSession({ mode, side, latest, guidance, tracker, details
               <div className="startup-action-section">
                 {!gameReady ? (
                   <>
+                    {gameLoadFailed && <div role="alert">
+                      <p>Game could not start. Retry loading the local 3D engine.</p>
+                      <Button type="button" onClick={() => { setGameReady(false); setGameLoadFailed(false); setGameAttempt(value => value + 1); }}><RefreshCw />Retry game</Button>
+                    </div>}
                     <div className="startup-loading-text">
                       <span className="pulse-dot" style={{ background: '#0F6C73', width: 7, height: 7, borderRadius: '50%', display: 'inline-block' }} />
-                      Calibrating 3D Engine &amp; Aligning Glove Telemetry…
+                      Loading local 3D engine…
                     </div>
                     <div className="startup-loading-bar-wrap">
                       <div className="startup-loading-bar-fill" />

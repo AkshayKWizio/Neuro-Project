@@ -1,28 +1,33 @@
+param([string]$ConfigFile = '', [string]$LauncherRoot = '')
 $ErrorActionPreference = 'Stop'
-$projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$processFile = Join-Path $projectRoot '.logs\processes.json'
-
-if (Test-Path -LiteralPath $processFile) {
-    $saved = Get-Content -Raw -LiteralPath $processFile | ConvertFrom-Json
-    foreach ($processId in @($saved.backend, $saved.frontend)) {
-        if ($processId -and (Get-Process -Id $processId -ErrorAction SilentlyContinue)) {
-            try { Stop-Process -Id $processId -ErrorAction Stop }
-            catch { Write-Warning "Could not stop saved process $processId; checking active app ports instead." }
+if (-not $LauncherRoot) { $LauncherRoot = Split-Path -Parent $PSScriptRoot }
+. (Join-Path $LauncherRoot 'Read-NeuroConfig.ps1')
+$settings = Get-NeuroConfig $ConfigFile
+$projectRoot = $settings.paths.dashboard
+$checkoutRoot = $LauncherRoot
+$rootPrefix = $checkoutRoot.TrimEnd('\') + '\'
+$vitePath = (Join-Path $projectRoot 'node_modules\vite\bin\vite.js').Replace('\', '/')
+$bridgePath = (Join-Path $projectRoot 'backend\local_launch.py').Replace('\', '/')
+$processes = @(Get-CimInstance Win32_Process)
+$owned = New-Object 'System.Collections.Generic.HashSet[int]'
+foreach ($process in $processes) {
+    $exe = [string]$process.ExecutablePath
+    $command = ([string]$process.CommandLine).Replace('\', '/')
+    if (($exe -and $exe.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) -or
+        ($process.Name -eq 'node.exe' -and $command.IndexOf($vitePath, [StringComparison]::OrdinalIgnoreCase) -ge 0) -or
+        ($process.Name -match '^python(w)?\.exe$' -and $command.IndexOf($bridgePath, [StringComparison]::OrdinalIgnoreCase) -ge 0)) {
+        [void]$owned.Add([int]$process.ProcessId)
+    }
+}
+do {
+    $changed = $false
+    foreach ($process in $processes) {
+        if ($owned.Contains([int]$process.ParentProcessId) -and $owned.Add([int]$process.ProcessId)) {
+            $changed = $true
         }
     }
+} while ($changed)
+foreach ($processId in $owned) {
+    Stop-Process -Id $processId -ErrorAction SilentlyContinue
 }
-
-# Python and Node can replace their original launcher process. Clean up only
-# listeners on this application's two fixed localhost ports and only when their
-# process names match the expected runtimes.
-foreach ($port in @(8765, 3000)) {
-    $listener = netstat -ano -p tcp | Select-String ":$port\s+.*LISTENING" | Select-Object -First 1
-    if (-not $listener) { continue }
-    $listenerPid = [int](($listener.ToString().Trim() -split '\s+')[-1])
-    $listenerProcess = Get-Process -Id $listenerPid -ErrorAction SilentlyContinue
-    if ($listenerProcess -and $listenerProcess.ProcessName -in @('python', 'node')) {
-        try { Stop-Process -Id $listenerPid -ErrorAction Stop }
-        catch { Write-Warning "Could not stop $($listenerProcess.ProcessName) listener $listenerPid on port $port." }
-    }
-}
-Write-Host 'Glove Telemetry has stopped.'
+Write-Host 'Stopped only runtime processes belonging to this team checkout.'

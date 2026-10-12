@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "paths": {
+    "dashboard": "glove-dashboard",
+    "venv": "glove-dashboard/backend/.venv",
+    "sdk": "glove-dashboard/backend/vendor/reality_sdk",
+    "hand_models": "glove-dashboard/hand_models",
+    "hand_textures": "glove-dashboard/hand_textures",
+    "web_bundle": "glove-dashboard/desktop_bundle/web",
+    "license_file": "glove-dashboard/backend/license_keys.json",
+    "data": "glove-dashboard/backend/data",
+    "logs": "glove-dashboard/.logs",
+    "game_library": "glove-dashboard/public/games/lib",
+    "xr_game": "XR Game 0.4.2-BETA/XR Game 0.4.2-BETA/XR Game.exe"
+  },
+  "runtime": {
+    "python_executable": "",
+    "node_executable": "",
+    "npm_executable": "",
+    "watch_polling": true,
+    "watch_interval_ms": 500,
+    "page_timeout_seconds": 60
+  },
+  "network": {
+    "host": "127.0.0.1",
+    "frontend_port": 3000,
+    "backend_port": 8765,
+    "osc_receive_host": "127.0.0.1",
+    "osc_receive_port": 9002,
+    "osc_send_host": "127.0.0.1",
+    "osc_send_port": 9003
+  },
+  "browser": {
+    "executable": "",
+    "app_mode": true,
+    "width": 1440,
+    "height": 900
+  }
+}

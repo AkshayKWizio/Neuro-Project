@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "session_id": "dd5fcb748fc1226c44e60224",
+  "doctor_id": "DOC-DEMO-0001",
+  "patient_id": "PAT-0001",
+  "exercise": "hand_open_close",
+  "hand": "left",
+  "started_at": "2026-10-12T09:55:48.287475Z",
+  "ended_at": "2026-10-12T09:56:31.074205Z",
+  "duration_seconds": 41.0,
+  "outcome": "completed",
+  "score": 200,
+  "glove_serial": "A3LC60039",
+  "calibration": {
+    "header": {
+      "time": 0,
+      "profile_id": 0,
+      "handedness": 1,
+      "serial": "A3LC60039",
+      "glove_type": "Reality Glove"
+    },
+    "label": "Basic",
+    "status": 4,
+    "progress": 100.0
+  },
+  "counts": {
+    "pronation": 0,
+    "supination": 0,
+    "clockwise": 0,
+    "anticlockwise": 0,
+    "wrist_open": 7,
+    "wrist_close": 7
+  },
+  "total_repetitions": 14,
+  "events": [
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791798989544,
+      "event_id": 14
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791798987837,
+      "event_id": 13
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791798981708,
+      "event_id": 12
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791798980353,
+      "event_id": 11
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791798975085,
+      "event_id": 10
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791798973566,
+      "event_id": 9
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791798970295,
+      "event_id": 8
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791798968628,
+      "event_id": 7
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791798966144,
+      "event_id": 6
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791798964726,
+      "event_id": 5
+    },
+    {
+      "movement": "wrist_open",
+      "timestamp_ms": 1791798961668,
+      "event_id": 4
+    },
+    {
+      "movement": "wrist_close",
+      "timestamp_ms": 1791798960296,
+      "event_id": 3
+    }
+  ],
+  "final_metrics": {
+    "pronation_supination": {
+      "state": "idle",
+      "angular_velocity": 0.0,
+      "projected_rotation": 0.0,
+      "direction_consistency": 0.0,
+      "palm_dot_change": 0.0
+    },
+    "circumduction": {
+      "state": "idle",
+      "score": 0.0,
+      "loop_strength": 0.0,
+      "average_velocity": 0.0,
+      "signed_area": 0.0
+    },
+    "hand_open_close": {
+      "state": "open",
+      "raw_flexion": 0.0,
+      "smoothed_flexion": 0.0,
+      "mcp_sum": 0.0,
+      "mcp_count": 4,
+      "mcp_values": {
+        "index_mcp": -0.0,
+        "middle_mcp": -0.0,
+        "ring_mcp": -0.0,
+        "pinky_mcp": -0.0
+      },
+      "confidence": 0.0,
+      "open_threshold": 0.25,
+      "close_threshold": 0.4,
+      "minimum_travel": 0.3,
+      "reference": 0.0,
+      "travel": 0.0,
+      "velocity": -0.009,
+      "direction_consistency": 0.0,
+      "motion": "idle",
+      "window_seconds": 1.0,
+      "channels": "MCP quaternion X, four fingers (thumb excluded)"
+    }
+  }
+}

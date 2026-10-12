@@ -3,6 +3,8 @@
 **New teammate / new computer:** start with [Team local setup and path guide](doc/TEAM_LOCAL_SETUP.md).
 It includes the exact config to edit, first-run steps, troubleshooting and instructions for Codex.
 
+**Gameplay hand rig integration:** [Live fingers + 3D IMU wrist rotation](doc/GAMEPLAY_LIVE_HAND_RIG.md).
+
 For the current Windows source app, edit only `neuro.local.json`, then double-click
 `Run-Neuro.cmd`. See [local configuration](doc/LOCAL_CONFIG.md) and
 [latest recovery notes](doc/UPDATED_CODE_RECOVERY.md). The local config is Git-ignored;

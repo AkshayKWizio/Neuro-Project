@@ -212,12 +212,18 @@ export function ExerciseSession({ mode, side, latest, events, detectorCounts, li
   tracker: ReactNode;
   details: ReactNode;
   onFinish: (summary?: SessionSummary) => void;
-  onTare: () => void;
+  onTare: () => void | Promise<boolean | void>;
   tarePending: boolean;
   tareDisabled: boolean;
   tareStatus: string;
   hand?: any;
 }) {
+  const [rigTareRevision,setRigTareRevision]=useState(0);
+  const [wristRoll,setWristRoll]=useState<number | null>(null);
+  const tareGameplayWrist=async()=>{
+    const sent=await onTare();
+    if(sent!==false) setRigTareRevision(value=>value+1);
+  };
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [gameReady, setGameReady] = useState(false);
   const [gameLoadFailed, setGameLoadFailed] = useState(false);
@@ -398,7 +404,7 @@ export function ExerciseSession({ mode, side, latest, events, detectorCounts, li
           <Hand />
           {showHandHud ? '3D Hand Active' : '3D Biometric Hand'}
         </Button>
-        <Button type="button" variant="outline" className="cinema-tare-btn" disabled={tareDisabled || tarePending} onClick={onTare}>
+        <Button type="button" variant="outline" className="cinema-tare-btn" disabled={tareDisabled || tarePending} onClick={tareGameplayWrist}>
           <Rotate3D />{tarePending ? 'Taring…' : 'Tare wrist'}
         </Button>
         <Button type="button" variant="outline" className={`cinema-clinic-btn ${showClinicDrawer ? 'active' : ''}`} onClick={() => setShowClinicDrawer((v) => !v)}>
@@ -602,6 +608,9 @@ export function ExerciseSession({ mode, side, latest, events, detectorCounts, li
                   <LiveHandRig
                     side={side}
                     joints={handHudMode === 'live' ? hand?.kinematic?.joints : undefined}
+                    orientation={live ? hand?.orientation?.orientation : undefined}
+                    tareRevision={rigTareRevision}
+                    onWristRoll={setWristRoll}
                     guidanceMode={handHudMode === 'guide' ? mode : undefined}
                   />
                 </div>
@@ -609,9 +618,7 @@ export function ExerciseSession({ mode, side, latest, events, detectorCounts, li
                   <div className="hud-metric">
                     <span>ROLL</span>
                     <strong>
-                      {typeof hand?.orientation?.orientation?.x === 'number'
-                        ? (hand.orientation.orientation.x * 100).toFixed(1) + '°'
-                        : '0.0°'}
+                      {handHudMode === 'live' && live && wristRoll !== null ? wristRoll.toFixed(1)+'°' : '—'}
                     </strong>
                   </div>
                   <div className="hud-metric">
@@ -628,7 +635,7 @@ export function ExerciseSession({ mode, side, latest, events, detectorCounts, li
                     variant="outline"
                     className="hud-tare-btn"
                     disabled={tareDisabled || tarePending}
-                    onClick={onTare}
+                    onClick={tareGameplayWrist}
                     title="Tare wrist neutral angle"
                     style={{
                       marginLeft: 'auto',

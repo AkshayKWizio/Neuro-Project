@@ -382,3 +382,65 @@ Retain the new asset module, the Balloon Archery import/integration, and
 geometry, exact arrow-nock/string attachment through the draw, settling effects,
 reduced motion, single-impact collision/no-penalty scoring, exercise bindings
 and the existing plane schedule.
+
+## Gameplay live rig: simultaneous finger joints and IMU wrist rotation
+
+For the full integration procedure and Codex handoff, see
+[GAMEPLAY_LIVE_HAND_RIG.md](GAMEPLAY_LIVE_HAND_RIG.md).
+
+Implemented in the updated team checkout only. The existing StretchSense FBX
+is retained: `WaveBone_1` is the wrist root and parents the palm and finger chains.
+The gameplay panel now passes the selected hand's `orientation.orientation`
+packet as well as its `kinematic.joints` to `LiveHandRig`.
+
+Retain `glove-dashboard/lib/wrist-imu.ts`, the changes in
+`components/live-hand-rig.tsx`, `components/exercise-session.tsx`, the command-result
+return in `app/page.tsx`, and `tests/wrist-imu.test.mjs` after a pull.
+
+### Rotation pipeline and invariants
+
+Finger positions and quaternions remain the existing absolute local SDK
+transforms. IMU orientation is a **separate packet with a different frame**:
+Unity's `OnOrientation` maps OSC to `(-y,-z,x,w)`; converting that Unity frame
+back to source FBX gives `(-y,z,-x,w)` (or its sign-equivalent quaternion).
+Do not apply this conversion to the finger-joint quaternions.
+
+The first valid IMU packet establishes the gameplay display's neutral reference.
+Wrist rotation uses `inverse(neutral) * incoming`, normalised, and is applied
+to `WaveBone_1` after articulation, replacing its rotation rather than multiplying
+IMU rotation onto an already-updated wrist transform. Other finger rotations and
+all joint positions are untouched. The wrist pivot remains at the SDK bone.
+No wrist detwisting is applied: it would hide pronation/supination. No continuous
+rubberbanding is added: a held pose should remain visible rather than decay.
+Invalid/zero/non-finite IMU quaternions are rejected; sign-equivalent `q/-q`
+produce the same visible pose. This is rendering only, not an exercise filter.
+
+Both gameplay tare buttons call the original vendor command. The command helper
+now reports success/failure; only accepted commands request a display rebase.
+The display holds neutral for 350ms and captures the latest available orientation
+afterward, allowing the upstream tare to settle. HTTP acceptance does not prove
+hardware completion: verify this delay with actual XR Game/gloves, especially
+on slow systems. Keep the wrist straight during tare. Disconnect/hand changes
+reset the display reference; switching Live/Guide does not silently reset it.
+
+Guidance/calibration animation paths do not use the live IMU. Their model,
+animation data and existing behaviour are unchanged. Other pages that do not
+pass the optional IMU prop retain their previous joint-only renderer.
+
+### Framing and display values
+
+Gameplay camera bounds use animated bone world positions, including fingertips,
+instead of cached bind-pose mesh bounds. The camera pans/expands to keep the
+turning hand inside the existing overlay; overlay location and colours are not
+changed. Gameplay ROLL now comes from the neutral-relative quaternion's FBX
+forearm-axis Euler angle in degrees, not `quaternion.x * 100`. It is a display
+angle with Euler limitations, not a clinical score or detector input.
+
+Twenty automated checks and local TypeScript validation pass. New tests verify
+the SDK frame mapping, non-identity neutral references, held poses, tare,
+sign-equivalent quaternions and both actual SDK FBX models: rotating the wrist
+changes fingertip world positions while preserving finger bend quaternions.
+Hardware testing must still confirm axes/signs, the neutral starting pose,
+combined finger/wrist movements and tare latency with LH and RH gloves.
+The Python bridge, XR Game launch logic, exercise EMA/thresholds, mappings and
+game-control delivery are unchanged.

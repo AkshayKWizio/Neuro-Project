@@ -1153,7 +1153,8 @@ export default function Home() {
       const response = await fetch(`${API}/api/command`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, hand: side.toLowerCase() }) });
       if (!response.ok) throw new Error();
       setCommandStatus(kind === 'calibration' ? 'Calibration requested — follow the XR pose sequence' : 'Wrist tare sent at the current neutral pose');
-    } catch { setCommandStatus('Command could not be sent'); }
+      return true;
+    } catch { setCommandStatus('Command could not be sent'); return false; }
     finally { setPendingCommand(null); window.setTimeout(() => setCommandStatus(''), 4500); }
   };
 

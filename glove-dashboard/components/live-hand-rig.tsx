@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { Hand } from 'lucide-react';
+import {WristImuPose, type ImuQuaternion, wristRollDegrees} from '@/lib/wrist-imu';
 
 type Vector3 = { x: number; y: number; z: number };
 type Quaternion = Vector3 & { w: number };
@@ -41,13 +42,27 @@ function findBone(jointName: string, bones: THREE.Bone[]) {
   return bones.find((bone) => normalizeName(bone.name) === target);
 }
 
-export function LiveHandRig({ side, joints, guidanceMode }: { side: 'LEFT' | 'RIGHT'; joints?: Joint[]; guidanceMode?: GuidanceMode }) {
+export function LiveHandRig({ side, joints, guidanceMode, orientation, tareRevision = 0, onWristRoll }: { side: 'LEFT' | 'RIGHT'; joints?: Joint[]; guidanceMode?: GuidanceMode; orientation?: ImuQuaternion | null; tareRevision?: number; onWristRoll?: (degrees:number | null)=>void }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const jointRef = useRef(joints);
+  const orientationRef=useRef(orientation);
+  const wristPoseRef=useRef(new WristImuPose());
+  const rollCallbackRef=useRef(onWristRoll);
+  const tareRevisionRef=useRef(tareRevision);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [mappedBones, setMappedBones] = useState(0);
 
   useEffect(() => { jointRef.current = joints; }, [joints]);
+  useEffect(()=>{
+    orientationRef.current=orientation;
+    if(!orientation) wristPoseRef.current.reset();
+  },[orientation]);
+  useEffect(()=>{rollCallbackRef.current=onWristRoll;},[onWristRoll]);
+  useEffect(()=>{wristPoseRef.current.reset();},[side]);
+  useEffect(()=>{
+    if(tareRevisionRef.current!==tareRevision) wristPoseRef.current.requestTare(performance.now());
+    tareRevisionRef.current=tareRevision;
+  },[tareRevision]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -79,6 +94,9 @@ export function LiveHandRig({ side, joints, guidanceMode }: { side: 'LEFT' | 'RI
     let displayRoot: THREE.Group | null = null;
     let gloveTexture: THREE.Texture | null = null;
     let calibrationFrames: CalibrationFrame[] = [];
+    let lastRollUpdate=0;
+    const liveBounds=new THREE.Box3();
+    const boneWorld=new THREE.Vector3();
     const rigBones = new Map<string, RigBone>();
     const calibrationBones = new Map<number, THREE.Bone>();
 
@@ -276,6 +294,36 @@ export function LiveHandRig({ side, joints, guidanceMode }: { side: 'LEFT' | 'RI
             joint.position.z * 100,
           );
           rigBone.bone.quaternion.copy(rigBone.target);
+        }
+        if(!guidanceMode && orientationRef.current) {
+          const wrist=rigBones.get('hand'); // WaveBone_1: parent of palm and all fingers
+          const delta=wristPoseRef.current.update(orientationRef.current,now);
+          if(wrist && delta) {
+            // Unity's IMU stage overrides wrist rotation AFTER articulation.
+            // Finger transforms and positions remain the exact SDK data.
+            wrist.bone.quaternion.copy(delta).multiply(wrist.rest);
+          }
+          if(now-lastRollUpdate>100) {
+            rollCallbackRef.current?.(delta ? wristRollDegrees(delta) : null);
+            lastRollUpdate=now;
+          }
+          // Use animated bone extents, not cached skinned-mesh bind-pose bounds.
+          // Keep a fully rotated hand in this small gameplay viewport.
+          displayRoot?.updateMatrixWorld(true);
+          liveBounds.makeEmpty();
+          for(const {bone} of rigBones.values()) liveBounds.expandByPoint(bone.getWorldPosition(boneWorld));
+          if(!liveBounds.isEmpty()) {
+            const size=liveBounds.getSize(new THREE.Vector3());
+            const center=liveBounds.getCenter(new THREE.Vector3());
+            const aspect=Math.max(1,mount.clientWidth)/Math.max(1,mount.clientHeight);
+            const height=Math.max(4.15,size.y+0.65,(size.x+0.65)/aspect);
+            camera.left=-height*aspect/2;camera.right=height*aspect/2;
+            camera.top=height/2;camera.bottom=-height/2;
+            camera.position.x=center.x;camera.position.y=center.y;
+            camera.updateProjectionMatrix();
+          }
+        } else if(!guidanceMode && now-lastRollUpdate>100) {
+          rollCallbackRef.current?.(null);lastRollUpdate=now;
         }
       }
       renderer.render(scene, camera);

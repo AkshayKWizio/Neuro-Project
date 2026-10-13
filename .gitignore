@@ -210,3 +210,4 @@ $RECYCLE.BIN/
 !glove-dashboard/lib/**
 !glove-dashboard/public/games/lib/
 !glove-dashboard/public/games/lib/**
+serve_games.py

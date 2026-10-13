@@ -214,6 +214,10 @@
       </div>
       <span class="gauge-deg" id="gauge-deg">0°</span>
     </div>
+    <div class="level-pill" id="sound-pill" style="cursor:pointer;pointer-events:auto;" title="Click to toggle BGM & Audio">
+      <span>🎵 BGM & AUDIO:</span>
+      <span class="lvl-num" id="val-sound" style="background:#0284C7;">ON</span>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -263,62 +267,132 @@
     // PROCEDURAL AUDIO ENGINE & HUD
     // ═══════════════════════════════════════════
     const gameAudio = setupGameAudio({
-      theme: 'flight',
+      theme: 'casual',
       title: 'Sky Glider',
       accentColor: '#0284C7',
       hudContainer: '.hud'
     });
     window.gameAudio = gameAudio;
 
-    class AudioSynth {
-      constructor() { this.ctx = null; }
-      init() {
-        if (gameAudio.ctx) {
-          this.ctx = gameAudio.ctx;
-        } else {
-          gameAudio.initAudioContext();
-          this.ctx = gameAudio.ctx;
+    class SkyAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.initialized = false;
+
+        // Downloaded Audio Assets (wrapped safely so unsupported audio environments do not halt execution)
+        try {
+          this.bgm = typeof Audio !== 'undefined' ? new Audio('./audio/bgm.ogg') : null;
+          if (this.bgm) { this.bgm.loop = true; this.bgm.volume = 0.28; }
+
+          this.ringAudio = typeof Audio !== 'undefined' ? new Audio('./audio/ring.ogg') : null;
+          if (this.ringAudio) { this.ringAudio.volume = 0.50; }
+
+          this.hitAudio = typeof Audio !== 'undefined' ? new Audio('./audio/hit.ogg') : null;
+          if (this.hitAudio) { this.hitAudio.volume = 0.45; }
+
+          this.fanfareAudio = typeof Audio !== 'undefined' ? new Audio('./audio/fanfare.ogg') : null;
+          if (this.fanfareAudio) { this.fanfareAudio.volume = 0.45; }
+        } catch {
+          this.bgm = null;
+          this.ringAudio = null;
+          this.hitAudio = null;
+          this.fanfareAudio = null;
         }
       }
-      getDest() {
-        return gameAudio.sfxGain || (this.ctx ? this.ctx.destination : null);
+      init() {
+        if (!this.ctx) {
+          gameAudio.initAudioContext();
+          this.ctx = gameAudio.ctx;
+        } else if (this.ctx.state === 'suspended') {
+          void this.ctx.resume().catch(() => {});
+        }
+        if (!this.initialized && !this.muted) {
+          this.initialized = true;
+          if (this.bgm) this.bgm.play().catch(() => {});
+        }
       }
-      play(freq, type, dur, vol = 0.25) {
-        this.init(); if (!this.ctx) return;
-        const dest = this.getDest(); if (!dest) return;
-        const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.type = type; o.frequency.setValueAtTime(freq, t);
-        o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.4, 20), t + dur);
-        g.gain.setValueAtTime(vol, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        o.connect(g); g.connect(dest);
-        o.start(t); o.stop(t + dur + 0.01);
+      toggleMute() {
+        this.init();
+        this.muted = !this.muted;
+        if (this.muted) {
+          if (this.bgm) this.bgm.pause();
+        } else {
+          if (this.bgm) this.bgm.play().catch(() => {});
+        }
+        return !this.muted;
       }
       ringHit() {
-        this.init(); if (!this.ctx) return;
-        const dest = this.getDest(); if (!dest) return;
-        const now = this.ctx.currentTime;
-        [659.25, 987.77, 1318.5].forEach((freq, idx) => {
-          const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-          o.type = 'triangle';
-          o.frequency.setValueAtTime(freq, now + idx * 0.03);
-          g.gain.setValueAtTime(0.2, now + idx * 0.03);
-          g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.03 + 0.3);
-          o.connect(g); g.connect(dest);
-          o.start(now + idx * 0.03); o.stop(now + idx * 0.03 + 0.35);
-        });
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.ringAudio) {
+            const snd = this.ringAudio.cloneNode();
+            snd.volume = 0.42;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
+        this.playTone(880, 'triangle', 0.25, 0.2);
       }
+      hit() {
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.hitAudio) {
+            const snd = this.hitAudio.cloneNode();
+            snd.volume = 0.48;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
+        this.playTone(120, 'sawtooth', 0.2, 0.25);
+      }
+      miss() { this.hit(); }
       fanfare() {
-        this.init(); if (!this.ctx) return;
-        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((freq, i) => {
-          setTimeout(() => this.play(freq, 'sine', 0.4, 0.25), i * 70);
-        });
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.fanfareAudio) {
+            const snd = this.fanfareAudio.cloneNode();
+            snd.volume = 0.45;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.4, 0.25), i * 70));
       }
-      miss() { this.play(160, 'sawtooth', 0.2, 0.12); }
+      whoosh() {
+        this.init();
+        if (this.muted) return;
+        this.playTone(280, 'sine', 0.16, 0.08);
+      }
+      play(freq, type, dur, vol = 0.25) {
+        this.playTone(freq, type, dur, vol);
+      }
+      playTone(freq, type, dur, vol = 0.2) {
+        if (!this.ctx || this.muted) return;
+        try {
+          const dest = gameAudio.sfxGain || this.ctx.destination;
+          const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+          o.type = type; o.frequency.setValueAtTime(freq, t);
+          o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.4, 20), t + dur);
+          g.gain.setValueAtTime(vol, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          o.connect(g); g.connect(dest);
+          o.start(t); o.stop(t + dur + 0.01);
+        } catch {}
+      }
+      updateEngineRPM(tiltDeg) {
+        if (!this.engine || this.muted) return;
+        const speedBoost = Math.min(0.35, Math.abs(tiltDeg) * 0.012);
+        this.engine.playbackRate = 0.95 + speedBoost;
+      }
     }
-    const sfx = new AudioSynth();
-    window.addEventListener('click', () => sfx.init(), { once: true });
-    window.addEventListener('keydown', () => sfx.init(), { once: true });
+    const sfx = new SkyAudioEngine();
+    window.addEventListener('click', () => sfx.init());
+    window.addEventListener('pointerdown', () => sfx.init());
+    window.addEventListener('keydown', () => sfx.init());
 
     // ═══════════════════════════════════════════
     // LEVEL PROGRESSION PROFILE
@@ -1061,11 +1135,23 @@
       showToast(`Switched to ${activeHand} Hand mode`);
     });
 
+    // Toggle BGM & Audio when clicking sound pill
+    document.getElementById('sound-pill')?.addEventListener('click', () => {
+      const active = sfx.toggleMute();
+      const badge = document.getElementById('val-sound');
+      if (badge) {
+        badge.textContent = active ? 'ON' : 'MUTED';
+        badge.style.background = active ? '#0284C7' : '#64748B';
+      }
+      showToast(active ? '🎵 BGM & Audio ON' : '🔇 Audio Muted');
+    });
+
     function moveToPose(movement) {
       if (!flight.move(movement)) return false;
       targetX = flight.lane * LANE_RIGHT_X;
       currentTiltDeg = (targetX - planeGroup.position.x) * -5;
       updateFlightHUD();
+      if (typeof sfx !== 'undefined') sfx.whoosh();
       return true;
     }
     bindGloveControls('sky_glider', {
@@ -1095,17 +1181,25 @@
     // ANIMATION & GAME LOOP
     // ═══════════════════════════════════════════
     let lastTime = performance.now();
+    const flightSpeed = 16;
 
     function animate(now) {
       requestAnimationFrame(animate);
       const delta = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      // High-RPM Propeller spin
-      propGroup.rotation.z += 0.85;
+      try {
+        // High-RPM Propeller spin
+        propGroup.rotation.z += 0.85;
 
-      // Flight speed (used by rings, obstacles, and scenery streaming)
-      const flightSpeed = 16;
+        // Update engine audio pitch with banking roll
+        sfx.updateEngineRPM(currentTiltDeg);
+        if (gameAudio?.updateFlight) {
+          gameAudio.updateFlight(planeGroup.rotation.z, flightSpeed);
+        }
+      } catch (err) {
+        console.warn('Audio/prop update error:', err);
+      }
 
       // Stream Mountain Ridges forward in Z (endless canyon rush)
       for (let i = 0; i < sceneryMountains.length; i++) {

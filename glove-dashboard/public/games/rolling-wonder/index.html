@@ -187,10 +187,39 @@
     .action-badge-text.step-left { color: #0284C7; }
     .action-badge-text.step-complete { color: #7C3AED; }
 
+    /* ─── Target Direction Lane Badge ─── */
+    .next-lane-badge {
+      position: absolute;
+      top: 76px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 9px 24px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 2px solid #10B981;
+      border-radius: 9999px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #047857;
+      box-shadow: 0 10px 28px rgba(16, 185, 129, 0.22);
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .next-lane-badge.left-target {
+      border-color: #0284C7;
+      color: #0369A1;
+      box-shadow: 0 10px 28px rgba(2, 132, 199, 0.22);
+    }
+
     /* ─── Toast Banner ─── */
     .toast {
       position: absolute;
-      top: 88px;
+      top: 126px;
       left: 50%;
       transform: translateX(-50%) translateY(-25px) scale(0.9);
       background: linear-gradient(135deg, #FAF5FF, #FFFFFF);
@@ -419,6 +448,12 @@
       </div>
     </div>
 
+    <!-- Sound Toggle Pill -->
+    <div class="level-pill" id="sound-pill" style="cursor:pointer;pointer-events:auto;background:rgba(255,255,255,0.92);color:#7C3AED;border:1.5px solid rgba(124,58,237,0.3);padding:8px 18px;box-shadow:0 6px 20px rgba(124,58,237,0.15);display:flex;align-items:center;gap:8px;" title="Click to toggle BGM & Sound">
+      <span style="font-size:12px;font-weight:700;">🎵 BGM & SOUND:</span>
+      <span class="lvl-num" id="val-sound" style="font-size:12px;background:#7C3AED;color:white;padding:2px 8px;border-radius:12px;">ON</span>
+    </div>
+
     <!-- Right Action Status (Clinical Circumduction State) -->
     <div class="action-pill-container" id="circ-pill">
       <div class="action-wheel-icon" id="circ-wheel-icon">
@@ -433,6 +468,12 @@
         <span class="action-badge-text" id="hud-action-text">WAITING RIGHT ➔</span>
       </div>
     </div>
+  </div>
+
+  <!-- Target Lane Guide (Zigzag Clinical Objective) -->
+  <div class="next-lane-badge" id="hud-target-lane">
+    <span id="target-lane-dot" style="width:10px;height:10px;border-radius:50%;background:#10B981;display:inline-block;box-shadow:0 0 10px #10B981;"></span>
+    <span id="target-lane-text">TARGET · RIGHT LANE ➔ (Turn Right)</span>
   </div>
 
   <!-- Toast -->
@@ -493,7 +534,7 @@
     // ADAPTIVE RUNNER ARCADE SOUNDSCAPE & ADJUSTABLE VOLUME HUD
     // ════════════════════════════════════════════════════════════════
     const gameAudio = setupGameAudio({
-      theme: 'arcade',
+      theme: 'casual',
       title: 'Rolling Wonder',
       accentColor: '#7C3AED',
       hudContainer: '.hud'
@@ -501,139 +542,191 @@
     window.gameAudio = gameAudio;
 
     // ════════════════════════════════════════════════════════════════
-    // 1. WEBAUDIO SYNTHESIZER ENGINE (Rich Procedural Happy Sounds)
+    // 1. WEBAUDIO & HIGH-FIDELITY SOUND ENGINE
+    // Pure Soundscape: Melodic BGM + Crisp Collectible Chimes (No continuous roll noise)
     // ════════════════════════════════════════════════════════════════
     class AudioEngine {
       constructor() {
         this.ctx = null;
+        this.muted = false;
+        this.initialized = false;
+
+        try {
+          this.bgm = typeof Audio !== 'undefined' ? new Audio('./audio/bgm.ogg') : null;
+          if (this.bgm) { this.bgm.loop = true; this.bgm.volume = 0.28; }
+
+          this.starAudio = typeof Audio !== 'undefined' ? new Audio('./audio/star.wav') : null;
+          if (this.starAudio) { this.starAudio.volume = 0.35; }
+
+          this.bounceAudio = typeof Audio !== 'undefined' ? new Audio('./audio/bounce.ogg') : null;
+          if (this.bounceAudio) { this.bounceAudio.volume = 0.40; }
+
+          this.fanfareAudio = typeof Audio !== 'undefined' ? new Audio('./audio/fanfare.wav') : null;
+          if (this.fanfareAudio) { this.fanfareAudio.volume = 0.38; }
+        } catch {
+          this.bgm = null;
+          this.starAudio = null;
+          this.bounceAudio = null;
+          this.fanfareAudio = null;
+        }
       }
       init() {
-        if (gameAudio.ctx) {
-          this.ctx = gameAudio.ctx;
-        } else {
+        if (!this.ctx) {
           gameAudio.initAudioContext();
           this.ctx = gameAudio.ctx;
+        } else if (this.ctx.state === 'suspended') {
+          void this.ctx.resume().catch(() => {});
         }
+        if (!this.initialized && !this.muted) {
+          this.initialized = true;
+          if (this.bgm) this.bgm.play().catch(() => {});
+        }
+      }
+      toggleMute() {
+        this.init();
+        this.muted = !this.muted;
+        if (this.muted) {
+          if (this.bgm) this.bgm.pause();
+        } else {
+          if (this.bgm) this.bgm.play().catch(() => {});
+        }
+        return !this.muted;
+      }
+      updateRollSpeed(speed) {
+        // Continuous rolling sound disabled per user preference: only BGM and collectible audio are played
       }
       getDest() {
         return gameAudio.sfxGain || (this.ctx ? this.ctx.destination : null);
       }
       playStarChime() {
         this.init();
+        if (this.muted) return;
+        try {
+          if (this.starAudio) {
+            const snd = this.starAudio.cloneNode();
+            snd.volume = 0.35;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
         if (!this.ctx) return;
         const dest = this.getDest(); if (!dest) return;
-        const now = this.ctx.currentTime;
-        const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-          gain.gain.setValueAtTime(0.25, now + idx * 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.22);
-          osc.connect(gain);
-          gain.connect(dest);
-          osc.start(now + idx * 0.04);
-          osc.stop(now + idx * 0.04 + 0.24);
-        });
+        try {
+          const now = this.ctx.currentTime;
+          // Crystal celesta 2-note chime (B5 -> E6): gentle, sweet, delightful
+          const osc1 = this.ctx.createOscillator(), gain1 = this.ctx.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(987.77, now);
+          gain1.gain.setValueAtTime(0.22, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc1.connect(gain1); gain1.connect(dest);
+          osc1.start(now); osc1.stop(now + 0.14);
+
+          const osc2 = this.ctx.createOscillator(), gain2 = this.ctx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(1318.51, now + 0.07);
+          gain2.gain.setValueAtTime(0.25, now + 0.07);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.40);
+          osc2.connect(gain2); gain2.connect(dest);
+          osc2.start(now + 0.07); osc2.stop(now + 0.42);
+        } catch {}
       }
       playGemChime() {
-        this.init();
-        if (!this.ctx) return;
-        const dest = this.getDest(); if (!dest) return;
-        const now = this.ctx.currentTime;
-        const notes = [659.25, 830.61, 987.77, 1318.5]; // E5, G#5, B5, E6
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.035);
-          gain.gain.setValueAtTime(0.3, now + idx * 0.035);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.035 + 0.3);
-          osc.connect(gain);
-          gain.connect(dest);
-          osc.start(now + idx * 0.035);
-          osc.stop(now + idx * 0.035 + 0.32);
-        });
+        this.playStarChime();
       }
       playJumpBoing() {
-        this.init();
-        if (!this.ctx) return;
-        const dest = this.getDest(); if (!dest) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.exponentialRampToValueAtTime(640, now + 0.16);
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-        osc.connect(gain);
-        gain.connect(dest);
-        osc.start(now);
-        osc.stop(now + 0.26);
+        this.playBumperBounce();
       }
       playBumperBounce() {
         this.init();
+        if (this.muted) return;
+        try {
+          if (this.bounceAudio) {
+            const snd = this.bounceAudio.cloneNode();
+            snd.volume = 0.50;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
         if (!this.ctx) return;
         const dest = this.getDest(); if (!dest) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(150, now + 0.18);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        osc.connect(gain);
-        gain.connect(dest);
-        osc.start(now);
-        osc.stop(now + 0.22);
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(150, now + 0.18);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          osc.connect(gain); gain.connect(dest);
+          osc.start(now); osc.stop(now + 0.22);
+        } catch {}
       }
       playTurboWhoosh() {
         this.init();
-        if (!this.ctx) return;
+        if (!this.ctx || this.muted) return;
         const dest = this.getDest(); if (!dest) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.linearRampToValueAtTime(520, now + 0.25);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-        osc.connect(gain);
-        gain.connect(dest);
-        osc.start(now);
-        osc.stop(now + 0.4);
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.linearRampToValueAtTime(520, now + 0.25);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+          osc.connect(gain); gain.connect(dest);
+          osc.start(now); osc.stop(now + 0.4);
+        } catch {}
       }
       playFanfare() {
         this.init();
+        if (this.muted) return;
+        try {
+          if (this.fanfareAudio) {
+            const snd = this.fanfareAudio.cloneNode();
+            snd.volume = 0.38;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
         if (!this.ctx) return;
         const dest = this.getDest(); if (!dest) return;
-        const notes = [
-          { f: 523.25, t: 0.00, d: 0.14 },
-          { f: 659.25, t: 0.12, d: 0.14 },
-          { f: 783.99, t: 0.24, d: 0.18 },
-          { f: 1046.5, t: 0.40, d: 0.45 },
-          { f: 1318.5, t: 0.55, d: 0.60 }
-        ];
-        const now = this.ctx.currentTime;
-        notes.forEach(n => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(n.f, now + n.t);
-          gain.gain.setValueAtTime(0.35, now + n.t);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
-          osc.connect(gain);
-          gain.connect(dest);
-          osc.start(now + n.t);
-          osc.stop(now + n.t + n.d + 0.05);
-        });
+        try {
+          // Joyful ascending 4-note chord: G5 -> B5 -> E6 -> G6 (soft sine harmonics)
+          const notes = [
+            { f: 783.99, t: 0.00, d: 0.18 },
+            { f: 987.77, t: 0.08, d: 0.18 },
+            { f: 1318.51, t: 0.16, d: 0.22 },
+            { f: 1567.98, t: 0.24, d: 0.50 }
+          ];
+          const now = this.ctx.currentTime;
+          notes.forEach(n => {
+            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(n.f, now + n.t);
+            gain.gain.setValueAtTime(0.24, now + n.t);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+            osc.connect(gain); gain.connect(dest);
+            osc.start(now + n.t); osc.stop(now + n.t + n.d + 0.02);
+          });
+        } catch {}
       }
     }
     const audio = new AudioEngine();
+    window.addEventListener('click', () => audio.init());
+    window.addEventListener('pointerdown', () => audio.init());
+    window.addEventListener('keydown', () => audio.init());
+
+    // Toggle BGM & Audio when clicking sound pill
+    document.getElementById('sound-pill')?.addEventListener('click', () => {
+      const active = audio.toggleMute();
+      const badge = document.getElementById('val-sound');
+      if (badge) {
+        badge.textContent = active ? 'ON' : 'MUTED';
+        badge.style.background = active ? '#7C3AED' : '#64748B';
+      }
+      showToast(active ? '🎵 BGM & Audio ON' : '🔇 Audio Muted');
+    });
 
     // ════════════════════════════════════════════════════════════════
     // 2. LEVEL DEFINITIONS & GAME STATE
@@ -987,48 +1080,114 @@
       return fl;
     }
 
-    // Star Collectible Mesh
-    function createStarMesh() {
-      const g = new THREE.Group();
-      // Golden faceted icosahedron star
-      const starGeo = new THREE.IcosahedronGeometry(0.42, 0);
-      const starMat = new THREE.MeshStandardMaterial({
-        color: 0xFBBF24,
-        emissive: 0xF59E0B,
-        emissiveIntensity: 0.6,
-        roughness: 0.2,
-        metalness: 0.8
-      });
-      const star = new THREE.Mesh(starGeo, starMat);
-      g.add(star);
-
-      // Sparkle halo ring
-      const haloGeo = new THREE.TorusGeometry(0.55, 0.03, 8, 20);
-      const haloMat = new THREE.MeshBasicMaterial({ color: 0xFEF08A });
-      const halo = new THREE.Mesh(haloGeo, haloMat);
-      halo.rotation.x = Math.PI / 4;
-      g.add(halo);
-
-      g.userData = { isStar: true, collected: false, rotSpeed: 2.5 + Math.random() };
-      return g;
+    // ════════════════════════════════════════════════════════════════
+    // 5B. UNIFIED 3D STAR COLLECTIBLE & TARGET BEACON SYSTEM
+    // ════════════════════════════════════════════════════════════════
+    // 5-Point Golden Extruded Star Geometry
+    function create5PointStarShape(outerRadius = 0.44, innerRadius = 0.20) {
+      const shape = new THREE.Shape();
+      const points = 5;
+      const step = Math.PI / points;
+      for (let i = 0; i < 2 * points; i++) {
+        const r = (i % 2 === 0) ? outerRadius : innerRadius;
+        const a = i * step - Math.PI / 2;
+        const x = r * Math.cos(a);
+        const y = r * Math.sin(a);
+        if (i === 0) shape.moveTo(x, y);
+        else shape.lineTo(x, y);
+      }
+      shape.closePath();
+      return shape;
     }
 
-    // Gem Collectible Mesh
-    function createGemMesh() {
+    const starShape = create5PointStarShape(0.44, 0.20);
+    const starExtrudeSettings = {
+      depth: 0.16,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      steps: 1,
+      bevelSize: 0.04,
+      bevelThickness: 0.04
+    };
+    const starGeo = new THREE.ExtrudeGeometry(starShape, starExtrudeSettings);
+    starGeo.center();
+
+    const starMat = new THREE.MeshStandardMaterial({
+      color: 0xFBBF24,
+      emissive: 0xF59E0B,
+      emissiveIntensity: 0.55,
+      roughness: 0.22,
+      metalness: 0.85
+    });
+
+    const haloGeo = new THREE.TorusGeometry(0.60, 0.035, 8, 24);
+    const haloMat = new THREE.MeshBasicMaterial({ color: 0xFEF08A, transparent: true, opacity: 0.85 });
+
+    const beaconGeo = new THREE.RingGeometry(0.55, 0.76, 32);
+    const beaconMatRight = new THREE.MeshBasicMaterial({
+      color: 0x10B981,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8
+    });
+    const beaconMatLeft = new THREE.MeshBasicMaterial({
+      color: 0x0284C7,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    const innerDotGeo = new THREE.CircleGeometry(0.32, 24);
+    const innerDotMatRight = new THREE.MeshBasicMaterial({
+      color: 0x34D399,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.35
+    });
+    const innerDotMatLeft = new THREE.MeshBasicMaterial({
+      color: 0x38BDF8,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.35
+    });
+
+    // Star Collectible Mesh (Single unified collectible type with on-track landing beacon)
+    function createStarMesh(lane = 'RIGHT') {
       const g = new THREE.Group();
-      const gemGeo = new THREE.OctahedronGeometry(0.45, 0);
-      gemGeo.scale(1.0, 1.4, 1.0);
-      const gemMat = new THREE.MeshPhysicalMaterial({
-        color: 0xEC4899,
-        emissive: 0xDB2777,
-        emissiveIntensity: 0.5,
-        roughness: 0.1,
-        transmission: 0.7,
-        metalness: 0.3
-      });
-      const gem = new THREE.Mesh(gemGeo, gemMat);
-      g.add(gem);
-      g.userData = { isGem: true, collected: false, rotSpeed: 3.2 };
+      const isRight = (lane === 'RIGHT');
+
+      // 3D Extruded Golden Star
+      const star = new THREE.Mesh(starGeo, starMat);
+      star.castShadow = true;
+      g.add(star);
+
+      // Rotating Sparkle Halo
+      const halo = new THREE.Mesh(haloGeo, haloMat);
+      halo.rotation.x = Math.PI / 3;
+      g.add(halo);
+
+      // On-road Landing Beacon Ring (Target ground marker)
+      const beacon = new THREE.Mesh(beaconGeo, isRight ? beaconMatRight : beaconMatLeft);
+      beacon.rotation.x = -Math.PI / 2;
+      beacon.position.y = -0.78; // on the road surface
+      g.add(beacon);
+
+      // Inner glowing target disk
+      const innerDot = new THREE.Mesh(innerDotGeo, isRight ? innerDotMatRight : innerDotMatLeft);
+      innerDot.rotation.x = -Math.PI / 2;
+      innerDot.position.y = -0.77;
+      g.add(innerDot);
+
+      g.userData = {
+        isStar: true,
+        lane: lane,
+        collected: false,
+        rotSpeed: 2.8,
+        starMesh: star,
+        haloMesh: halo,
+        beaconMesh: beacon,
+        innerDotMesh: innerDot
+      };
       return g;
     }
 
@@ -1049,7 +1208,6 @@
       cap.castShadow = true;
       g.add(cap);
 
-      // White polka dots
       for (let i = 0; i < 4; i++) {
         const dotG = new THREE.SphereGeometry(0.1, 8, 8);
         const dotM = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
@@ -1062,29 +1220,42 @@
       return g;
     }
 
-    let trackItemStep = 0;
-    function populateSegmentItems(seg) {
-      const lvl = LEVELS[currentLevelIdx];
-      // Guided 2-Lane Clinical Sequence (Strictly Left & Right):
-      // Step 0: Items on Right Lane (+1.6) -> prompts Turn Right (Clockwise)
-      // Step 1: Items on Left Lane (-1.6)  -> prompts Turn Left (Anticlockwise)
-      // Cycle: Turn Right -> Turn Left = 1 Complete Clinical Repetition
-      const isRight = (trackItemStep % 2 === 0);
-      trackItemStep++;
-
-      if (isRight) {
-        // Right Lane (+1.6) - Clockwise target
-        const item = createStarMesh();
-        item.position.set(1.6, 0.8, 0);
-        seg.add(item);
-        activeCollectibles.push(item);
+    function updateTargetLaneHUD(lane) {
+      const badge = document.getElementById('hud-target-lane');
+      const dot = document.getElementById('target-lane-dot');
+      const text = document.getElementById('target-lane-text');
+      if (!badge || !dot || !text) return;
+      if (lane === 'LEFT') {
+        badge.className = 'next-lane-badge left-target';
+        dot.style.background = '#0284C7';
+        dot.style.boxShadow = '0 0 10px #0284C7';
+        text.innerText = 'TARGET · ⬅ LEFT LANE (Turn Left)';
       } else {
-        // Left Lane (-1.6) - Anticlockwise target
-        const item = createGemMesh();
-        item.position.set(-1.6, 0.8, 0);
-        seg.add(item);
-        activeCollectibles.push(item);
+        badge.className = 'next-lane-badge';
+        dot.style.background = '#10B981';
+        dot.style.boxShadow = '0 0 10px #10B981';
+        text.innerText = 'TARGET · RIGHT LANE ➔ (Turn Right)';
       }
+    }
+
+    function populateSegmentItems(seg) {
+      const segIndex = seg.userData?.segIndex ?? 0;
+      // Strict zigzag spacing:
+      // Collectibles only spawn every 4th segment (every 32 units = ~2.2s reaction time)
+      // segIndex < 4: initial starting track remains clear for launch
+      if (segIndex < 4 || segIndex % 4 !== 0) return;
+
+      // Deterministic strict zigzag:
+      // segIndex % 8 === 4 -> RIGHT lane (+1.7) (Turn Right target)
+      // segIndex % 8 === 0 -> LEFT lane (-1.7)  (Turn Left target)
+      const isRight = (segIndex % 8 === 4);
+      const lane = isRight ? 'RIGHT' : 'LEFT';
+      const posX = isRight ? 1.7 : -1.7;
+
+      const star = createStarMesh(lane);
+      star.position.set(posX, 0.85, 0);
+      seg.add(star);
+      activeCollectibles.push(star);
     }
 
     // Build initial track segments
@@ -1102,7 +1273,7 @@
       roadMesh.position.y = -0.2;
       roadMesh.receiveShadow = true;
       seg.add(roadMesh);
-      seg.userData = { roadMesh };
+      seg.userData = { roadMesh, segIndex: i };
 
       // Rainbow Curbs
       const curbGeo = new THREE.BoxGeometry(0.35, 0.55, SEGMENT_LEN);
@@ -1151,10 +1322,8 @@
         seg.add(arch);
       }
 
-      // Spawn Initial Items on segments (except right at starting player segment)
-      if (i > 1) {
-        populateSegmentItems(seg);
-      }
+      // Spawn Initial Items on segments (spaced zigzag starting from segment 4)
+      populateSegmentItems(seg);
 
       trackGroup.add(seg);
       segments.push(seg);
@@ -1265,12 +1434,9 @@
         if (wheelEl) wheelEl.style.transform = `rotate(${wheelAngle}deg)`;
 
         if (repSequenceStage === 'NEED_RIGHT') {
-          repSequenceStage = 'NEED_LEFT';
-          updateActionBadge('TURN RIGHT ✓', 'Step 2: Turn Left (Anticlockwise)', 'step-right');
-          showToast('STEP 1: TURN RIGHT ✓ (NOW TURN LEFT)');
-          audio.playStarChime();
+          updateActionBadge('TURNING RIGHT ➔', 'Aim for the Golden Star on Right!', 'step-right');
         } else {
-          updateActionBadge('TURN RIGHT', 'Waiting for Turn Left to complete Rep', 'step-right');
+          updateActionBadge('TURNING RIGHT', 'Next target is Left Star', 'step-right');
         }
       } else if (dir === 'LEFT') {
         // Anticlockwise motion = True state: Turn Left
@@ -1279,41 +1445,9 @@
         if (wheelEl) wheelEl.style.transform = `rotate(${wheelAngle}deg)`;
 
         if (repSequenceStage === 'NEED_LEFT') {
-          // 1 FULL CLINICAL REPETITION: TURN RIGHT -> TURN LEFT!
-          reps += 1;
-          score += 200;
-          repSequenceStage = 'NEED_RIGHT';
-          updateHUD();
-          updateActionBadge('REP COMPLETE! ✓', 'Next: Turn Right (Clockwise)', 'step-complete');
-          showToast('CLINICAL REP COMPLETE! (RIGHT ➔ LEFT) +200');
-          audio.playGemChime();
-          spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0x10B981);
-
-          // Broadcast clinical telemetry to dashboard
-          if (window.parent && window.parent !== window) {
-            window.parent.postMessage({
-              type: 'NEURO_REP_EVENT',
-              exercise: 'circumduction',
-              movement: 'wrist_circumduction',
-              reps: reps,
-              score: score,
-              side: typeof activeHand !== 'undefined' ? activeHand : 'RIGHT'
-            }, '*');
-            window.parent.postMessage({
-              type: 'exercise_rep',
-              movement: 'wrist_circumduction_rep',
-              direction_sequence: 'turn_right_turn_left',
-              count: reps
-            }, '*');
-          }
-
-          // Check level progression by reps
-          const lvl = LEVELS[currentLevelIdx];
-          if (reps >= (lvl.targetReps || 8) && !isGameOver) {
-            completeLevel();
-          }
+          updateActionBadge('TURNING LEFT ⬅', 'Aim for the Golden Star on Left!', 'step-left');
         } else {
-          updateActionBadge('TURN LEFT', 'Need: Turn Right first to start Rep', 'step-left');
+          updateActionBadge('TURNING LEFT', 'Next target is Right Star', 'step-left');
         }
       }
     }
@@ -1378,6 +1512,9 @@
       starsInLevel = 0;
       const nextLvl = LEVELS[currentLevelIdx];
       ballSpeed = nextLvl.speed;
+      repSequenceStage = 'NEED_RIGHT';
+      updateTargetLaneHUD('RIGHT');
+      updateActionBadge('STEER RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)', 'step-right');
 
       // Update theme colors seamlessly
       scene.background.set(nextLvl.bgHills);
@@ -1398,6 +1535,8 @@
       ballSpeed = LEVELS[currentLevelIdx].speed;
       isGameOver = false;
       repSequenceStage = 'NEED_RIGHT';
+      updateTargetLaneHUD('RIGHT');
+      updateActionBadge('STEER RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)', 'step-right');
 
       // Update theme colors
       const lvl = LEVELS[currentLevelIdx];
@@ -1412,7 +1551,6 @@
       });
 
       updateHUD();
-      updateActionBadge('WAITING RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)');
       showToast(`WELCOME TO ${lvl.name.toUpperCase()}!`);
     }
 
@@ -1540,6 +1678,7 @@
           if (worldZ > SEGMENT_LEN * 2) {
             // Move segment to the far end
             seg.position.z -= SEGMENT_COUNT * SEGMENT_LEN;
+            seg.userData.segIndex = (seg.userData.segIndex || 0) + SEGMENT_COUNT;
             // Clean old items from this segment
             for (let i = seg.children.length - 1; i >= 0; i--) {
               const child = seg.children[i];
@@ -1565,10 +1704,6 @@
       ballMesh.rotation.x -= ballSpeed * dt * 1.8;
       ballMesh.rotation.z = -currentX * 0.35;
 
-      if (window.gameAudio) {
-        window.gameAudio.updateRolling(ballSpeed);
-      }
-
       // Hamster character animation inside ball
       hamsterGroup.rotation.z = -currentX * 0.25;
       hamsterGroup.position.y = -0.15 + Math.sin(time * 0.015) * 0.03; // cute running bounce
@@ -1587,11 +1722,23 @@
         }
       }
 
-      // Collectibles Rotation & Collision Check
+      // Collectibles Rotation, Beacon Pulse & Clinical Collision Check
       for (let i = activeCollectibles.length - 1; i >= 0; i--) {
         const item = activeCollectibles[i];
         if (!item.userData.collected) {
-          item.rotation.y += (item.userData.rotSpeed || 2.5) * dt;
+          // Dynamic mesh rotations & gentle bobbing
+          if (item.userData.starMesh) {
+            item.userData.starMesh.rotation.y += (item.userData.rotSpeed || 2.8) * dt;
+            item.userData.starMesh.position.y = Math.sin(time * 0.004 + item.position.x) * 0.08;
+          }
+          if (item.userData.haloMesh) {
+            item.userData.haloMesh.rotation.z += 2.0 * dt;
+          }
+          if (item.userData.beaconMesh) {
+            item.userData.beaconMesh.rotation.z += 1.2 * dt;
+            const pulse = 1.0 + Math.sin(time * 0.006) * 0.08;
+            item.userData.beaconMesh.scale.set(pulse, pulse, 1);
+          }
 
           // Compute absolute world position of collectible
           const worldX = item.position.x;
@@ -1601,32 +1748,77 @@
           const distXZ = Math.hypot(worldX - playerGroup.position.x, worldZ - playerGroup.position.z);
           const distY = Math.abs(worldY - playerGroup.position.y);
 
-          // Turbo magnetic attractor or standard radius pickup
-          const pickupRadius = isTurbo ? 2.4 : 1.1;
+          // Comfortable pickup radius for rolling ball
+          const pickupRadius = isTurbo ? 2.4 : 1.35;
 
-          if (distXZ < pickupRadius && distY < 1.4) {
+          if (distXZ < pickupRadius && distY < 1.6) {
             item.userData.collected = true;
             item.visible = false;
 
-            if (item.userData.isGem) {
-              score += 250;
-              audio.playGemChime();
-              spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0xEC4899);
-              showToast('RAINBOW GEM! +250');
-            } else {
-              starsInLevel += 1;
-              totalStars += 1;
+            const isRightStar = (item.userData.lane === 'RIGHT');
+            starsInLevel += 1;
+            totalStars += 1;
+
+            if (isRightStar) {
+              // STEP 1 COMPLETE: Turn Right (Clockwise Target)
               score += 100;
               audio.playStarChime();
-              spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0xFBBF24);
-              showToast(`STAR ${starsInLevel}/${LEVELS[currentLevelIdx].targetStars}! +100`);
+              spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0x10B981);
+              showToast('⭐ STEP 1 COMPLETE! (Now Steer Left ⬅) +100');
+              repSequenceStage = 'NEED_LEFT';
+              updateTargetLaneHUD('LEFT');
+              updateActionBadge('STEER LEFT ⬅', 'Step 2 / 2: Turn Left (Anticlockwise)', 'step-left');
+            } else {
+              // STEP 2 COMPLETE: Turn Left -> 1 FULL CLINICAL REPETITION ACHIEVED!
+              reps += 1;
+              score += 200;
+              audio.playFanfare();
+              spawnStarBurst(playerGroup.position.x, playerGroup.position.y, playerGroup.position.z, 0x0284C7);
+              spawnConfettiShower();
+              showToast('🌟 CLINICAL REP COMPLETE! (Right ➔ Left) +200');
+              repSequenceStage = 'NEED_RIGHT';
+              updateTargetLaneHUD('RIGHT');
+              updateActionBadge('STEER RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)', 'step-right');
+
+              // Broadcast clinical telemetry to glove dashboard
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'NEURO_REP_EVENT',
+                  exercise: 'circumduction',
+                  movement: 'wrist_circumduction',
+                  reps: reps,
+                  score: score,
+                  side: typeof activeHand !== 'undefined' ? activeHand : 'RIGHT'
+                }, '*');
+                window.parent.postMessage({
+                  type: 'exercise_rep',
+                  movement: 'wrist_circumduction_rep',
+                  direction_sequence: 'turn_right_turn_left',
+                  count: reps
+                }, '*');
+              }
             }
 
             updateHUD();
 
-            // Check Level Victory
-            if (starsInLevel >= LEVELS[currentLevelIdx].targetStars && !isGameOver) {
+            // Check Level Victory (by reps or stars)
+            const lvl = LEVELS[currentLevelIdx];
+            if ((reps >= (lvl.targetReps || 6) || starsInLevel >= lvl.targetStars) && !isGameOver) {
               completeLevel();
+            }
+          }
+
+          // Auto-advance target HUD if uncollected star passes behind player
+          if (!item.userData.collected && worldZ > 3.0 && !item.userData.passed) {
+            item.userData.passed = true;
+            if (item.userData.lane === 'RIGHT' && repSequenceStage === 'NEED_RIGHT') {
+              repSequenceStage = 'NEED_LEFT';
+              updateTargetLaneHUD('LEFT');
+              updateActionBadge('STEER LEFT ⬅', 'Step 2 / 2: Turn Left (Anticlockwise)', 'step-left');
+            } else if (item.userData.lane === 'LEFT' && repSequenceStage === 'NEED_LEFT') {
+              repSequenceStage = 'NEED_RIGHT';
+              updateTargetLaneHUD('RIGHT');
+              updateActionBadge('STEER RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)', 'step-right');
             }
           }
         }
@@ -1700,6 +1892,8 @@
 
     // Initial HUD refresh
     updateHUD();
+    updateTargetLaneHUD('RIGHT');
+    updateActionBadge('STEER RIGHT ➔', 'Step 1 / 2: Turn Right (Clockwise)', 'step-right');
   </script>
 </body>
 </html>

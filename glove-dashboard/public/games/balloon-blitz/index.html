@@ -415,6 +415,10 @@
 <body>
   <div class="hud">
     <div class="hud-pill"><strong>Balloon Archery</strong> &nbsp; Score <b id="v-score">0</b> · Hits <b id="v-hits">0</b> · Shots <b id="v-shots">0</b> · Accuracy <b id="v-accuracy">0%</b></div>
+    <div class="hud-pill" id="sound-pill" style="cursor:pointer;pointer-events:auto;margin-top:6px;display:flex;align-items:center;justify-content:space-between;" title="Click to toggle BGM & Sound">
+      <span>🎵 BGM & SOUND:</span>
+      <span id="val-sound" style="background:#E91E63;color:white;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700;">ON</span>
+    </div>
   </div>
   <div class="archery-status" id="shot-status">READY · Close your hand when the balloon crosses the gold sight</div>
   <div class="toast" id="toast"></div>
@@ -450,88 +454,159 @@
     window.gameAudio = gameAudio;
 
     // ════════════════════════════════════════════════
-    // AUDIO ENGINE
+    // HIGH-FIDELITY FESTIVAL AUDIO ENGINE
     // ════════════════════════════════════════════════
     class SFX {
-      constructor() { this.ctx = null; }
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.initialized = false;
+
+        try {
+          this.bgm = typeof Audio !== 'undefined' ? new Audio('./audio/bgm.ogg') : null;
+          if (this.bgm) { this.bgm.loop = true; this.bgm.volume = 0.22; }
+
+          this.popAudio = typeof Audio !== 'undefined' ? new Audio('./audio/pop.ogg') : null;
+          if (this.popAudio) { this.popAudio.volume = 0.55; }
+
+          this.arrowAudio = typeof Audio !== 'undefined' ? new Audio('./audio/arrow.ogg') : null;
+          if (this.arrowAudio) { this.arrowAudio.volume = 0.50; }
+
+          this.twangAudio = typeof Audio !== 'undefined' ? new Audio('./audio/twang.ogg') : null;
+          if (this.twangAudio) { this.twangAudio.volume = 0.40; }
+
+          this.targetAudio = typeof Audio !== 'undefined' ? new Audio('./audio/target.ogg') : null;
+          if (this.targetAudio) { this.targetAudio.volume = 0.48; }
+
+          this.fanfareAudio = typeof Audio !== 'undefined' ? new Audio('./audio/fanfare.ogg') : null;
+          if (this.fanfareAudio) { this.fanfareAudio.volume = 0.50; }
+        } catch {
+          this.bgm = null;
+          this.popAudio = null;
+          this.arrowAudio = null;
+          this.twangAudio = null;
+          this.targetAudio = null;
+          this.fanfareAudio = null;
+        }
+      }
       init() {
-        if (gameAudio.ctx) {
-          this.ctx = gameAudio.ctx;
-        } else {
+        if (!this.ctx) {
           gameAudio.initAudioContext();
           this.ctx = gameAudio.ctx;
+        } else if (this.ctx.state === 'suspended') {
+          void this.ctx.resume().catch(() => {});
         }
+        if (!this.initialized && !this.muted) {
+          this.initialized = true;
+          if (this.bgm) this.bgm.play().catch(() => {});
+        }
+      }
+      toggleMute() {
+        this.init();
+        this.muted = !this.muted;
+        if (this.muted) {
+          if (this.bgm) this.bgm.pause();
+        } else {
+          if (this.bgm) this.bgm.play().catch(() => {});
+        }
+        return !this.muted;
       }
       getDest() {
         return gameAudio.sfxGain || (this.ctx ? this.ctx.destination : null);
       }
       tone(freq, type, dur, vol = 0.2) {
-        this.init(); if (!this.ctx) return;
+        this.init(); if (!this.ctx || this.muted) return;
         const dest = this.getDest(); if (!dest) return;
-        const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.type = type; o.frequency.setValueAtTime(freq, t);
-        o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.3, 20), t + dur);
-        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.01);
+        try {
+          const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+          o.type = type; o.frequency.setValueAtTime(freq, t);
+          o.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.3, 20), t + dur);
+          g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.01);
+        } catch {}
+      }
+      shoot() {
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.arrowAudio) {
+            const snd = this.arrowAudio.cloneNode();
+            snd.volume = 0.5;
+            snd.play().catch(() => {});
+          }
+          if (this.twangAudio) {
+            const t = this.twangAudio.cloneNode();
+            t.volume = 0.35;
+            t.play().catch(() => {});
+          }
+        } catch {
+          this.tone(320, 'sine', 0.12, 0.15);
+        }
       }
       pump(pitch = 1) {
-        // Satisfying air pump sound
-        this.init(); if (!this.ctx) return;
-        const dest = this.getDest(); if (!dest) return;
-        const t = this.ctx.currentTime;
-        const noise = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        noise.type = 'sawtooth';
-        noise.frequency.setValueAtTime(80 * pitch, t);
-        noise.frequency.exponentialRampToValueAtTime(200 * pitch, t + 0.06);
-        noise.frequency.exponentialRampToValueAtTime(60 * pitch, t + 0.15);
-        gain.gain.setValueAtTime(0.15, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-        noise.connect(gain); gain.connect(dest);
-        noise.start(t); noise.stop(t + 0.2);
-        // Whoosh component
-        const w = this.ctx.createOscillator();
-        const wg = this.ctx.createGain();
-        w.type = 'sine';
-        w.frequency.setValueAtTime(300 * pitch, t);
-        w.frequency.exponentialRampToValueAtTime(500 * pitch, t + 0.08);
-        wg.gain.setValueAtTime(0.08, t);
-        wg.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-        w.connect(wg); wg.connect(dest);
-        w.start(t); w.stop(t + 0.12);
-      }
-      stretch(size) {
-        // Rubber stretching sound — higher pitch as bigger
-        this.tone(150 + size * 400, 'sine', 0.1, 0.05);
+        this.shoot();
       }
       pop() {
-        this.init(); if (!this.ctx) return;
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.popAudio) {
+            const snd = this.popAudio.cloneNode();
+            snd.volume = 0.55;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
+        if (!this.ctx) return;
         const dest = this.getDest(); if (!dest) return;
-        const t = this.ctx.currentTime;
-        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.type = 'square'; o.frequency.setValueAtTime(800, t);
-        o.frequency.exponentialRampToValueAtTime(40, t + 0.06);
-        g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.1);
-        // Secondary burst
-        const o2 = this.ctx.createOscillator(), g2 = this.ctx.createGain();
-        o2.type = 'sawtooth'; o2.frequency.setValueAtTime(200, t + 0.02);
-        o2.frequency.exponentialRampToValueAtTime(30, t + 0.12);
-        g2.gain.setValueAtTime(0.3, t + 0.02); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-        o2.connect(g2); g2.connect(dest); o2.start(t + 0.02); o2.stop(t + 0.15);
+        try {
+          const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+          o.type = 'square'; o.frequency.setValueAtTime(800, t);
+          o.frequency.exponentialRampToValueAtTime(40, t + 0.06);
+          g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+          o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.1);
+        } catch {}
+      }
+      targetHit() {
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.targetAudio) {
+            const snd = this.targetAudio.cloneNode();
+            snd.volume = 0.48;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
+        this.tone(120, 'triangle', 0.14, 0.12);
+      }
+      stretch(size) {
+        this.tone(150 + size * 400, 'sine', 0.1, 0.05);
       }
       release() {
-        // Happy tie-off and woosh upward
         [440, 554, 659].forEach((f, i) => setTimeout(() => this.tone(f, 'triangle', 0.25, 0.2), i * 50));
       }
       perfect() {
         [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.35, 0.25), i * 60));
       }
       fanfare() {
+        this.init();
+        if (this.muted) return;
+        try {
+          if (this.fanfareAudio) {
+            const snd = this.fanfareAudio.cloneNode();
+            snd.volume = 0.5;
+            snd.play().catch(() => {});
+            return;
+          }
+        } catch {}
         [392, 523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.7, 0.25), i * 65));
       }
     }
     const sfx = new SFX();
+    window.addEventListener('click', () => sfx.init());
+    window.addEventListener('pointerdown', () => sfx.init());
+    window.addEventListener('keydown', () => sfx.init());
 
     // ════════════════════════════════════════════════
     // RENDERER
@@ -1043,13 +1118,13 @@
       arrow.userData.impactAt=flightClock;
       embeddedArrows.push(arrow);
       spawnParticles(0,3.15,1.3,14,[0xf7e6c7,0xea8475,0x18797b]);
-      sfx.tone(120,'triangle',0.14,0.12);
+      sfx.targetHit();
     }
     function onGrip() {
       if (!activeBalloon || arrows.length || !round.close()) return false;
       arrows.push(makeArrow());
       loadedArrow.visible=false;
-      sfx.pump(1);
+      sfx.shoot();
       status.textContent = 'DRAW & RELEASE · Open your hand to reload';
       updateHUD(); return true;
     }
@@ -1059,6 +1134,18 @@
       return true;
     }
     bindGloveControls('balloon_blitz', {grip: onGrip, release: onRelease});
+
+    // Toggle BGM & Audio when clicking sound pill
+    document.getElementById('sound-pill')?.addEventListener('click', () => {
+      const active = sfx.toggleMute();
+      const badge = document.getElementById('val-sound');
+      if (badge) {
+        badge.textContent = active ? 'ON' : 'MUTED';
+        badge.style.background = active ? '#E91E63' : '#64748B';
+      }
+      toast(active ? '🎵 BGM & Audio ON' : '🔇 Audio Muted');
+    });
+
     // Manual controls only on the standalone preview, never alongside glove events.
     if (window.parent === window) {
       window.addEventListener('keydown', e => {

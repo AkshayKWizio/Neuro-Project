@@ -374,7 +374,7 @@
     scene.environment = skyTex;
     scene.fog = new THREE.FogExp2(0xFFE0B2, 0.007);
 
-    const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 400);
+    const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.8, 450);
     camera.position.set(0, 5.8, 11.0);
 
     // ═══════════════════════════════════════════
@@ -403,11 +403,11 @@
     scene.add(rimLight);
 
     // ═══════════════════════════════════════════
-    // ENVIRONMENT: CANYON, RIVER & MOUNTAINS
+    // ENVIRONMENT: SCENIC STREAMING CANYON, RIVER & MOUNTAINS
     // ═══════════════════════════════════════════
 
     // Canyon Floor / Valley
-    const valleyGeo = new THREE.PlaneGeometry(300, 600, 32, 32);
+    const valleyGeo = new THREE.PlaneGeometry(320, 700, 32, 32);
     const valleyMat = new THREE.MeshStandardMaterial({
       color: 0x4CAF50, roughness: 0.85, metalness: 0.05
     });
@@ -417,10 +417,27 @@
     valley.receiveShadow = true;
     scene.add(valley);
 
-    // Sparkling Winding Alpine River down the valley center
-    const riverGeo = new THREE.PlaneGeometry(16, 600, 8, 32);
+    // Dynamic Sparkling Alpine River with flowing water ripple texture
+    const waterCanvas = document.createElement('canvas');
+    waterCanvas.width = 128; waterCanvas.height = 512;
+    const wCtx = waterCanvas.getContext('2d');
+    const wGrad = wCtx.createLinearGradient(0, 0, 128, 512);
+    wGrad.addColorStop(0, '#0284C7');
+    wGrad.addColorStop(0.5, '#38BDF8');
+    wGrad.addColorStop(1, '#0369A1');
+    wCtx.fillStyle = wGrad; wCtx.fillRect(0, 0, 128, 512);
+    wCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    for (let i = 0; i < 35; i++) {
+      wCtx.fillRect(Math.random() * 100, Math.random() * 490, 16 + Math.random() * 30, 2.5);
+    }
+    const waterTex = new THREE.CanvasTexture(waterCanvas);
+    waterTex.wrapS = THREE.RepeatWrapping;
+    waterTex.wrapT = THREE.RepeatWrapping;
+    waterTex.repeat.set(1, 14);
+
+    const riverGeo = new THREE.PlaneGeometry(16, 700, 8, 32);
     const riverMat = new THREE.MeshStandardMaterial({
-      color: 0x0284C7, roughness: 0.1, metalness: 0.4
+      map: waterTex, color: 0xBAE6FD, roughness: 0.15, metalness: 0.5
     });
     const river = new THREE.Mesh(riverGeo, riverMat);
     river.rotation.x = -Math.PI / 2;
@@ -428,20 +445,26 @@
     scene.add(river);
 
     // Riverbank sand borders
-    const riverBankGeo = new THREE.PlaneGeometry(24, 600);
+    const riverBankGeo = new THREE.PlaneGeometry(24, 700);
     const riverBankMat = new THREE.MeshStandardMaterial({ color: 0xD7CCC8, roughness: 0.9 });
     const riverBank = new THREE.Mesh(riverBankGeo, riverBankMat);
     riverBank.rotation.x = -Math.PI / 2;
     riverBank.position.set(0, -6.46, -150);
     scene.add(riverBank);
 
-    // Majestic Canyon Mountain Ridges Left & Right
+    // Majestic Canyon Mountain Ridges Left & Right (Streaming Conveyor)
     const mountainRockColors = [0x795548, 0x8D6E63, 0x6D4C41, 0xA1887F];
-    const snowCapMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.4 });
+    const snowCapMat = new THREE.MeshStandardMaterial({
+      color: 0xFFFFFF,
+      roughness: 0.4,
+      polygonOffset: true,
+      polygonOffsetFactor: -1.5,
+      polygonOffsetUnits: -4.0
+    });
+    const sceneryMountains = [];
 
     function makeMountainPeak(x, z, radius, height) {
       const g = new THREE.Group();
-      // Main rock cone
       const rockMat = new THREE.MeshStandardMaterial({
         color: mountainRockColors[Math.floor(Math.random() * mountainRockColors.length)],
         roughness: 0.85,
@@ -453,10 +476,10 @@
       rock.receiveShadow = true;
       g.add(rock);
 
-      // Snow-capped peak on top
-      const snowHeight = height * 0.32;
-      const snow = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.32, snowHeight, 7), snowCapMat);
-      snow.position.y = height - snowHeight / 2;
+      const snowHeight = height * 0.34;
+      const snow = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.34, snowHeight, 7), snowCapMat);
+      snow.position.y = height - snowHeight / 2 + 0.06;
+      snow.scale.set(1.04, 1.02, 1.04);
       g.add(snow);
 
       g.position.set(x, -6.5, z);
@@ -464,20 +487,17 @@
     }
 
     for (let i = -14; i <= 14; i++) {
-      // Left Ridge
-      const rL = 14 + Math.random() * 8;
-      const hL = 26 + Math.random() * 18;
-      const xL = -28 - Math.random() * 18;
-      scene.add(makeMountainPeak(xL, i * 28, rL, hL));
+      const rL = 14 + Math.random() * 8, hL = 26 + Math.random() * 18, xL = -28 - Math.random() * 18;
+      const peakL = makeMountainPeak(xL, i * 28, rL, hL);
+      scene.add(peakL); sceneryMountains.push(peakL);
 
-      // Right Ridge
-      const rR = 14 + Math.random() * 8;
-      const hR = 26 + Math.random() * 18;
-      const xR = 28 + Math.random() * 18;
-      scene.add(makeMountainPeak(xR, i * 28, rR, hR));
+      const rR = 14 + Math.random() * 8, hR = 26 + Math.random() * 18, xR = 28 + Math.random() * 18;
+      const peakR = makeMountainPeak(xR, i * 28, rR, hR);
+      scene.add(peakR); sceneryMountains.push(peakR);
     }
 
-    // Stylized Alpine Pine Trees along the valley slopes
+    // Stylized Alpine Pine Trees along the valley slopes (Streaming Conveyor)
+    const sceneryTrees = [];
     function makePineTree(x, z, scale = 1) {
       const g = new THREE.Group();
       const trunk = new THREE.Mesh(
@@ -502,26 +522,42 @@
       return g;
     }
 
-    for (let i = -15; i <= 15; i++) {
-      // Left trees
-      scene.add(makePineTree(-14 - Math.random() * 10, i * 20 + Math.random() * 8, 1.0 + Math.random() * 0.6));
-      scene.add(makePineTree(-11 - Math.random() * 6, i * 20 + Math.random() * 8, 0.8 + Math.random() * 0.5));
-      // Right trees
-      scene.add(makePineTree(14 + Math.random() * 10, i * 20 + Math.random() * 8, 1.0 + Math.random() * 0.6));
-      scene.add(makePineTree(11 + Math.random() * 6, i * 20 + Math.random() * 8, 0.8 + Math.random() * 0.5));
+    for (let i = -16; i <= 16; i++) {
+      const tL1 = makePineTree(-14 - Math.random() * 10, i * 20 + Math.random() * 8, 1.0 + Math.random() * 0.6);
+      const tL2 = makePineTree(-11 - Math.random() * 6, i * 20 + Math.random() * 8, 0.8 + Math.random() * 0.5);
+      const tR1 = makePineTree(14 + Math.random() * 10, i * 20 + Math.random() * 8, 1.0 + Math.random() * 0.6);
+      const tR2 = makePineTree(11 + Math.random() * 6, i * 20 + Math.random() * 8, 0.8 + Math.random() * 0.5);
+      scene.add(tL1); scene.add(tL2); scene.add(tR1); scene.add(tR2);
+      sceneryTrees.push(tL1, tL2, tR1, tR2);
     }
+
+    // High-Speed Arcade Wind Streaks (Creates intense forward flight speed sensation)
+    const streakCount = 48;
+    const streakPos = new Float32Array(streakCount * 6);
+    for (let i = 0; i < streakCount; i++) {
+      const sx = (Math.random() - 0.5) * 26;
+      const sy = 0.5 + Math.random() * 8;
+      const sz = -Math.random() * 260;
+      streakPos[i * 6] = sx; streakPos[i * 6 + 1] = sy; streakPos[i * 6 + 2] = sz;
+      streakPos[i * 6 + 3] = sx; streakPos[i * 6 + 4] = sy; streakPos[i * 6 + 5] = sz + 5.0;
+    }
+    const speedStreakGeo = new THREE.BufferGeometry();
+    speedStreakGeo.setAttribute('position', new THREE.BufferAttribute(streakPos, 3));
+    const speedStreakMat = new THREE.LineBasicMaterial({
+      color: 0xE0F2FE, transparent: true, opacity: 0.55, linewidth: 2
+    });
+    const speedStreaks = new THREE.LineSegments(speedStreakGeo, speedStreakMat);
+    scene.add(speedStreaks);
 
     // Floating Hot Air Balloons in the far sky
     function makeHotAirBalloon(x, y, z, color1, color2) {
       const g = new THREE.Group();
-      // Balloon envelope
       const envGeo = new THREE.SphereGeometry(3.5, 16, 16);
       envGeo.scale(1, 1.35, 1);
       const envMat = new THREE.MeshStandardMaterial({ color: color1, roughness: 0.4 });
       const env = new THREE.Mesh(envGeo, envMat);
       g.add(env);
 
-      // Bottom skirt
       const skirt = new THREE.Mesh(
         new THREE.CylinderGeometry(1.2, 0.8, 1.2, 12),
         new THREE.MeshStandardMaterial({ color: color2, roughness: 0.5 })
@@ -529,7 +565,6 @@
       skirt.position.y = -3.8;
       g.add(skirt);
 
-      // Wicker basket
       const basket = new THREE.Mesh(
         new THREE.BoxGeometry(1.2, 1.0, 1.2),
         new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.9 })
@@ -584,129 +619,281 @@
     }
 
     // ═══════════════════════════════════════════
-    // HERO AIRCRAFT: STYLIZED SPORT BIPLANE
+    // HERO AIRCRAFT: HIGH-PERFORMANCE AEROBATIC SPORT RACER
     // ═══════════════════════════════════════════
     const planeGroup = new THREE.Group();
 
-    // Fuselage body (aerodynamic curved shell)
-    const fuseGeo = new THREE.CylinderGeometry(0.48, 0.22, 3.8, 16);
-    fuseGeo.rotateX(Math.PI / 2);
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x0284C7, metalness: 0.35, roughness: 0.25
+    // Aircraft Premium Materials
+    const aeroBlueMat = new THREE.MeshStandardMaterial({
+      color: 0x0284C7, metalness: 0.45, roughness: 0.22
     });
-    const fuselage = new THREE.Mesh(fuseGeo, bodyMat);
-    fuselage.castShadow = true;
-    fuselage.receiveShadow = true;
-    planeGroup.add(fuselage);
+    const arcticWhiteMat = new THREE.MeshStandardMaterial({
+      color: 0xF8FAFC, metalness: 0.2, roughness: 0.28
+    });
+    const goldAccentMat = new THREE.MeshStandardMaterial({
+      color: 0xF59E0B, metalness: 0.7, roughness: 0.18
+    });
+    const chromeMat = new THREE.MeshStandardMaterial({
+      color: 0xE2E8F0, metalness: 0.9, roughness: 0.15
+    });
+    const darkMetalMat = new THREE.MeshStandardMaterial({
+      color: 0x0F172A, roughness: 0.4
+    });
 
-    // Fuselage belly stripe (white lacquer)
-    const bellyGeo = new THREE.CylinderGeometry(0.49, 0.23, 1.8, 16, 1, false, 0, Math.PI);
+    // ── 1. Sculpted Aerodynamic Fuselage ──
+    const fuselageGroup = new THREE.Group();
+
+    // Main Cabin & Cowling
+    const cabinGeo = new THREE.CylinderGeometry(0.48, 0.42, 2.2, 24);
+    cabinGeo.rotateX(Math.PI / 2);
+    const cabin = new THREE.Mesh(cabinGeo, aeroBlueMat);
+    cabin.position.set(0, 0, -0.2);
+    cabin.castShadow = true;
+    fuselageGroup.add(cabin);
+
+    // Aerodynamic Nose Cowling
+    const cowlGeo = new THREE.ConeGeometry(0.52, 1.1, 24);
+    cowlGeo.rotateX(-Math.PI / 2);
+    const cowl = new THREE.Mesh(cowlGeo, aeroBlueMat);
+    cowl.position.set(0, 0, -1.8);
+    cowl.castShadow = true;
+    fuselageGroup.add(cowl);
+
+    // Chin Air Scoop under nose
+    const scoopGeo = new THREE.BoxGeometry(0.28, 0.18, 0.9);
+    const scoop = new THREE.Mesh(scoopGeo, darkMetalMat);
+    scoop.position.set(0, -0.38, -1.5);
+    fuselageGroup.add(scoop);
+
+    // Sleek Tapered Tail Boom
+    const tailBoomGeo = new THREE.CylinderGeometry(0.42, 0.14, 2.4, 20);
+    tailBoomGeo.rotateX(Math.PI / 2);
+    const tailBoom = new THREE.Mesh(tailBoomGeo, aeroBlueMat);
+    tailBoom.position.set(0, 0.04, 1.8);
+    tailBoom.castShadow = true;
+    fuselageGroup.add(tailBoom);
+
+    // White Racing Belly Fairing & Stripes
+    const bellyGeo = new THREE.CylinderGeometry(0.49, 0.38, 2.0, 20, 1, false, 0, Math.PI);
     bellyGeo.rotateX(Math.PI / 2);
     bellyGeo.rotateZ(Math.PI);
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, metalness: 0.1, roughness: 0.3 });
-    const belly = new THREE.Mesh(bellyGeo, whiteMat);
-    planeGroup.add(belly);
+    const belly = new THREE.Mesh(bellyGeo, arcticWhiteMat);
+    belly.position.set(0, -0.02, -0.2);
+    fuselageGroup.add(belly);
 
-    // Engine Cowling (nose)
-    const noseGeo = new THREE.SphereGeometry(0.5, 16, 12);
-    noseGeo.scale(0.95, 0.95, 1.2);
-    const noseMat = new THREE.MeshStandardMaterial({ color: 0xF97316, metalness: 0.4, roughness: 0.2 });
-    const nose = new THREE.Mesh(noseGeo, noseMat);
-    nose.position.set(0, 0, -1.8);
-    planeGroup.add(nose);
-
-    // Main Top Wings (glossy cyan with orange tips)
-    const topWingGeo = new THREE.BoxGeometry(5.8, 0.1, 0.9);
-    const topWing = new THREE.Mesh(topWingGeo, bodyMat);
-    topWing.position.set(0, 0.55, -0.2);
-    topWing.castShadow = true;
-    planeGroup.add(topWing);
-
-    // Bottom Wings
-    const botWingGeo = new THREE.BoxGeometry(5.0, 0.08, 0.8);
-    const botWing = new THREE.Mesh(botWingGeo, bodyMat);
-    botWing.position.set(0, -0.2, -0.2);
-    botWing.castShadow = true;
-    planeGroup.add(botWing);
-
-    // Wing Struts (chrome metal)
-    const strutMat = new THREE.MeshStandardMaterial({ color: 0xE2E8F0, metalness: 0.8, roughness: 0.2 });
-    [-2.1, 2.1].forEach(x => {
-      const strutL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.75, 8), strutMat);
-      strutL.position.set(x, 0.17, -0.2);
-      planeGroup.add(strutL);
+    // Dual Twin Chrome Exhaust Stacks
+    [-0.45, 0.45].forEach(exX => {
+      for (let e = 0; e < 3; e++) {
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.22, 10), chromeMat);
+        pipe.rotation.z = exX > 0 ? -Math.PI / 3 : Math.PI / 3;
+        pipe.position.set(exX, -0.08, -1.4 + e * 0.22);
+        fuselageGroup.add(pipe);
+      }
     });
 
-    // Navigation Lights on Wingtips
-    const redLight = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xEF4444, emissiveIntensity: 1.0 })
-    );
-    redLight.position.set(-2.9, 0.55, -0.2);
-    planeGroup.add(redLight);
+    planeGroup.add(fuselageGroup);
 
-    const greenLight = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x10B981, emissiveIntensity: 1.0 })
-    );
-    greenLight.position.set(2.9, 0.55, -0.2);
-    planeGroup.add(greenLight);
+    // ── 2. Modern Low-Wing Cantilever Airfoil with Dihedral ──
+    const wingsGroup = new THREE.Group();
 
-    // Glass Canopy & Cockpit
-    const canopyGeo = new THREE.SphereGeometry(0.38, 16, 12);
-    canopyGeo.scale(0.8, 0.8, 1.8);
+    // Sculpted Main Wings (Tapered, swept-back, with aerodynamic camber)
+    const wingShape = new THREE.Shape();
+    wingShape.moveTo(-3.2, 0.3);
+    wingShape.lineTo(-3.1, -0.4);
+    wingShape.lineTo(0, -0.75);
+    wingShape.lineTo(3.1, -0.4);
+    wingShape.lineTo(3.2, 0.3);
+    wingShape.lineTo(0, 0.55);
+    wingShape.closePath();
+
+    const wingExtrudeSettings = { depth: 0.12, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.04, bevelThickness: 0.04 };
+    const wingGeo = new THREE.ExtrudeGeometry(wingShape, wingExtrudeSettings);
+    wingGeo.rotateX(-Math.PI / 2);
+    const mainWings = new THREE.Mesh(wingGeo, aeroBlueMat);
+    mainWings.position.set(0, -0.16, 0);
+    mainWings.castShadow = true;
+    wingsGroup.add(mainWings);
+
+    // Wing Racing Stripe Decals (Bold Arctic White & Gold Accents)
+    const wingStripeL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 1.1), arcticWhiteMat);
+    wingStripeL.position.set(-1.8, -0.1, 0.05);
+    wingsGroup.add(wingStripeL);
+
+    const wingStripeR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 1.1), arcticWhiteMat);
+    wingStripeR.position.set(1.8, -0.1, 0.05);
+    wingsGroup.add(wingStripeR);
+
+    // Gold Wingtip Caps
+    [-3.25, 3.25].forEach(wtX => {
+      const tip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.72), goldAccentMat);
+      tip.position.set(wtX, -0.08, 0.02);
+      wingsGroup.add(tip);
+    });
+
+    // Articulated Ailerons (Animate with Roll Banking)
+    const aileronMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.5, roughness: 0.3 });
+    const aileronGeo = new THREE.BoxGeometry(1.2, 0.06, 0.22);
+    const leftAileron = new THREE.Mesh(aileronGeo, aileronMat);
+    leftAileron.position.set(-2.0, -0.14, 0.55);
+    wingsGroup.add(leftAileron);
+
+    const rightAileron = new THREE.Mesh(aileronGeo, aileronMat);
+    rightAileron.position.set(2.0, -0.14, 0.55);
+    wingsGroup.add(rightAileron);
+
+    // Wingtip Illuminated Navigation Pods
+    const navRedLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0xEF4444, emissive: 0xEF4444, emissiveIntensity: 2.2 })
+    );
+    navRedLight.position.set(-3.28, -0.05, 0.02);
+    wingsGroup.add(navRedLight);
+
+    const navGreenLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0x10B981, emissive: 0x10B981, emissiveIntensity: 2.2 })
+    );
+    navGreenLight.position.set(3.28, -0.05, 0.02);
+    wingsGroup.add(navGreenLight);
+
+    planeGroup.add(wingsGroup);
+
+    // ── 3. Aerodynamic Teardrop Bubble Canopy & Pilot ──
+    const cockpitGroup = new THREE.Group();
+
+    const canopyGeo = new THREE.SphereGeometry(0.40, 24, 16);
+    canopyGeo.scale(0.74, 0.76, 2.2);
     const canopyMat = new THREE.MeshStandardMaterial({
-      color: 0xBAE6FD, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.75
+      color: 0xBAE6FD, roughness: 0.06, metalness: 0.3, transparent: true, opacity: 0.65
     });
     const canopy = new THREE.Mesh(canopyGeo, canopyMat);
-    canopy.position.set(0, 0.45, -0.3);
-    planeGroup.add(canopy);
+    canopy.position.set(0, 0.42, -0.32);
+    cockpitGroup.add(canopy);
 
-    // Pilot inside
+    // Canopy Trim Arch
+    const trimGeo = new THREE.TorusGeometry(0.32, 0.03, 10, 24, Math.PI);
+    trimGeo.rotateZ(Math.PI);
+    const canopyTrim = new THREE.Mesh(trimGeo, darkMetalMat);
+    canopyTrim.position.set(0, 0.45, -0.3);
+    cockpitGroup.add(canopyTrim);
+
+    // Cockpit Dashboard with Glowing Avionics
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.22, 0.1), darkMetalMat);
+    dash.position.set(0, 0.28, -0.85);
+    cockpitGroup.add(dash);
+    const dialLight = new THREE.Mesh(
+      new THREE.CircleGeometry(0.04, 10),
+      new THREE.MeshBasicMaterial({ color: 0x10B981 })
+    );
+    dialLight.position.set(0.08, 0.32, -0.79);
+    cockpitGroup.add(dialLight);
+
+    // Aviator Pilot
     const pilotHead = new THREE.Mesh(
-      new THREE.SphereGeometry(0.18, 12, 10),
-      new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.8 })
+      new THREE.SphereGeometry(0.18, 14, 12),
+      new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.3 })
     );
-    pilotHead.position.set(0, 0.38, -0.25);
-    planeGroup.add(pilotHead);
+    pilotHead.position.set(0, 0.36, -0.28);
+    cockpitGroup.add(pilotHead);
 
-    // Tail Fin & Rudder
-    const finGeo = new THREE.BoxGeometry(0.08, 1.1, 0.8);
-    const fin = new THREE.Mesh(finGeo, noseMat);
-    fin.position.set(0, 0.65, 1.6);
+    const goggles = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 0.09, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.2, metalness: 0.8 })
+    );
+    goggles.position.set(0, 0.37, -0.42);
+    cockpitGroup.add(goggles);
+
+    planeGroup.add(cockpitGroup);
+
+    // ── 4. Empennage: Swept Tail Fin, Rudder & Stabilizers ──
+    const tailGroup = new THREE.Group();
+
+    // Swept Vertical Stabilizer
+    const finShape = new THREE.Shape();
+    finShape.moveTo(0, 0);
+    finShape.lineTo(0.65, 0);
+    finShape.lineTo(0.32, 1.35);
+    finShape.lineTo(0, 1.35);
+    finShape.closePath();
+    const finGeo = new THREE.ExtrudeGeometry(finShape, { depth: 0.07, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.02, bevelThickness: 0.02 });
+    finGeo.rotateY(Math.PI / 2);
+    const fin = new THREE.Mesh(finGeo, goldAccentMat);
+    fin.position.set(0.035, 0.18, 2.0);
     fin.castShadow = true;
-    planeGroup.add(fin);
+    tailGroup.add(fin);
 
-    // Horizontal Tail Stabilizer
-    const stabGeo = new THREE.BoxGeometry(2.0, 0.08, 0.5);
-    const stab = new THREE.Mesh(stabGeo, bodyMat);
-    stab.position.set(0, 0.2, 1.6);
-    planeGroup.add(stab);
+    // Articulated Tail Rudder
+    const rudderGeo = new THREE.BoxGeometry(0.06, 1.25, 0.28);
+    const rudder = new THREE.Mesh(rudderGeo, aeroBlueMat);
+    rudder.position.set(0, 0.72, 2.75);
+    tailGroup.add(rudder);
 
-    // Propeller Hub & Blades
-    const propGroup = new THREE.Group();
-    propGroup.position.set(0, 0, -2.35);
+    // Swept Horizontal Stabilizers
+    const hStabGeo = new THREE.BoxGeometry(2.4, 0.08, 0.58);
+    const hStab = new THREE.Mesh(hStabGeo, aeroBlueMat);
+    hStab.position.set(0, 0.26, 2.3);
+    hStab.castShadow = true;
+    tailGroup.add(hStab);
 
-    const spinner = new THREE.Mesh(
-      new THREE.ConeGeometry(0.18, 0.35, 12),
-      new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.8, roughness: 0.2 })
+    // Blinking Tail Strobe Beacon
+    const tailStrobe = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 10, 8),
+      new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 2.5 })
     );
-    spinner.rotation.x = -Math.PI / 2;
+    tailStrobe.position.set(0, 1.58, 2.15);
+    tailGroup.add(tailStrobe);
+
+    planeGroup.add(tailGroup);
+
+    // ── 5. Aerodynamic Spinner & High-RPM Propeller ──
+    const propGroup = new THREE.Group();
+    propGroup.position.set(0, 0, -2.4);
+
+    // Polished Bullet Spinner Cone
+    const spinnerGeo = new THREE.ConeGeometry(0.22, 0.48, 20);
+    spinnerGeo.rotateX(-Math.PI / 2);
+    const spinner = new THREE.Mesh(spinnerGeo, goldAccentMat);
     propGroup.add(spinner);
 
-    const bladeMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.4 });
-    const blade1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.14, 0.04), bladeMat);
-    propGroup.add(blade1);
+    // 3 Aerodynamic Propeller Blades with High-Visibility Yellow Tips
+    for (let p = 0; p < 3; p++) {
+      const bladePivot = new THREE.Group();
+      bladePivot.rotation.z = (p * Math.PI * 2) / 3;
 
-    // Motion blur propeller translucent disc
-    const propDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(0.8, 16),
-      new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.85, 0.03), darkMetalMat);
+      blade.position.y = 0.44;
+      bladePivot.add(blade);
+
+      const bladeTip = new THREE.Mesh(new THREE.BoxGeometry(0.142, 0.22, 0.032), goldAccentMat);
+      bladeTip.position.y = 0.78;
+      bladePivot.add(bladeTip);
+
+      propGroup.add(bladePivot);
+    }
+
+    // High-RPM Propeller Blur Disc with Radial Motion Texture
+    const blurCanvas = document.createElement('canvas');
+    blurCanvas.width = 128; blurCanvas.height = 128;
+    const bCtx = blurCanvas.getContext('2d');
+    const bGrad = bCtx.createRadialGradient(64, 64, 8, 64, 64, 64);
+    bGrad.addColorStop(0, 'rgba(255, 255, 255, 0.0)');
+    bGrad.addColorStop(0.35, 'rgba(240, 249, 255, 0.35)');
+    bGrad.addColorStop(0.75, 'rgba(245, 158, 11, 0.45)');
+    bGrad.addColorStop(0.92, 'rgba(245, 158, 11, 0.65)');
+    bGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+    bCtx.fillStyle = bGrad; bCtx.beginPath(); bCtx.arc(64, 64, 64, 0, Math.PI * 2); bCtx.fill();
+    const blurTex = new THREE.CanvasTexture(blurCanvas);
+
+    const propBlurDisc = new THREE.Mesh(
+      new THREE.RingGeometry(0.18, 1.25, 32),
+      new THREE.MeshBasicMaterial({ map: blurTex, transparent: true, opacity: 0.65, side: THREE.DoubleSide })
     );
-    propGroup.add(propDisc);
+    propBlurDisc.position.z = -0.05;
+    propGroup.add(propBlurDisc);
+
     planeGroup.add(propGroup);
 
-    // Wingtip Particle Trail Ribbons
+    // ── 6. Wingtip Contrail Ribbon Trails ──
     const trailGeos = [new THREE.BufferGeometry(), new THREE.BufferGeometry()];
     const trailPositions = [new Float32Array(60 * 3), new Float32Array(60 * 3)];
     const trailMat = new THREE.LineBasicMaterial({ color: 0xBAE6FD, transparent: true, opacity: 0.6, linewidth: 2 });
@@ -914,19 +1101,66 @@
       const delta = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      // Propeller spin
-      propGroup.rotation.z += 0.55;
+      // High-RPM Propeller spin
+      propGroup.rotation.z += 0.85;
+
+      // Flight speed (used by rings, obstacles, and scenery streaming)
+      const flightSpeed = 16;
+
+      // Stream Mountain Ridges forward in Z (endless canyon rush)
+      for (let i = 0; i < sceneryMountains.length; i++) {
+        const m = sceneryMountains[i];
+        m.position.z += flightSpeed * delta;
+        if (m.position.z > 60) m.position.z -= 560;
+      }
+
+      // Stream Alpine Pine Trees forward in Z (intense ground rush parallax)
+      for (let i = 0; i < sceneryTrees.length; i++) {
+        const t = sceneryTrees[i];
+        t.position.z += flightSpeed * delta;
+        if (t.position.z > 25) t.position.z -= 360;
+      }
+
+      // Dynamic River Water Flowing Texture (calm, natural alpine flow)
+      waterTex.offset.y += (flightSpeed * 0.008) * delta;
+
+      // High-Speed 3D Wind Streaks rushing past camera
+      const posArr = speedStreakGeo.attributes.position.array;
+      for (let i = 0; i < streakCount; i++) {
+        posArr[i * 6 + 2] += flightSpeed * 2.2 * delta;
+        posArr[i * 6 + 5] = posArr[i * 6 + 2] + 5.0;
+        if (posArr[i * 6 + 2] > 20) {
+          posArr[i * 6 + 2] = -260 - Math.random() * 50;
+          posArr[i * 6 + 5] = posArr[i * 6 + 2] + 5.0;
+          posArr[i * 6] = (Math.random() - 0.5) * 26;
+          posArr[i * 6 + 3] = posArr[i * 6];
+          posArr[i * 6 + 1] = 0.5 + Math.random() * 8;
+          posArr[i * 6 + 4] = posArr[i * 6 + 1];
+        }
+      }
+      speedStreakGeo.attributes.position.needsUpdate = true;
 
       // Smooth aircraft lateral interpolation
       planeGroup.position.x += (targetX - planeGroup.position.x) * (1 - Math.exp(-6 * delta));
       currentTiltDeg *= Math.exp(-5 * delta);
 
+      // Subtle aerodynamic lift bobbing (air cushion floating sensation)
+      planeGroup.position.y = FLIGHT_ALTITUDE + Math.sin(now * 0.0035) * 0.04;
+
       // Forearm banking roll
       const targetRoll = (-currentTiltDeg * Math.PI) / 180;
-      planeGroup.rotation.z += (targetRoll - planeGroup.rotation.z) * 0.12;
+      planeGroup.rotation.z += (targetRoll - planeGroup.rotation.z) * 0.15;
       // Slight aerodynamic yaw and pitch
-      planeGroup.rotation.y = (-currentTiltDeg * Math.PI) / 380;
+      planeGroup.rotation.y = (-currentTiltDeg * Math.PI) / 320;
       planeGroup.rotation.x = -0.04 + Math.sin(now * 0.003) * 0.02;
+
+      // Articulated Ailerons & Rudder respond dynamically to banking
+      leftAileron.rotation.x = -planeGroup.rotation.z * 0.45;
+      rightAileron.rotation.x = planeGroup.rotation.z * 0.45;
+      rudder.rotation.y = -planeGroup.rotation.z * 0.35;
+
+      // Blinking Tail Strobe Beacon
+      tailStrobe.material.emissiveIntensity = (Math.sin(now * 0.008) > 0.85) ? 4.0 : 0.2;
 
       // Camera dynamic chase banking with proper flight altitude framing
       const camTargetX = 0;
@@ -951,8 +1185,8 @@
       });
 
       // Update wingtip contrail ribbon trails
-      const leftTipWorld = new THREE.Vector3(-2.8, 0.55, -0.2).applyMatrix4(planeGroup.matrixWorld);
-      const rightTipWorld = new THREE.Vector3(2.8, 0.55, -0.2).applyMatrix4(planeGroup.matrixWorld);
+      const leftTipWorld = new THREE.Vector3(-3.25, -0.05, 0.02).applyMatrix4(planeGroup.matrixWorld);
+      const rightTipWorld = new THREE.Vector3(3.25, -0.05, 0.02).applyMatrix4(planeGroup.matrixWorld);
 
       leftTrailHistory.unshift(leftTipWorld);
       rightTrailHistory.unshift(rightTipWorld);
@@ -973,7 +1207,6 @@
       trailGeos[1].setAttribute('position', new THREE.BufferAttribute(rArr.subarray(0, rightTrailHistory.length * 3), 3));
 
       // Endless two-lane course. Target collection, not elapsed time, advances the route.
-      const flightSpeed = 14;
       for (let i = activeRings.length - 1; i >= 0; i--) {
         const ring = activeRings[i];
         ring.position.z += flightSpeed * delta;

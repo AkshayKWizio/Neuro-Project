@@ -94,7 +94,7 @@ function LoginGate({ kind, onLogin, onCancel }: { kind: 'doctor' | 'patient'; on
       <label className="password-label" htmlFor={`${kind}-password`}>PASSWORD</label><div className="license-input"><LockKeyhole /><Input id={`${kind}-password`} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></div>
       {error && <div className="access-message"><CircleAlert />{error}</div>}
       <Button type="submit" disabled={busy || !username || !password}>{busy ? 'Signing in…' : `Sign in as ${kind}`}<ChevronRight /></Button>
-      {doctor && !onCancel && <Button type="button" variant="outline" style={{ marginTop: '8px' }} onClick={() => void onLogin('doctor', 'doctor')}>Continue as Demo Doctor →</Button>}
+      {doctor && !onCancel && <Button type="button" variant="outline" style={{ marginTop: '8px', width: '100%', borderColor: '#cbd5e1', color: '#0F6C73', backgroundColor: '#ffffff', fontWeight: 650 }} onClick={() => void onLogin('doctor', 'doctor')}>Continue as Demo Doctor →</Button>}
       {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
     </form>
   </div>;
@@ -832,16 +832,22 @@ function CalibrationControls({ side, hand, connected, bridgeOnline, onCommand, p
   const bend = typeof hand?.sliders?.INDEXBEND1 === 'number' ? Math.round(hand.sliders.INDEXBEND1 * 100) + '%' : (typeof hand?.sliders?.index_mcp === 'number' ? Math.round(hand.sliders.index_mcp * 100) + '%' : (connected ? 'Active' : '—'));
 
   return <div className="quick-controls">
-    <div><span>CONTROL TARGET</span><strong>{side} GLOVE</strong><small>{connected ? 'Live telemetry available' : 'Not connected'}</small></div>
-    {connected && <div className="quick-live-metrics" style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#94a3b8', padding: '4px 0', alignItems: 'center' }}>
-      <span>ROLL: <b style={{ color: '#38bdf8' }}>{roll}</b></span>
-      <span>BEND: <b style={{ color: '#38bdf8' }}>{bend}</b></span>
-      <span style={{ color: isCalib ? '#10b981' : '#f59e0b', marginLeft: 'auto', fontWeight: 600 }}>{isCalib ? 'CALIBRATED' : 'UNCALIBRATED'}</span>
+    <div className="quick-target"><span>CONTROL TARGET</span><strong>{side} GLOVE</strong><small>{connected ? 'Live telemetry available' : 'Not connected'}</small></div>
+    {connected && <div className="quick-live-metrics">
+      <span>ROLL: <b>{roll}</b></span>
+      <span>BEND: <b>{bend}</b></span>
+      <span className={isCalib ? 'calib-tag-ready' : 'calib-tag-pending'}>{isCalib ? 'CALIBRATED' : 'UNCALIBRATED'}</span>
     </div>}
-    <div className="quick-progress"><span>CALIBRATION</span><strong>{isCalib ? '100% (READY)' : `${Math.round(progress)}%`}</strong><i><b style={{ width: `${progress}%` }} /></i></div>
-    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-      <Button style={{ flex: 1 }} disabled={!bridgeOnline || !connected || pending !== null} onClick={(event) => { event.stopPropagation(); onCommand('articulation_basic_calibrate', 'calibration', side); }}><Gauge />{pending === 'calibration' ? 'Starting…' : isCalib ? 'Recalibrate' : 'Calibrate'}</Button>
-      <Button style={{ flex: 1 }} variant="outline" disabled={!bridgeOnline || !connected || pending !== null} onClick={(event) => { event.stopPropagation(); onCommand('imu_tare', 'tare', side); }}><Rotate3D />{pending === 'tare' ? 'Taring…' : 'Tare wrist'}</Button>
+    <div className="quick-progress">
+      <div className="quick-progress-header">
+        <span>CALIBRATION</span>
+        <strong>{isCalib ? '100% (READY)' : `${Math.round(progress)}%`}</strong>
+      </div>
+      <i><b style={{ width: `${progress}%` }} /></i>
+    </div>
+    <div className="quick-actions">
+      <Button className="quick-btn-calibrate" disabled={!bridgeOnline || !connected || pending !== null} onClick={(event) => { event.stopPropagation(); onCommand('articulation_basic_calibrate', 'calibration', side); }}><Gauge />{pending === 'calibration' ? 'Starting…' : isCalib ? 'Recalibrate' : 'Calibrate'}</Button>
+      <Button className="quick-btn-tare" variant="outline" disabled={!bridgeOnline || !connected || pending !== null} onClick={(event) => { event.stopPropagation(); onCommand('imu_tare', 'tare', side); }}><Rotate3D />{pending === 'tare' ? 'Taring…' : 'Tare wrist'}</Button>
     </div>
     {message && <span className="quick-message">{message}</span>}
   </div>;
@@ -1221,7 +1227,7 @@ export default function Home() {
 
   const patientActive = Boolean(auth?.patient);
   return <main className="app-shell redesigned-app">
-    <header className="therapy-topbar"><div className="brand"><div className="brand-mark"><img src="/app_icon.png" alt="206 AI" className="brand-app-icon" /></div><div><h1>206 AI</h1><p>CLINICAL NEURO-REHABILITATION WORKSTATION</p></div></div><nav aria-label="Application sections"><button className={view === 'exercises' ? 'selected' : ''} onClick={() => setView('exercises')}>Exercises</button><button disabled={!patientActive} className={view === 'live' ? 'selected' : ''} onClick={() => patientActive && setView('live')}>Live data</button><button className={view === 'reports' ? 'selected' : ''} onClick={() => setView('reports')}>Reports</button></nav><div className="topbar-actions"><div className="topbar-status"><span className={patientActive && anyGloveConnected ? 'connected' : ''}><i />{patientActive ? anyGloveConnected ? 'GLOVES LIVE' : 'PATIENT SESSION' : auth?.authenticated ? 'DOCTOR WORKSPACE' : 'AUTHENTICATION'}</span><small>{patientActive ? `${auth?.patient?.name} · ${auth?.patient?.id}` : auth?.doctor?.name ?? 'Doctor login required'}</small></div>{patientActive && (anyGloveConnected ? <Button type="button" variant="outline" className="disconnect-gloves" style={{ borderColor: '#fecaca', color: '#dc2626' }} onClick={() => void disconnectXRGame()}><Power className="mr-2" />Disconnect Gloves</Button> : <Button type="button" style={{ background: '#0F6C73', color: '#ffffff' }} onClick={() => { setShowGloveModal(true); void launchXRGame(); }}><Bluetooth className="mr-2" />Connect Gloves</Button>)}{patientActive && <Button type="button" variant="outline" className="disconnect-gloves" onClick={() => void endPatient()}><User />End patient</Button>}{auth?.authenticated && <Button type="button" variant="outline" className="logout-button" onClick={() => void logout()}><LogOut />Logout</Button>}</div></header>
+    <header className="therapy-topbar"><div className="brand"><div className="brand-mark"><img src="/app_icon.png" alt="206 AI" className="brand-app-icon" /></div><div><h1>206 AI</h1><p>CLINICAL NEURO-REHABILITATION WORKSTATION</p></div></div><nav aria-label="Application sections"><button className={view === 'exercises' ? 'selected' : ''} onClick={() => setView('exercises')}>Exercises</button><button disabled={!patientActive} className={view === 'live' ? 'selected' : ''} onClick={() => patientActive && setView('live')}>Live data</button><button className={view === 'reports' ? 'selected' : ''} onClick={() => setView('reports')}>Reports</button></nav><div className="topbar-actions"><div className="topbar-status"><span className={patientActive && anyGloveConnected ? 'connected' : ''}><i />{patientActive ? anyGloveConnected ? 'GLOVES LIVE' : 'PATIENT SESSION' : auth?.authenticated ? 'DOCTOR WORKSPACE' : 'AUTHENTICATION'}</span><small>{patientActive ? `${auth?.patient?.name} · ${auth?.patient?.id}` : auth?.doctor?.name ?? 'Doctor login required'}</small></div>{patientActive && (anyGloveConnected ? <Button type="button" variant="outline" className="disconnect-gloves" style={{ borderColor: '#fecaca', color: '#dc2626' }} onClick={() => void disconnectXRGame()}><Power className="mr-2" />Disconnect Gloves</Button> : <Button type="button" style={{ background: '#0F6C73', color: '#ffffff' }} onClick={() => { setShowGloveModal(true); void launchXRGame(); }}><Bluetooth className="mr-2" />Connect Gloves</Button>)}{patientActive && <Button type="button" variant="outline" className="end-patient-btn" onClick={() => void endPatient()}><User />End patient</Button>}{auth?.authenticated && <Button type="button" variant="outline" className="logout-button" onClick={() => void logout()}><LogOut />Logout</Button>}</div></header>
     {patientActive && <section className="therapy-status"><div><Radio /><span><strong>{telemetry?.meta.packet_rate ?? 0} Hz</strong><small>PACKET RATE</small></span></div><div><Gauge /><span><strong>{selectedHand}</strong><small>ACTIVE HAND</small></span></div><div><Wifi /><span><strong>{handHasData('LEFT') ? 'CONNECTED' : 'OFFLINE'}</strong><small>LEFT GLOVE</small></span></div><div><Wifi /><span><strong>{handHasData('RIGHT') ? 'CONNECTED' : 'OFFLINE'}</strong><small>RIGHT GLOVE</small></span></div></section>}
     <div className="therapy-main">{patientActive
       ? view === 'exercises' ? <ExerciseWorkspace telemetry={telemetry} selectedHand={selectedHand} setSelectedHand={setSelectedHand} selectExercise={selectExercise} finishExercise={(summary) => void finishExercise(summary)} sendCommand={sendCommand} pendingCommand={pendingCommand} commandStatus={commandStatus} bridgeOnline={bridgeOnline} /> : view === 'live' ? <LiveDataWorkspace telemetry={telemetry} selectedHand={selectedHand} setSelectedHand={setSelectedHand} bridgeOnline={bridgeOnline} sendCommand={sendCommand} pendingCommand={pendingCommand} commandStatus={commandStatus} /> : <ReportsWorkspace activePatient={auth?.patient} />

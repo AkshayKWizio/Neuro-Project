@@ -7049,3 +7049,723 @@ button[variant="outline"]:hover,
   border-color: #94a3b8 !important;
 }
 
+/* =========================================================================
+   CLINICAL GLOVE CALIBRATION GATE & CONTROLS (READABILITY & HIGH POLISH)
+   ========================================================================= */
+
+.calibration-overlay {
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: 9999 !important;
+}
+
+.calibration-gate-card {
+  width: min(100%, 680px) !important;
+  max-height: calc(100vh - 48px) !important;
+  padding: 32px 36px !important;
+  border-radius: 20px !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(15, 108, 115, 0.12) !important;
+  overflow: auto !important;
+  color: #0f172a !important;
+}
+
+.calibration-gate-card .access-mark {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 14px !important;
+  background: #e6f4f2 !important;
+  border: 1px solid #99d5cb !important;
+  color: #0F6C73 !important;
+  margin-bottom: 16px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.calibration-gate-card .access-mark svg {
+  width: 26px !important;
+  height: 26px !important;
+  color: #0F6C73 !important;
+}
+
+.calibration-gate-card .eyebrow {
+  display: inline-block !important;
+  font-size: 11.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.08em !important;
+  color: #0F6C73 !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+}
+
+.calibration-gate-card h1#calibration-title {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 4px 0 8px 0 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.calibration-gate-card > p {
+  font-size: 14px !important;
+  color: #475569 !important;
+  line-height: 1.55 !important;
+  margin: 0 0 22px 0 !important;
+}
+
+.calibration-requirements {
+  display: grid !important;
+  gap: 16px !important;
+}
+
+.calibration-requirement {
+  padding: 22px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+}
+
+.calibration-requirement header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.calibration-requirement header span {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  color: #0f172a !important;
+}
+
+.calibration-requirement header span svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: #0F6C73 !important;
+}
+
+.calibration-requirement header span b {
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.02em !important;
+  color: #0f172a !important;
+}
+
+.calibration-requirement header strong {
+  padding: 5px 13px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.calibration-requirement.status-2 header strong {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border: 1px solid #bae6fd !important;
+}
+
+.calibration-requirement.status-3 header strong {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.calibration-requirement.status-4 header strong {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.calibration-requirement > small {
+  display: block !important;
+  margin: 4px 0 16px 0 !important;
+  color: #64748b !important;
+  font-size: 12px !important;
+  font-family: var(--font-geist-mono), monospace !important;
+  font-weight: 500 !important;
+}
+
+.calibration-motion {
+  position: relative !important;
+  height: 230px !important;
+  margin: 0 0 16px 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%) !important;
+}
+
+.calibration-motion .hand-viewport {
+  height: 230px !important;
+  min-height: 230px !important;
+  background: radial-gradient(circle at 50% 48%, rgba(15, 108, 115, 0.12), transparent 52%) !important;
+}
+
+.calibration-motion > span {
+  position: absolute !important;
+  z-index: 5 !important;
+  left: 50% !important;
+  bottom: 12px !important;
+  transform: translateX(-50%) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  white-space: nowrap !important;
+  padding: 6px 14px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.12) !important;
+  border: 1px solid rgba(15, 108, 115, 0.18) !important;
+  color: #0F6C73 !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.calibration-motion > span svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: #0F6C73 !important;
+}
+
+.calibration-gate-progress > div {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 6px !important;
+}
+
+.calibration-gate-progress > div span {
+  color: #334155 !important;
+  font-size: 11.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.calibration-gate-progress > div b {
+  color: #0F6C73 !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  font-family: var(--font-geist-mono), monospace !important;
+}
+
+.calibration-gate-progress > i {
+  display: block !important;
+  height: 8px !important;
+  margin-top: 6px !important;
+  overflow: hidden !important;
+  border-radius: 9999px !important;
+  background: #e2e8f0 !important;
+}
+
+.calibration-gate-progress u {
+  display: block !important;
+  height: 100% !important;
+  border-radius: 9999px !important;
+  background: linear-gradient(90deg, #0F6C73 0%, #14b8a6 100%) !important;
+  transition: width 0.25s ease-out !important;
+}
+
+.calibration-requirement > p {
+  margin: 14px 0 !important;
+  padding: 12px 16px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  color: #1e293b !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.55 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.calibration-gate-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin-top: 16px !important;
+}
+
+.calibration-gate-actions button {
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 0 18px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+.calibration-gate-actions button:first-child {
+  background: #ffffff !important;
+  color: #64748b !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+.calibration-gate-actions button:first-child:hover {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  border-color: #94a3b8 !important;
+}
+
+.calibration-gate-actions button:nth-child(2):not(:last-child) {
+  background: #ffffff !important;
+  color: #0F6C73 !important;
+  border: 1.5px solid #99d5cb !important;
+}
+
+.calibration-gate-actions button:nth-child(2):not(:last-child):hover {
+  background: #f0fdfa !important;
+  border-color: #0F6C73 !important;
+}
+
+.calibration-gate-actions button:last-child {
+  background: #0F6C73 !important;
+  color: #ffffff !important;
+  border: 1.5px solid #0B5258 !important;
+  box-shadow: 0 2px 8px rgba(15, 108, 115, 0.25) !important;
+}
+
+.calibration-gate-actions button:last-child:hover {
+  background: #0d5c62 !important;
+  border-color: #09474c !important;
+  box-shadow: 0 4px 12px rgba(15, 108, 115, 0.35) !important;
+}
+
+.calibration-gate-actions button:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+.calibration-gate-message {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+  padding: 11px 15px !important;
+  border: 1px solid #99d5cb !important;
+  border-radius: 8px !important;
+  background: #f0fdfa !important;
+  color: #0F6C73 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+.calibration-gate-message svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: #0F6C73 !important;
+}
+
+.calibration-gate-card > small {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  margin-top: 18px !important;
+  color: #64748b !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.calibration-gate-card > small svg {
+  width: 15px !important;
+  height: 15px !important;
+  color: #0F6C73 !important;
+}
+
+/* Also polish Quick Calibration Controls in Live Data / Hand Rig */
+.quick-controls {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  padding: 14px 18px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.quick-target span {
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  color: #64748b !important;
+  letter-spacing: 0.06em !important;
+}
+
+.quick-target strong {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.quick-target small {
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+
+.quick-live-metrics span {
+  font-size: 11.5px !important;
+  color: #334155 !important;
+}
+
+.quick-live-metrics span b {
+  font-weight: 750 !important;
+  color: #0f172a !important;
+}
+
+.calib-tag-ready {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+  padding: 3px 8px !important;
+  border-radius: 9999px !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+}
+
+.calib-tag-pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+  padding: 3px 8px !important;
+  border-radius: 9999px !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+}
+
+.quick-progress-header span {
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  color: #64748b !important;
+  letter-spacing: 0.06em !important;
+}
+
+.quick-progress-header strong {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #0F6C73 !important;
+}
+
+.quick-progress i {
+  height: 6px !important;
+  background: #e2e8f0 !important;
+  border-radius: 9999px !important;
+}
+
+.quick-progress b {
+  background: linear-gradient(90deg, #0F6C73, #14b8a6) !important;
+  border-radius: 9999px !important;
+}
+
+.quick-btn-calibrate {
+  background: #0F6C73 !important;
+  color: #ffffff !important;
+  border: 1px solid #0B5258 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+}
+
+.quick-btn-calibrate:hover {
+  background: #0d5c62 !important;
+}
+
+.quick-btn-tare {
+  background: #ffffff !important;
+  color: #0F6C73 !important;
+  border: 1.5px solid #99d5cb !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+}
+
+.quick-btn-tare:hover {
+  background: #f0fdfa !important;
+}
+
+
+
+/* DUAL HAND RIG & QUICK CONTROLS POLISHED STYLES */
+
+/* ==========================================================================
+   DUAL HAND RIG & QUICK CONTROLS POLISHED STYLES (NO CLIPPING / NO OVERLAPS)
+   ========================================================================== */
+.rig-card {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+.quick-controls,
+.rig-card .quick-controls {
+  min-height: 72px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-top: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  border-radius: 0 0 12px 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+/* 1. Target Column */
+.quick-controls .quick-target,
+.quick-controls > div:first-child {
+  flex: 0 0 auto !important;
+  min-width: 95px !important;
+  max-width: 125px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.quick-target span,
+.quick-controls > div:first-child span {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  line-height: 1.2 !important;
+}
+
+.quick-target strong,
+.quick-controls > div:first-child strong {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.quick-target small,
+.quick-controls > div:first-child small {
+  font-size: 10px !important;
+  color: #64748b !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+/* 2. Live Telemetry Metrics */
+.quick-controls .quick-live-metrics {
+  flex: 0 1 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11px !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+.quick-controls .quick-live-metrics span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+
+.quick-controls .quick-live-metrics span b {
+  font-weight: 750 !important;
+  color: #0284c7 !important;
+}
+
+.calib-tag-ready {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+  padding: 2px 7px !important;
+  border-radius: 9999px !important;
+  font-size: 9.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+}
+
+.calib-tag-pending {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+  padding: 2px 7px !important;
+  border-radius: 9999px !important;
+  font-size: 9.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+}
+
+/* 3. Progress Bar (Never Overlaps) */
+.quick-controls .quick-progress {
+  flex: 1 1 115px !important;
+  min-width: 95px !important;
+  max-width: 165px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  box-sizing: border-box !important;
+}
+
+.quick-controls .quick-progress-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: baseline !important;
+  width: 100% !important;
+  gap: 6px !important;
+}
+
+.quick-controls .quick-progress-header span,
+.quick-controls .quick-progress > span {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  letter-spacing: 0.05em !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.quick-controls .quick-progress-header strong,
+.quick-controls .quick-progress strong {
+  float: none !important;
+  margin: 0 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #0F6C73 !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.quick-controls .quick-progress i {
+  display: block !important;
+  height: 5px !important;
+  background: #e2e8f0 !important;
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.quick-controls .quick-progress b {
+  display: block !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, #0F6C73, #14b8a6) !important;
+  border-radius: 9999px !important;
+  transition: width 0.2s ease !important;
+}
+
+/* 4. Action Buttons (Never Clips) */
+.quick-controls .quick-actions,
+.quick-controls > div:last-child:not(.quick-progress):not(.quick-message) {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.quick-btn-calibrate,
+.quick-controls button:not(.quick-btn-tare) {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 11px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  background: #0F6C73 !important;
+  color: #ffffff !important;
+  border: 1px solid #0B5258 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 2px rgba(15, 108, 115, 0.15) !important;
+}
+
+.quick-btn-calibrate:hover,
+.quick-controls button:not(.quick-btn-tare):hover {
+  background: #0d5c62 !important;
+}
+
+.quick-btn-tare,
+.quick-controls button.quick-btn-tare {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 9px !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #0F6C73 !important;
+  border: 1.5px solid #0F6C73 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+}
+
+.quick-btn-tare:hover,
+.quick-controls button.quick-btn-tare:hover {
+  background: #f0fdfa !important;
+  border-color: #0d5c62 !important;
+}
+
+.quick-btn-calibrate svg,
+.quick-btn-tare svg,
+.quick-controls button svg {
+  width: 13px !important;
+  height: 13px !important;
+  flex-shrink: 0 !important;
+}
+
+.quick-message {
+  width: 100% !important;
+  flex-basis: 100% !important;
+  margin-top: 4px !important;
+  padding: 4px 8px !important;
+  border-left: 3px solid #0F6C73 !important;
+  background: #f0fdfa !important;
+  color: #0F6C73 !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  border-radius: 0 4px 4px 0 !important;
+}
+
+@media (max-width: 1200px) {
+  .rig-card .quick-controls {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px 10px !important;
+  }
+}

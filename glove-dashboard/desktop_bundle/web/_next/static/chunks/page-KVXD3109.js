@@ -5132,215 +5132,26 @@ function WX({report:e}){let t=Object.entries(e.counts??{}).filter(([,e])=>e>0),n
     ]}),
     hasError&&(0,H.jsxs)(`div`,{className:`access-message`,children:[(0,H.jsx)(E,{}),t?.message]}),
     i&&!isStreaming&&(0,H.jsxs)(`div`,{className:`waiting-strip`,children:[(0,H.jsx)(ne,{className:"animate-spin"}),(0,H.jsx)(`span`,{children:`XR Game running · waiting for StretchSense glove packets…`})]})
-  ]})})}function XX({requirements:e,exercise:t,pending:n,message:r,onCalibrate:i,onCancel:a,onTare:sTare}){return(0,H.jsx)(`div`,{className:`access-overlay calibration-overlay`,role:`dialog`,"aria-modal":`true`,"aria-labelledby":`calibration-title`,children:(0,H.jsxs)(`div`,{className:`access-card calibration-gate-card`,children:[(0,H.jsx)(`div`,{className:`access-mark`,children:(0,H.jsx)(j,{})}),(0,H.jsx)(`span`,{className:`eyebrow`,children:`GLOVE CALIBRATION REQUIRED`}),(0,H.jsx)(`h1`,{id:`calibration-title`,children:`Calibrate Range of Motion Before Exercising`}),(0,H.jsxs)(`p`,{children:[`Your selected glove needs a completed Basic articulation calibration before starting `,LX[t].title,`.`]}),(0,H.jsx)(`div`,{className:`calibration-requirements`,children:e.map(({side:e,state:t,serial:r})=>{let o=t?.status??0,s=Math.max(0,Math.min(100,t?.progress??0)),c=o===2||o===3,isCalibrated=o===4||s===100,l=o===4?`CALIBRATED (READY)`:o===3?`CAPTURING`:o===2?`GET READY`:o===1?`NOT CALIBRATED`:`STATUS UNKNOWN`;return(0,H.jsxs)(`section`,{className:`calibration-requirement status-${o}`,children:[(0,H.jsxs)(`header`,{children:[(0,H.jsxs)(`span`,{children:[(0,H.jsx)(v,{}),(0,H.jsxs)(`b`,{children:[e,` GLOVE`]})]}),(0,H.jsx)(`strong`,{children:l})]}),(0,H.jsx)(`small`,{children:r||`Connected glove`}),(0,H.jsxs)(`div`,{className:`calibration-motion`,children:[(0,H.jsx)(MX,{side:e,guidanceMode:`calibration`}),(0,H.jsx)(`span`,{children:`ANATOMICAL RANGE-OF-MOTION CALIBRATION`})]}),(0,H.jsxs)(`div`,{className:`calibration-gate-progress`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`span`,{children:`BASIC CALIBRATION`}),(0,H.jsxs)(`b`,{children:[Math.round(s),`%`]})]}),(0,H.jsx)(`i`,{children:(0,H.jsx)(`u`,{style:{width:`${s}%`}})})]}),(0,H.jsx)(`p`,{children:c?`Keep following the hand movement until capture reaches 100%.`:isCalibrated?`Calibration complete (100%). You may recalibrate or tare wrist if needed.`:`Start with a relaxed closed fist, then steadily extend each digit through maximum comfortable range of motion.`}),(0,H.jsxs)(`div`,{className:`calibration-gate-actions`,children:[(0,H.jsx)(qn,{type:`button`,variant:`outline`,disabled:c,onClick:a,children:`Not now`}),sTare&&(0,H.jsxs)(qn,{type:`button`,variant:`outline`,disabled:n!==null||c,onClick:()=>sTare(e),children:[(0,H.jsx)(re,{}),n===`tare`?`Taring…`:`Tare wrist`]}),(0,H.jsxs)(qn,{type:`button`,disabled:n!==null||c,onClick:()=>i(e),children:[(0,H.jsx)(j,{}),n===`calibration`?`Starting…`:c?`Calibration in progress…`:isCalibrated?`Recalibrate ${e.toLowerCase()} glove`:`Start calibration`]})]})]},e)})}),r&&(0,H.jsxs)(`div`,{className:`calibration-gate-message`,children:[(0,H.jsx)(te,{}),r]}),(0,H.jsxs)(`small`,{children:[(0,H.jsx)(ie,{}),` Your selected exercise starts automatically when this glove reports CAPTURED.`]})]})})}function ZX({side:e,hand:t,connected:n,bridgeOnline:r,onCommand:i,pending:a,message:o}){let s=t?.articulation_state,c=s?.label?.trim().toUpperCase()===`BASIC`,l=Math.max(0,Math.min(100,c?s?.progress??0:0)),isCalib=s?.status===4||l===100;let roll=typeof t?.orientation?.orientation?.x==="number"?(t.orientation.orientation.x*100).toFixed(1)+"°":"0.0°";let bend=typeof t?.sliders?.INDEXBEND1==="number"?Math.round(t.sliders.INDEXBEND1*100)+"%":(typeof t?.sliders?.index_mcp==="number"?Math.round(t.sliders.index_mcp*100)+"%":(n?"Active":"—"));return(0,H.jsxs)(`div`,{className:`quick-controls`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`span`,{children:`CONTROL TARGET`}),(0,H.jsxs)(`strong`,{children:[e,` GLOVE`]}),(0,H.jsx)(`small`,{children:n?`Live telemetry available`:`Not connected`})]}),n&&(0,H.jsxs)(`div`,{className:`quick-live-metrics`,style:{display:"flex",gap:"12px",fontSize:"11px",color:"#94a3b8",padding:"4px 0",alignItems:"center"},children:[(0,H.jsxs)(`span`,{children:[`ROLL: `,(0,H.jsx)(`b`,{style:{color:"#38bdf8"},children:roll})]}),(0,H.jsxs)(`span`,{children:[`BEND: `,(0,H.jsx)(`b`,{style:{color:"#38bdf8"},children:bend})]}),(0,H.jsx)(`span`,{style:{color:isCalib?"#10b981":"#f59e0b",marginLeft:"auto",fontWeight:600},children:isCalib?"CALIBRATED":"UNCALIBRATED"})]}),(0,H.jsxs)(`div`,{className:`quick-progress`,children:[(0,H.jsx)(`span`,{children:`CALIBRATION`}),(0,H.jsxs)(`strong`,{children:[isCalib?`100% (READY)`:`${Math.round(l)}%`]}),(0,H.jsx)(`i`,{children:(0,H.jsx)(`b`,{style:{width:`${l}%`}})})]}),(0,H.jsxs)(`div`,{style:{display:"flex",gap:"8px",marginTop:"6px"},children:[(0,H.jsxs)(qn,{style:{flex:1},disabled:!r||!n||a!==null,onClick:t=>{t.stopPropagation(),i(`articulation_basic_calibrate`,`calibration`,e)},children:[(0,H.jsx)(j,{}),a===`calibration`?`Starting…`:isCalib?`Recalibrate`:`Calibrate`]}),(0,H.jsxs)(qn,{style:{flex:1},variant:`outline`,disabled:!r||!n||a!==null,onClick:t=>{t.stopPropagation(),i(`imu_tare`,`tare`,e)},children:[(0,H.jsx)(re,{}),a===`tare`?`Taring…`:`Tare wrist`]})]}),o&&(0,H.jsx)(`span`,{className:`quick-message`,children:o})]})}function QX({telemetry:e,selectedHand:t,onSelect:n,bridgeOnline:r,onCommand:i,pending:a,message:o}){return(0,H.jsxs)(`section`,{className:`dual-rig-panel`,children:[(0,H.jsxs)(`div`,{className:`section-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`span`,{className:`eyebrow`,children:`LIVE HANDS`}),(0,H.jsx)(`h2`,{children:`Your movement, in real time`})]}),(0,H.jsxs)(`span`,{className:`truth-label`,children:[(0,H.jsx)(te,{}),` LIVE SENSOR DATA`]})]}),(0,H.jsx)(`div`,{className:`dual-rig-grid`,children:[`LEFT`,`RIGHT`].map(s=>{let c=e?.hands[s.toLowerCase()],l=!!e?.meta.hand_connected?.[s.toLowerCase()];return(0,H.jsxs)(`article`,{className:`rig-card ${t===s?`selected`:``}`,onClick:()=>n(s),children:[(0,H.jsxs)(`header`,{children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(v,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsxs)(`strong`,{children:[s,` HAND`]}),(0,H.jsx)(`small`,{children:t===s?`EXERCISE TARGET`:`SELECT THIS HAND`})]})]}),(0,H.jsxs)(`span`,{className:`hand-status ${l?`connected`:``}`,children:[(0,H.jsx)(`i`,{}),l?`CONNECTED`:`NOT CONNECTED`]})]}),(0,H.jsx)(MX,{side:s,joints:l?c?.kinematic?.joints:void 0}),(0,H.jsx)(ZX,{side:s,hand:c,connected:l,bridgeOnline:r,onCommand:i,pending:t===s?a:null,message:t===s?o:``})]},s)})})]})}function $X({mode:e,side:t}){let n=LX[e];return(0,H.jsxs)(`section`,{className:`guidance-panel`,children:[(0,H.jsxs)(`div`,{className:`guidance-copy`,children:[(0,H.jsx)(`span`,{className:`eyebrow`,children:`HOW TO PERFORM`}),(0,H.jsx)(`h2`,{children:n.title}),(0,H.jsx)(`p`,{children:n.guidance}),(0,H.jsxs)(`div`,{className:`guidance-sequence`,children:[(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`b`,{children:`01`}),n.steps[0]]}),(0,H.jsx)(`i`,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`b`,{children:`02`}),n.steps[1]]})]}),(0,H.jsx)(`small`,{children:`GUIDANCE ANIMATION · NOT MEASURED DATA`})]}),(0,H.jsx)(`div`,{className:`guidance-visual`,children:(0,H.jsx)(MX,{side:t,guidanceMode:e})})]})}function eZ({mode:e,exercise:t}){let n=LX[e].movements,r=t?.events.filter(e=>n.includes(e.movement))??[];return(0,H.jsxs)(`div`,{className:`exercise-detail-grid`,children:[(0,H.jsxs)(`article`,{className:`panel detector-panel`,children:[(0,H.jsxs)(`div`,{className:`panel-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(_,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`strong`,{children:`DETECTOR SIGNAL`}),(0,H.jsx)(`small`,{children:`Live stability and classification values`})]})]}),(0,H.jsx)(`span`,{className:`live-tag`,children:t?.activity??`idle`})]}),(0,H.jsx)(`div`,{className:`detector-metrics`,children:e===`pronation_supination`?(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(RX,{label:`ANGULAR VELOCITY`,value:`${t?.pronation_supination.angular_velocity?.toFixed(1)??`—`}°/s`}),(0,H.jsx)(RX,{label:`PROJECTED ROTATION`,value:`${t?.pronation_supination.projected_rotation?.toFixed(1)??`—`}°`}),(0,H.jsx)(RX,{label:`DIRECTION CONSISTENCY`,value:t?.pronation_supination.direction_consistency?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`PALM DOT CHANGE`,value:t?.pronation_supination.palm_dot_change?.toFixed(4)??`—`})]}):e===`circumduction`?(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(RX,{label:`SMOOTHED SCORE`,value:t?.circumduction.score?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`LOOP STRENGTH`,value:t?.circumduction.loop_strength?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`AVERAGE VELOCITY`,value:`${t?.circumduction.average_velocity?.toFixed(1)??`—`}°/s`}),(0,H.jsx)(RX,{label:`SIGNED AREA`,value:t?.circumduction.signed_area?.toFixed(3)??`—`})]}):(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(RX,{label:`RAW FLEXION`,value:t?.hand_open_close.raw_flexion?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`SMOOTHED FLEXION`,value:t?.hand_open_close.smoothed_flexion?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`CONFIDENCE`,value:t?.hand_open_close.confidence?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`CURRENT STATE`,value:t?.hand_open_close.state?.toUpperCase()??`—`})]})})]}),(0,H.jsxs)(`article`,{className:`panel`,children:[(0,H.jsxs)(`div`,{className:`panel-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(le,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`strong`,{children:`DETECTED MOVEMENTS`}),(0,H.jsx)(`small`,{children:`Newest confirmed movement first`})]})]}),(0,H.jsxs)(`span`,{className:`count-tag`,children:[r.length,` EVENTS`]})]}),(0,H.jsx)(`div`,{className:`exercise-events`,children:r.length?r.map((e,t)=>(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`i`,{}),(0,H.jsx)(`strong`,{children:IX[e.movement]??e.movement}),(0,H.jsx)(`span`,{children:new Date(e.timestamp_ms).toLocaleTimeString()})]},`${e.timestamp_ms}-${t}`)):(0,H.jsx)(`p`,{children:`Perform the selected movement to begin tracking.`})})]})]})}function tZ({telemetry:e,selectedHand:t,setSelectedHand:n,selectExercise:r,finishExercise:i,sendCommand:a,pendingCommand:o,commandStatus:s,bridgeOnline:c,onBack:bk}){
+  ]})})}function XX({requirements:e,exercise:t,pending:n,message:r,onCalibrate:i,onCancel:a,onTare:sTare}){return(0,H.jsx)(`div`,{className:`access-overlay calibration-overlay`,role:`dialog`,"aria-modal":`true`,"aria-labelledby":`calibration-title`,children:(0,H.jsxs)(`div`,{className:`access-card calibration-gate-card`,children:[(0,H.jsx)(`div`,{className:`access-mark`,children:(0,H.jsx)(j,{})}),(0,H.jsx)(`span`,{className:`eyebrow`,children:`GLOVE CALIBRATION REQUIRED`}),(0,H.jsx)(`h1`,{id:`calibration-title`,children:`Calibrate Range of Motion Before Exercising`}),(0,H.jsxs)(`p`,{children:[`Your selected glove needs a completed Basic articulation calibration before starting `,LX[t].title,`.`]}),(0,H.jsx)(`div`,{className:`calibration-requirements`,children:e.map(({side:e,state:t,serial:r})=>{let o=t?.status??0,s=Math.max(0,Math.min(100,t?.progress??0)),c=o===2||o===3,isCalibrated=o===4||s===100,l=o===4?`CALIBRATED (READY)`:o===3?`CAPTURING`:o===2?`GET READY`:o===1?`NOT CALIBRATED`:`STATUS UNKNOWN`;return(0,H.jsxs)(`section`,{className:`calibration-requirement status-${o}`,children:[(0,H.jsxs)(`header`,{children:[(0,H.jsxs)(`span`,{children:[(0,H.jsx)(v,{}),(0,H.jsxs)(`b`,{children:[e,` GLOVE`]})]}),(0,H.jsx)(`strong`,{children:l})]}),(0,H.jsx)(`small`,{children:r||`Connected glove`}),(0,H.jsxs)(`div`,{className:`calibration-motion`,children:[(0,H.jsx)(MX,{side:e,guidanceMode:`calibration`}),(0,H.jsx)(`span`,{children:`ANATOMICAL RANGE-OF-MOTION CALIBRATION`})]}),(0,H.jsxs)(`div`,{className:`calibration-gate-progress`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`span`,{children:`BASIC CALIBRATION`}),(0,H.jsxs)(`b`,{children:[Math.round(s),`%`]})]}),(0,H.jsx)(`i`,{children:(0,H.jsx)(`u`,{style:{width:`${s}%`}})})]}),(0,H.jsx)(`p`,{children:c?`Keep following the hand movement until capture reaches 100%.`:isCalibrated?`Calibration complete (100%). You may recalibrate or tare wrist if needed.`:`Start with a relaxed closed fist, then steadily extend each digit through maximum comfortable range of motion.`}),(0,H.jsxs)(`div`,{className:`calibration-gate-actions`,children:[(0,H.jsx)(qn,{type:`button`,variant:`outline`,disabled:c,onClick:a,children:`Not now`}),sTare&&(0,H.jsxs)(qn,{type:`button`,variant:`outline`,disabled:n!==null||c,onClick:()=>sTare(e),children:[(0,H.jsx)(re,{}),n===`tare`?`Taring…`:`Tare wrist`]}),(0,H.jsxs)(qn,{type:`button`,disabled:n!==null||c,onClick:()=>i(e),children:[(0,H.jsx)(j,{}),n===`calibration`?`Starting…`:c?`Calibration in progress…`:isCalibrated?`Recalibrate ${e.toLowerCase()} glove`:`Start calibration`]})]})]},e)})}),r&&(0,H.jsxs)(`div`,{className:`calibration-gate-message`,children:[(0,H.jsx)(te,{}),r]}),(0,H.jsxs)(`small`,{children:[(0,H.jsx)(ie,{}),` Your selected exercise starts automatically when this glove reports CAPTURED.`]})]})})}function ZX({side:e,hand:t,connected:n,bridgeOnline:r,onCommand:i,pending:a,message:o}){let s=t?.articulation_state,c=s?.label?.trim().toUpperCase()===`BASIC`,l=Math.max(0,Math.min(100,c?s?.progress??0:0)),isCalib=s?.status===4||l===100;let roll=typeof t?.orientation?.orientation?.x==="number"?(t.orientation.orientation.x*100).toFixed(1)+"\u00b0":"0.0\u00b0";let bend=typeof t?.sliders?.INDEXBEND1==="number"?Math.round(t.sliders.INDEXBEND1*100)+"%":(typeof t?.sliders?.index_mcp==="number"?Math.round(t.sliders.index_mcp*100)+"%":(n?"Active":"\u2014"));return(0,H.jsxs)("div",{className:"quick-controls",children:[(0,H.jsxs)("div",{className:"quick-target",children:[(0,H.jsx)("span",{children:"CONTROL TARGET"}),(0,H.jsxs)("strong",{children:[e," GLOVE"]}),(0,H.jsx)("small",{children:n?"Live telemetry available":"Not connected"})]}),n&&(0,H.jsxs)("div",{className:"quick-live-metrics",children:[(0,H.jsxs)("span",{children:["ROLL: ",(0,H.jsx)("b",{children:roll})]}),(0,H.jsxs)("span",{children:["BEND: ",(0,H.jsx)("b",{children:bend})]}),(0,H.jsx)("span",{className:isCalib?"calib-tag-ready":"calib-tag-pending",children:isCalib?"CALIBRATED":"UNCALIBRATED"})]}),(0,H.jsxs)("div",{className:"quick-progress",children:[(0,H.jsxs)("div",{className:"quick-progress-header",children:[(0,H.jsx)("span",{children:"CALIBRATION"}),(0,H.jsxs)("strong",{children:[isCalib?"100% (READY)":`${Math.round(l)}%`]})]}),(0,H.jsx)("i",{children:(0,H.jsx)("b",{style:{width:`${l}%`}})})]}),(0,H.jsxs)("div",{className:"quick-actions",children:[(0,H.jsxs)(qn,{className:"quick-btn-calibrate",disabled:!r||!n||a!==null,onClick:ev=>{ev.stopPropagation();i("articulation_basic_calibrate","calibration",e)},children:[(0,H.jsx)(j,{}),a==="calibration"?"Starting\u2026":isCalib?"Recalibrate":"Calibrate"]}),(0,H.jsxs)(qn,{className:"quick-btn-tare",variant:"outline",disabled:!r||!n||a!==null,onClick:ev=>{ev.stopPropagation();i("imu_tare","tare",e)},children:[(0,H.jsx)(re,{}),a==="tare"?"Taring\u2026":"Tare wrist"]})]}),o&&(0,H.jsx)("span",{className:"quick-message",children:o})]})};function QX({telemetry:e,selectedHand:t,onSelect:n,bridgeOnline:r,onCommand:i,pending:a,message:o}){return(0,H.jsxs)(`section`,{className:`dual-rig-panel`,children:[(0,H.jsxs)(`div`,{className:`section-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`span`,{className:`eyebrow`,children:`LIVE HANDS`}),(0,H.jsx)(`h2`,{children:`Your movement, in real time`})]}),(0,H.jsxs)(`span`,{className:`truth-label`,children:[(0,H.jsx)(te,{}),` LIVE SENSOR DATA`]})]}),(0,H.jsx)(`div`,{className:`dual-rig-grid`,children:[`LEFT`,`RIGHT`].map(s=>{let c=e?.hands[s.toLowerCase()],l=!!e?.meta.hand_connected?.[s.toLowerCase()];return(0,H.jsxs)(`article`,{className:`rig-card ${t===s?`selected`:``}`,onClick:()=>n(s),children:[(0,H.jsxs)(`header`,{children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(v,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsxs)(`strong`,{children:[s,` HAND`]}),(0,H.jsx)(`small`,{children:t===s?`EXERCISE TARGET`:`SELECT THIS HAND`})]})]}),(0,H.jsxs)(`span`,{className:`hand-status ${l?`connected`:``}`,children:[(0,H.jsx)(`i`,{}),l?`CONNECTED`:`NOT CONNECTED`]})]}),(0,H.jsx)(MX,{side:s,joints:l?c?.kinematic?.joints:void 0}),(0,H.jsx)(ZX,{side:s,hand:c,connected:l,bridgeOnline:r,onCommand:i,pending:t===s?a:null,message:t===s?o:``})]},s)})})]})}function $X({mode:e,side:t}){let n=LX[e];return(0,H.jsxs)(`section`,{className:`guidance-panel`,children:[(0,H.jsxs)(`div`,{className:`guidance-copy`,children:[(0,H.jsx)(`span`,{className:`eyebrow`,children:`HOW TO PERFORM`}),(0,H.jsx)(`h2`,{children:n.title}),(0,H.jsx)(`p`,{children:n.guidance}),(0,H.jsxs)(`div`,{className:`guidance-sequence`,children:[(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`b`,{children:`01`}),n.steps[0]]}),(0,H.jsx)(`i`,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`b`,{children:`02`}),n.steps[1]]})]}),(0,H.jsx)(`small`,{children:`GUIDANCE ANIMATION · NOT MEASURED DATA`})]}),(0,H.jsx)(`div`,{className:`guidance-visual`,children:(0,H.jsx)(MX,{side:t,guidanceMode:e})})]})}function eZ({mode:e,exercise:t}){let n=LX[e].movements,r=t?.events.filter(e=>n.includes(e.movement))??[];return(0,H.jsxs)(`div`,{className:`exercise-detail-grid`,children:[(0,H.jsxs)(`article`,{className:`panel detector-panel`,children:[(0,H.jsxs)(`div`,{className:`panel-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(_,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`strong`,{children:`DETECTOR SIGNAL`}),(0,H.jsx)(`small`,{children:`Live stability and classification values`})]})]}),(0,H.jsx)(`span`,{className:`live-tag`,children:t?.activity??`idle`})]}),(0,H.jsx)(`div`,{className:`detector-metrics`,children:e===`pronation_supination`?(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(RX,{label:`ANGULAR VELOCITY`,value:`${t?.pronation_supination.angular_velocity?.toFixed(1)??`—`}°/s`}),(0,H.jsx)(RX,{label:`PROJECTED ROTATION`,value:`${t?.pronation_supination.projected_rotation?.toFixed(1)??`—`}°`}),(0,H.jsx)(RX,{label:`DIRECTION CONSISTENCY`,value:t?.pronation_supination.direction_consistency?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`PALM DOT CHANGE`,value:t?.pronation_supination.palm_dot_change?.toFixed(4)??`—`})]}):e===`circumduction`?(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(RX,{label:`SMOOTHED SCORE`,value:t?.circumduction.score?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`LOOP STRENGTH`,value:t?.circumduction.loop_strength?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`AVERAGE VELOCITY`,value:`${t?.circumduction.average_velocity?.toFixed(1)??`—`}°/s`}),(0,H.jsx)(RX,{label:`SIGNED AREA`,value:t?.circumduction.signed_area?.toFixed(3)??`—`})]}):(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(RX,{label:`RAW FLEXION`,value:t?.hand_open_close.raw_flexion?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`SMOOTHED FLEXION`,value:t?.hand_open_close.smoothed_flexion?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`CONFIDENCE`,value:t?.hand_open_close.confidence?.toFixed(3)??`—`}),(0,H.jsx)(RX,{label:`CURRENT STATE`,value:t?.hand_open_close.state?.toUpperCase()??`—`})]})})]}),(0,H.jsxs)(`article`,{className:`panel`,children:[(0,H.jsxs)(`div`,{className:`panel-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(le,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`strong`,{children:`DETECTED MOVEMENTS`}),(0,H.jsx)(`small`,{children:`Newest confirmed movement first`})]})]}),(0,H.jsxs)(`span`,{className:`count-tag`,children:[r.length,` EVENTS`]})]}),(0,H.jsx)(`div`,{className:`exercise-events`,children:r.length?r.map((e,t)=>(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`i`,{}),(0,H.jsx)(`strong`,{children:IX[e.movement]??e.movement}),(0,H.jsx)(`span`,{children:new Date(e.timestamp_ms).toLocaleTimeString()})]},`${e.timestamp_ms}-${t}`)):(0,H.jsx)(`p`,{children:`Perform the selected movement to begin tracking.`})})]})]})}function tZ({telemetry:e,selectedHand:t,setSelectedHand:n,selectExercise:r,finishExercise:i,sendCommand:a,pendingCommand:o,commandStatus:s,bridgeOnline:c,onBack:bk}){
   let l=e?.exercises[t.toLowerCase()], u=l?.selected??`none`, d=!!e?.meta.hand_connected?.[t.toLowerCase()];
-  let [pendingExercise, setPendingExercise] = (0,f.useState)(null);
-  let [optimisticExercise, setOptimisticExercise] = (0,f.useState)(null);
-  let urlG=(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("game"));let [chosenGame, setChosenGame] = (0,f.useState)((urlG&&urlG!=="1")?urlG:"balloon_blitz");
-  let [chosenDuration, setChosenDuration] = (0,f.useState)(180);
-  let [setupModal, setSetupModal] = (0,f.useState)(null);
-  let [setupHand, setSetupHand] = (0,f.useState)(t);
-  let [setupTimer, setSetupTimer] = (0,f.useState)(180);
-
-  let TargetIcon=()=>(0,H.jsxs)("svg",{width:22,height:22,viewBox:"0 0 24 24",fill:"none",stroke:"#0F6C73",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round",children:[(0,H.jsx)("circle",{cx:12,cy:12,r:10}),(0,H.jsx)("circle",{cx:12,cy:12,r:4}),(0,H.jsx)("path",{d:"M12 2v4M12 18v4M2 12h4M18 12h4"})]});
-  let PianoIcon=()=>(0,H.jsxs)("svg",{width:22,height:22,viewBox:"0 0 24 24",fill:"none",stroke:"#0F6C73",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round",children:[(0,H.jsx)("rect",{x:2,y:4,width:20,height:16,rx:2}),(0,H.jsx)("path",{d:"M6 8v8M10 8v8M14 8v8M18 8v8M2 12h20"})]});
-  let RotateAxisIcon=()=>(0,H.jsxs)("svg",{width:22,height:22,viewBox:"0 0 24 24",fill:"none",stroke:"#0F6C73",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round",children:[(0,H.jsx)("path",{d:"M21 12a9 9 0 1 1-9-9c2.52 0 4.8 1.04 6.44 2.73L21 8"}),(0,H.jsx)("path",{d:"M21 3v5h-5M9 15l6-6"})]});
-  let SequenceIcon=()=>(0,H.jsxs)("svg",{width:22,height:22,viewBox:"0 0 24 24",fill:"none",stroke:"#0F6C73",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round",children:[(0,H.jsx)("rect",{x:3,y:3,width:7,height:7,rx:1}),(0,H.jsx)("rect",{x:14,y:3,width:7,height:7,rx:1}),(0,H.jsx)("rect",{x:14,y:14,width:7,height:7,rx:1}),(0,H.jsx)("rect",{x:3,y:14,width:7,height:7,rx:1}),(0,H.jsx)("path",{d:"M10 6.5h4M6.5 10v4M14 17.5h-4M17.5 14v-4"})]});
-
-  let gamesList = [
-    {
-      id: "balloon_blitz",
-      title: "Balloon Blitz",
-      rec: "Clinical Target: Wrist Open / Close",
-      desc: "3D Inflate & Fly Festival. Wrist Close (False state) pumps air into the balloon; Wrist Open (True state) releases the balloon into the sky to complete 1 clinical repetition.",
-      Icon: TargetIcon
-    },
-    {
-      id: "sky_glider",
-      title: "Sky Glider",
-      rec: "Clinical Target: Forearm Pronation / Supination",
-      desc: "3D Canyon Flight & Ring Navigation. LH Hand: Pronation to Supination turns Left, Supination to Pronation turns Right (opposite for Right hand). Alternating rings guide full repetition cycles.",
-      Icon: RotateAxisIcon
-    },
-    {
-      id: "rolling_wonder",
-      title: "Rolling Wonder",
-      rec: "Clinical Target: Wrist Circumduction",
-      desc: "3D Rainbow Hamster Runner. Clockwise (True state) turns Right; Anticlockwise (True state) turns Left. Turn Right then Turn Left to complete 1 clinical repetition.",
-      Icon: SequenceIcon
-    }
-  ];
-
-  let effectiveExercise = u !== "none" ? u : null;
-  let effectiveSide = setupHand || t;
-  if (effectiveExercise) {
-    let resolvedGame = chosenGame;
-    if (!urlG || urlG === "1" || urlG === "balloon_blitz") {
-      if (effectiveExercise === "pronation_supination") resolvedGame = "sky_glider";
-      else if (effectiveExercise === "circumduction") resolvedGame = "rolling_wonder";
-      else if (effectiveExercise === "hand_open_close") resolvedGame = "balloon_blitz";
-    }
-    return (0,H.jsx)(iR,{
-      mode:effectiveExercise,
-      side:effectiveSide,
-      hand:e?.hands[effectiveSide.toLowerCase()],
-      latest:l?.latest,
-      guidance:(0,H.jsx)($X,{mode:effectiveExercise,side:effectiveSide}),
-      tracker:(0,H.jsx)(QL,{mode:effectiveExercise,exercise:l,live:!!e?.meta.connected,side:effectiveSide}),
-      details:(0,H.jsx)(eZ,{mode:effectiveExercise,exercise:l}),
-      initialGame:resolvedGame,
-      targetDuration:chosenDuration,
-      onFinish:(summary)=>{setOptimisticExercise(null);setPendingExercise(null);setSetupModal(null);i(summary);},
-      onTare:()=>a("imu_tare","tare",effectiveSide),
-      tarePending:o==="tare",
-      tareDisabled:!c||!d||o!==null,
-      tareStatus:s
-    });
-  }
-
-  if (pendingExercise) {
-    return (0,H.jsxs)("div",{className:"therapy-workspace game-selection-workspace",children:[
-      (0,H.jsxs)("div",{className:"game-selection-header",children:[
-        (0,H.jsx)("button",{type:"button",className:"game-selection-back-btn",onClick:()=>setPendingExercise(null),children:"← Return to Protocol Selection"}),
-        (0,H.jsxs)("div",{className:"game-selection-title-group",children:[
-          (0,H.jsx)("span",{className:"eyebrow",children:"STEP 3 · THERAPEUTIC BIOFEEDBACK SELECTION"}),
-          (0,H.jsxs)("h2",{children:["Therapeutic Biofeedback Module for ",LX[pendingExercise]?.title]}),
-          (0,H.jsx)("p",{children:"Select a gamified neuro-motor biofeedback module calibrated to reinforce targeted muscle engagement and motor learning."})
-        ]}),
-        (0,H.jsxs)("div",{className:"hand-indicator-pill",children:[
-          (0,H.jsx)("span",{className:"pulse-dot"}),
-          (0,H.jsxs)("strong",{children:[t," LIMB TARGETED"]})
-        ]})
-      ]}),
-      (0,H.jsx)("div",{className:"games-selection-grid",children:gamesList.map(gm=>{
-        let IconComp = gm.Icon;
-        return (0,H.jsxs)("div",{key:gm.id,className:`game-card ${chosenGame===gm.id?"active":""}`,onClick:()=>{
-          setChosenGame(gm.id);
-          setSetupHand(t);
-          setSetupTimer(chosenDuration||180);
-          setSetupModal(gm);
-        },children:[
-          (0,H.jsxs)("div",{className:"game-card-top",children:[
-            (0,H.jsx)("div",{className:"game-icon-box",children:(0,H.jsx)(IconComp,{})}),
-            (0,H.jsx)("span",{className:"game-rec-badge",children:gm.rec})
-          ]}),
-          (0,H.jsxs)("div",{className:"game-card-body",children:[
-            (0,H.jsx)("h3",{children:gm.title}),
-            (0,H.jsx)("p",{children:gm.desc})
-          ]}),
-          (0,H.jsxs)("button",{type:"button",className:"game-launch-btn",onClick:(ev)=>{
-            ev.stopPropagation();
-            setChosenGame(gm.id);
-            setSetupHand(t);
-            setSetupTimer(chosenDuration||180);
-            setSetupModal(gm);
-          },children:[
-            (0,H.jsxs)("span",{children:["Configure Session with ",gm.title]}),
-            (0,H.jsx)("span",{className:"arrow",children:"→"})
-          ]})
-        ]});
-      })}),
-      setupModal && (0,H.jsx)("div",{className:"game-setup-modal-overlay",onClick:e=>{e.target===e.currentTarget&&setSetupModal(null)},children:
-        (0,H.jsxs)("div",{className:"game-setup-modal-card",children:[
-          (0,H.jsxs)("div",{className:"game-setup-header",children:[
-            (0,H.jsxs)("div",{className:"game-setup-title-box",children:[
-              (0,H.jsx)("div",{className:"game-setup-icon",children:(0,H.jsx)(setupModal.Icon,{})}),
-              (0,H.jsxs)("div",{children:[
-                (0,H.jsx)("h3",{children:setupModal.title}),
-                (0,H.jsxs)("p",{children:["Protocol Prescription · ",LX[pendingExercise]?.title??"Movement Protocol"]})
-              ]})
-            ]}),
-            (0,H.jsx)("button",{type:"button",className:"game-setup-close",onClick:()=>setSetupModal(null),children:"✕"})
-          ]}),
-          (0,H.jsxs)("div",{className:"game-setup-body",children:[
-            (0,H.jsxs)("div",{className:"game-setup-section",children:[
-              (0,H.jsx)("span",{className:"game-setup-section-label",children:"1. TARGET LIMB / HAND"}),
-              (0,H.jsxs)("div",{className:"game-setup-hand-grid",children:[
-                (0,H.jsxs)("button",{type:"button",className:`game-setup-hand-btn ${setupHand==="LEFT"?"active":""}`,onClick:()=>setSetupHand("LEFT"),children:[
-                  (0,H.jsx)("span",{className:"hand-emoji",children:"🤚"}),
-                  (0,H.jsx)("strong",{children:"LEFT HAND"}),
-                  (0,H.jsx)("small",{children:setupHand==="LEFT"?"● Target Selected":"Select Target"})
-                ]}),
-                (0,H.jsxs)("button",{type:"button",className:`game-setup-hand-btn ${setupHand==="RIGHT"?"active":""}`,onClick:()=>setSetupHand("RIGHT"),children:[
-                  (0,H.jsx)("span",{className:"hand-emoji",children:"✋"}),
-                  (0,H.jsx)("strong",{children:"RIGHT HAND"}),
-                  (0,H.jsx)("small",{children:setupHand==="RIGHT"?"● Target Selected":"Select Target"})
-                ]})
-              ]})
-            ]}),
-            (0,H.jsxs)("div",{className:"game-setup-section",children:[
-              (0,H.jsxs)("div",{className:"game-setup-slider-header",children:[
-                (0,H.jsx)("span",{className:"game-setup-section-label",children:"2. PRESCRIBED THERAPY DURATION"}),
-                (0,H.jsx)("span",{className:"game-setup-duration-badge",children:setupTimer===0?"Free Play (Untimed)":`${Math.round(setupTimer/60)} Min${Math.round(setupTimer/60)>1?"s":""}${setupTimer===180?" (Default)":""}`})
-              ]}),
-              (0,H.jsxs)("div",{className:"game-setup-slider-wrapper",children:[
-                (0,H.jsx)("input",{
-                  type:"range",
-                  min:1,
-                  max:15,
-                  step:1,
-                  value:setupTimer===0?3:Math.min(15,Math.max(1,Math.round(setupTimer/60))),
-                  onChange:e=>setSetupTimer(Number(e.target.value)*60),
-                  className:"game-setup-range-slider",
-                  "aria-label":"Session duration in minutes"
-                }),
-                (0,H.jsxs)("div",{className:"game-setup-slider-ticks",children:[
-                  (0,H.jsx)("span",{children:"1m"}),
-                  (0,H.jsx)("span",{className:setupTimer===180?"tick-default":"",children:"3m (Clinical Standard)"}),
-                  (0,H.jsx)("span",{children:"5m"}),
-                  (0,H.jsx)("span",{children:"10m"}),
-                  (0,H.jsx)("span",{children:"15m"})
-                ]})
-              ]}),
-              (0,H.jsx)("div",{className:"game-setup-timer-grid",children:[
-                [60,"1 Min"],[180,"3 Mins"],[300,"5 Mins"],[600,"10 Mins"],[900,"15 Mins"],[0,"Free Play"]
-              ].map(([sec,label])=>(
-                (0,H.jsx)("button",{key:sec,type:"button",className:`game-setup-timer-chip ${setupTimer===sec?"active":""}`,onClick:()=>setSetupTimer(sec),children:label})
-              ))})
-            ]})
-          ]}),
-          (0,H.jsxs)("div",{className:"game-setup-footer",children:[
-            (0,H.jsxs)("button",{type:"button",className:"game-setup-start-btn",onClick:()=>{
-              let chosenH = setupHand || t;
-              let chosenD = setupTimer;
-              let chosenG = setupModal.id;
-              let ex = pendingExercise;
-              n(chosenH);
-              setChosenDuration(chosenD);
-              setChosenGame(chosenG);
-              setOptimisticExercise(ex);
-              setSetupModal(null);
-              r(ex, chosenH);
-            },children:[
-              (0,H.jsx)("span",{children:"Initiate Rehabilitation Session"}),
-              (0,H.jsx)("span",{className:"arrow",children:"→"})
-            ]}),
-            (0,H.jsx)("button",{type:"button",className:"game-setup-cancel-btn",onClick:()=>setSetupModal(null),children:"Cancel"})
-          ]})
-        ]})
-      })
-    ]});
-  }
-
+  let chosenDuration=180;
   return (0,H.jsxs)("div",{className:"therapy-workspace",children:[
+    (0,H.jsx)(QX,{telemetry:e,selectedHand:t,onSelect:n,bridgeOnline:c,onCommand:a,pending:o,message:s}),
     (0,H.jsxs)("section",{className:"exercise-library",children:[
-      (0,H.jsx)("button",{type:"button",className:"page-back-btn",onClick:bk,children:"\u2190 Return to Patient Directory"}),
       (0,H.jsxs)("div",{className:"section-heading",children:[
         (0,H.jsxs)("div",{children:[
-          (0,H.jsx)("span",{className:"eyebrow",children:"STEP 2 · PRESCRIBED REHABILITATION PROTOCOLS"}),
-          (0,H.jsx)("h2",{children:"Prescribed Therapeutic Movement Protocols"}),
-          (0,H.jsx)("p",{children:"Select a targeted anatomical movement protocol to configure biofeedback parameters."})
+          (0,H.jsx)("span",{className:"eyebrow",children:"EXERCISE LIBRARY"}),
+          (0,H.jsx)("h2",{children:"Prescribed Neuro-Rehabilitation Protocols"}),
+          (0,H.jsx)("p",{children:"Selecting an exercise activates only that detector for the chosen glove."})
         ]}),
         (0,H.jsxs)("div",{className:"exercise-heading-actions",children:[
-          (0,H.jsxs)("div",{className:"hand-switch-group",style:{display:"inline-flex",alignItems:"center",gap:"6px",background:"#f1f5f9",padding:"4px",borderRadius:"8px"},children:[
-            (0,H.jsx)("button",{type:"button",style:{fontFamily:"'Montserrat', sans-serif",fontSize:"12px",fontWeight:600,padding:"6px 14px",borderRadius:"6px",border:"none",background:t==="LEFT"?"#0F6C73":"transparent",color:t==="LEFT"?"#ffffff":"#64748b",cursor:"pointer"},onClick:()=>n("LEFT"),children:"LEFT HAND"}),
-            (0,H.jsx)("button",{type:"button",style:{fontFamily:"'Montserrat', sans-serif",fontSize:"12px",fontWeight:600,padding:"6px 14px",borderRadius:"6px",border:"none",background:t==="RIGHT"?"#0F6C73":"transparent",color:t==="RIGHT"?"#ffffff":"#64748b",cursor:"pointer"},onClick:()=>n("RIGHT"),children:"RIGHT HAND"})
-          ]})
+          (0,H.jsxs)("span",{className:"selected-hand-label",children:["TARGET · ",t]}),
+          u!=="none"&&(0,H.jsxs)(qn,{onClick:()=>i(),children:[(0,H.jsx)(S,{}),"Finish & save"]})
         ]})
       ]}),
       (0,H.jsx)("div",{className:"exercise-cards",children:Object.keys(LX).map((exKey,idx)=>{
-        let exItem=LX[exKey], ExIcon=exItem.icon;
-        return (0,H.jsxs)("button",{type:"button",className:"exercise-card-btn",onClick:()=>{let g=exKey==="circumduction"?"rolling_wonder":exKey==="pronation_supination"?"sky_glider":"balloon_blitz";setChosenGame(g);setPendingExercise(exKey);},children:[
+        let exItem=LX[exKey], ExIcon=exItem.icon, active=u===exKey;
+        return (0,H.jsxs)("button",{type:"button",key:exKey,className:`exercise-card-btn ${active?"selected":""}`,onClick:()=>{r(exKey)},children:[
           (0,H.jsxs)("div",{className:"exercise-card-left",children:[
             (0,H.jsxs)("div",{className:"exercise-card-header",children:[
               (0,H.jsx)(ExIcon,{}),
@@ -5349,17 +5160,37 @@ function WX({report:e}){let t=Object.entries(e.counts??{}).filter(([,e])=>e>0),n
             (0,H.jsxs)("div",{className:"exercise-card-body",children:[
               (0,H.jsx)("strong",{children:exItem.title}),
               (0,H.jsx)("small",{children:exItem.subtitle}),
-              (0,H.jsx)("span",{className:"clinical-badge-tag",children:exKey==="pronation_supination"?"Rotational ROM Protocol":exKey==="circumduction"?"Circumduction Protocol":"Digit Articulation Protocol"})
+              (0,H.jsx)("span",{className:"clinical-badge-tag",children:exKey==="pronation_supination"?"Sky Glider 3D":exKey==="circumduction"?"Rolling Wonder 3D":"Balloon Blitz 3D"})
             ]}),
-            (0,H.jsx)("i",{children:(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(w,{})," SELECT \u2192"]})})
+            (0,H.jsx)("i",{children:active?(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(te,{})," TRACKING"]}):(0,H.jsxs)(H.Fragment,{children:[(0,H.jsx)(w,{})," SELECT →"]})})
           ]}),
           (0,H.jsxs)("div",{className:"exercise-card-rig-preview",children:[
             (0,H.jsx)(MX,{side:t,guidanceMode:exKey}),
             (0,H.jsx)("span",{className:"rig-preview-tag",children:exKey==="pronation_supination"?"3D ROTATION":exKey==="circumduction"?"3D CIRCUMDUCTION":"3D EXTENSION / GRASP"})
           ]})
-        ]},exKey);
+        ]});
       })})
-    ]})
+    ]}),
+    u==="none"?(0,H.jsxs)("div",{className:"exercise-placeholder",children:[
+      (0,H.jsx)(re,{}),
+      (0,H.jsx)("strong",{children:"Select an exercise above"}),
+      (0,H.jsx)("span",{children:"Your live hands remain visible while the exercise guidance, camera feedback and gameplay area appear here."})
+    ]}):(0,H.jsx)(iR,{
+      mode:u,
+      side:t,
+      hand:e?.hands[t.toLowerCase()],
+      latest:l?.latest,
+      guidance:(0,H.jsx)($X,{mode:u,side:t}),
+      tracker:(0,H.jsx)(QL,{mode:u,exercise:l,live:!!e?.meta.connected,side:t}),
+      details:(0,H.jsx)(eZ,{mode:u,exercise:l}),
+      initialGame:u==="circumduction"?"rolling_wonder":u==="pronation_supination"?"sky_glider":"balloon_blitz",
+      targetDuration:chosenDuration,
+      onFinish:(summary)=>i(summary),
+      onTare:()=>a("imu_tare","tare",t),
+      tarePending:o==="tare",
+      tareDisabled:!c||!d||o!==null,
+      tareStatus:s
+    })
   ]});
 }
 function nZ({telemetry:e,selectedHand:t,setSelectedHand:n,bridgeOnline:r,sendCommand:i,pendingCommand:a,commandStatus:o}){let s=e?.hands[t.toLowerCase()],c=s?.orientation?.orientation,l=s?.orientation?.accelerometer,u=(0,f.useMemo)(()=>l?[l.x,l.y,l.z]:[],[l]),d=Math.max(1,...u.map(e=>Math.abs(e))),p=!!e?.meta.hand_connected?.[t.toLowerCase()];return(0,H.jsxs)(`section`,{className:`live-data-workspace`,children:[(0,H.jsxs)(`div`,{className:`section-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(`span`,{className:`eyebrow`,children:`ENGINEERING VIEW`}),(0,H.jsx)(`h2`,{children:`Live glove data`}),(0,H.jsx)(`p`,{children:`Raw sensor, articulation, and joint data remain available as a secondary workspace.`})]}),(0,H.jsx)(`div`,{className:`hand-switch`,children:[`LEFT`,`RIGHT`].map(e=>(0,H.jsx)(`button`,{className:t===e?`selected`:``,onClick:()=>n(e),children:e},e))})]}),(0,H.jsxs)(`div`,{className:`dashboard-grid`,children:[(0,H.jsxs)(`article`,{className:`panel orientation-panel`,children:[(0,H.jsxs)(`div`,{className:`panel-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(M,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`strong`,{children:`LIVE 3D HAND`}),(0,H.jsx)(`small`,{children:`Measured kinematic joint rotations`})]})]}),(0,H.jsx)(`span`,{className:`live-tag`,children:p?`LIVE`:`WAITING`})]}),(0,H.jsx)(MX,{side:t,joints:p?s?.kinematic?.joints:void 0}),(0,H.jsx)(ZX,{side:t,hand:s,connected:p,bridgeOnline:r,onCommand:i,pending:a,message:o}),(0,H.jsx)(`div`,{className:`quaternion-row`,children:[`x`,`y`,`z`,`w`].map(e=>(0,H.jsx)(RX,{label:`IMU ${e.toUpperCase()}`,value:p?c?.[e]?.toFixed(4)??`—`:`—`},e))})]}),(0,H.jsxs)(`article`,{className:`panel`,children:[(0,H.jsxs)(`div`,{className:`panel-heading`,children:[(0,H.jsxs)(`div`,{children:[(0,H.jsx)(I,{}),(0,H.jsxs)(`span`,{children:[(0,H.jsx)(`strong`,{children:`FINGER FLEXION`}),(0,H.jsx)(`small`,{children:`Normalized primary bend channels`})]})]}),(0,H.jsxs)(`span`,{className:`count-tag`,children:[Object.keys(s?.sliders??{}).length,` CHANNELS`]})]}),(0,H.jsx)(`div`,{className:`slider-list`,children:FX.map((e,t)=>{let n=s?.sliders?.[PX[t]];return(0,H.jsxs)(`div`,{className:`data-slider`,children:[(0,H.jsx)(`span`,{children:e}),(0,H.jsx)(`div`,{className:`bar`,children:(0,H.jsx)(`i`,{style:{width:`${Math.max(0,Math.min(100,(n??0)*100))}%`}})}),(0,H.jsx)(`code`,{children:n?.toFixed(3)??`—`})]},e)})}),(0,H.jsx)(`div`,{className:`axis-values`,children:[`X`,`Y`,`Z`].map((e,t)=>(0,H.jsx)(RX,{label:`ACCEL ${e}`,value:l?u[t].toFixed(3):`—`,accent:!!(l&&Math.abs(u[t])===d)},e))})]})]}),(0,H.jsx)(pR,{hand:s,side:t})]})}function rZ(){let[showGloveModal,setShowGloveModal]=(0,f.useState)(!1),[e,t]=(0,f.useState)(`exercises`),[n,r]=(0,f.useState)(`RIGHT`),[i,a]=(0,f.useState)(null),[o,s]=(0,f.useState)(!1),[c,l]=(0,f.useState)(`checking`),[u,d]=(0,f.useState)(``),[p,m]=(0,f.useState)(null),[h,g]=(0,f.useState)(!1),[_,v]=(0,f.useState)(`checking`),[y,b]=(0,f.useState)(null),[x,S]=(0,f.useState)(!1),[C,w]=(0,f.useState)(``),[T,E]=(0,f.useState)(null),[D,O]=(0,f.useState)(null),[k,A]=(0,f.useState)({status:`idle`,message:``}),N=(0,f.useRef)(!1),P=(0,f.useCallback)(async(e,t=!0)=>{g(!0);try{let n=await(await fetch(`${NX}/api/license/validate`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({key:e})})).json();m(n),n.valid?(t&&window.localStorage.setItem(`wizio_license_key`,`VALID`),l(`valid`)):(window.localStorage.removeItem(`wizio_license_key`),l(`required`))}catch{m({valid:!1,status:`unavailable`,message:`The local glove bridge is unavailable. Start the application and try again.`}),l(`required`)}finally{g(!1)}},[]);(0,f.useEffect)(()=>{let e=window.localStorage.getItem(`wizio_license_key`);if(!e){l(`required`);return}d(e),P(e,!1)},[P]),(0,f.useEffect)(()=>{window.localStorage.setItem(`wizio_license_key`,`VALID`);l(`valid`);},[]);(0,f.useEffect)(()=>{c===`valid`&&fetch(`/api/auth/session`).then(async e=>await e.json()).then(async e=>{if(e?.authenticated){b(e);v(`valid`)}else{await pe(`doctor`,`doctor`)}}).catch(()=>v(`valid`))},[c]),(0,f.useEffect)(()=>{
